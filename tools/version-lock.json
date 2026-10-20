@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "contentSha256": "2e2d58f9d1bcad725512460b1c94548c7df27b7c512a477204cf6652e559cd3c",
+  "upstream": {
+    "ref": "88d47514b82e7c44f00f2b2a72ff6dd12158038c",
+    "version": "0.15.29"
+  },
+  "omc": {
+    "ref": "6688a30e90d7285ff336af2dc5ab4b9709f1a8bc",
+    "version": "5.7.5"
+  }
+}

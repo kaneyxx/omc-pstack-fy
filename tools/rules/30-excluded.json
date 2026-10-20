@@ -1,0 +1,23 @@
+{
+  "about": "Remove mentions of skills this build leaves out.",
+  "edits": [
+    {
+      "file": "README.md",
+      "find": "| [`/make-bot-ui`](./skills/make-bot-ui/SKILL.md) | you want a page or dashboard whose buttons wake a Grok Bot over a webhook, including the sender-key handoff and Tailscale. |\n",
+      "replace": "",
+      "why": "make-bot-ui is excluded."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "| Build a page whose buttons wake a Grok Bot over a webhook | [`/make-bot-ui`](../make-bot-ui/SKILL.md) |\n",
+      "replace": "",
+      "why": "make-bot-ui is excluded."
+    },
+    {
+      "file": "docs/guide/09-make-it-yours.md",
+      "find": "## Build a bot UI with `/make-bot-ui`\n\nOne situational skill is for Grok Bot users. [`/make-bot-ui`](../../skills/make-bot-ui/SKILL.md) builds a small page whose buttons wake a bot over a webhook routine. For example, you could swipe through a review queue and have each swipe ask the bot to act on that item. A server on your machine holds the webhook's sender key, so the key never reaches the browser or the chat. The skill also covers exposing the page on Tailscale.\n\n",
+      "replace": "",
+      "why": "make-bot-ui is excluded."
+    }
+  ]
+}

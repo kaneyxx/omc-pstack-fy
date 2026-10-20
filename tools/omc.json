@@ -1,0 +1,187 @@
+{
+  "about": "What omc-pstack-fy relies on in oh-my-claudecode. node tools/build.mjs checks it against vendor/oh-my-claudecode, the OMC release pinned in upstream.json. An OMC release that adds or removes an agent or skill, or rewrites a passage below, fails the build until someone re-checks what omc-pstack-fy says about it. Each anchor names the OMC text (find) and the text in our plugin file that depends on it (uses, or find when absent). An anchor whose uses text is gone from our file fails too, so the list stays current.",
+  "agents": [
+    "analyst",
+    "architect",
+    "code-reviewer",
+    "code-simplifier",
+    "critic",
+    "debugger",
+    "designer",
+    "document-specialist",
+    "executor",
+    "explore",
+    "git-master",
+    "planner",
+    "qa-tester",
+    "scientist",
+    "security-reviewer",
+    "test-engineer",
+    "tracer",
+    "verifier",
+    "writer"
+  ],
+  "skills": [
+    "agent-doc-discipline",
+    "ai-slop-cleaner",
+    "architecture-survey",
+    "ask",
+    "ask-navigator",
+    "autopilot",
+    "autoresearch",
+    "cancel",
+    "configure-notifications",
+    "debug",
+    "deep-interview",
+    "deepinit",
+    "diagram",
+    "drydock",
+    "execute",
+    "external-context",
+    "graph",
+    "harbor",
+    "hud",
+    "intent",
+    "launch",
+    "loft",
+    "map",
+    "minimal-code-discipline",
+    "minimal-prose-discipline",
+    "omc-doctor",
+    "omc-setup",
+    "plan",
+    "pr",
+    "project-session-manager",
+    "ralph",
+    "ralplan",
+    "refit",
+    "release",
+    "remember",
+    "research",
+    "review",
+    "self-improve",
+    "session-flow",
+    "skill",
+    "skillify",
+    "tdd",
+    "team",
+    "trace",
+    "ultragoal",
+    "verify",
+    "visual-verdict",
+    "wiki"
+  ],
+  "anchors": [
+    {
+      "omc": "docs/CLAUDE.md",
+      "find": "Route code to `executor`",
+      "ours": "hooks/omc-bridge.md",
+      "why": "The bridge overrides this CLAUDE.md line by quoting it."
+    },
+    {
+      "omc": "skills/ralph/SKILL.md",
+      "find": "oh-my-claudecode:executor",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "`oh-my-claudecode:executor` spawn examples",
+      "why": "The bridge overrides OMC's literal executor spawn examples."
+    },
+    {
+      "omc": "skills/execute/SKILL.md",
+      "find": "delegate to `executor` agents",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "Where OMC would spawn `executor`",
+      "why": "execute hands each code unit to executor, which the bridge reroutes."
+    },
+    {
+      "omc": "src/features/delegation-routing/types.ts",
+      "find": "'build-fixer': 'debugger'",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "`debugger` (alias `build-fixer`)",
+      "why": "build-fixer is an alias of debugger, so the bridge reroutes both."
+    },
+    {
+      "omc": "skills/autopilot/SKILL.md",
+      "find": "for Phase 4 quality review",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "autopilot Phase 4",
+      "why": "autopilot's Phase 4 code-reviewer is a final review gate that interrogate replaces."
+    },
+    {
+      "omc": "skills/team/SKILL.md",
+      "find": "team-exec -> team-verify",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "the team-verify pass",
+      "why": "team-verify is team's final review gate."
+    },
+    {
+      "omc": "skills/team/SKILL.md",
+      "find": "message `team-lead`",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "reports to `team-lead` by message",
+      "why": "A delegate in a team follows team's worker protocol."
+    },
+    {
+      "omc": "skills/execute/SKILL.md",
+      "find": "hand off to `review` or `verify`",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "an execute hand-off to review",
+      "why": "execute's hand-off to review is a final review gate."
+    },
+    {
+      "omc": "skills/ultragoal/SKILL.md",
+      "find": "`codeReview`",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "ultragoal's final `codeReview`",
+      "why": "ultragoal's final codeReview evidence comes from interrogate."
+    },
+    {
+      "omc": "src/ultragoal/artifacts.ts",
+      "find": "recommendation: 'APPROVE'",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "count as `APPROVE`",
+      "why": "The bridge maps interrogate's verdict onto ultragoal's codeReview.recommendation."
+    },
+    {
+      "omc": "agents/code-reviewer.md",
+      "find": "REQUEST CHANGES",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "counts as `REQUEST CHANGES`",
+      "why": "The bridge maps an open Act On finding onto code-reviewer's verdict."
+    },
+    {
+      "omc": "src/ultragoal/artifacts.ts",
+      "find": "architectStatus: 'CLEAR'",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "architect status not `CLEAR`",
+      "why": "The bridge maps a design-level finding onto ultragoal's codeReview.architectStatus."
+    },
+    {
+      "omc": "skills/ralph/SKILL.md",
+      "find": "7.5 **Mandatory Deslop Pass**",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "ralph step 7.5",
+      "why": "ralph's step 7.5 runs deslop instead of ai-slop-cleaner."
+    },
+    {
+      "omc": "skills/ralph/SKILL.md",
+      "find": "Skill(\"oh-my-claudecode:ai-slop-cleaner\")",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "in place of `ai-slop-cleaner`",
+      "why": "The deslop pass replaces this skill call."
+    },
+    {
+      "omc": "src/ultragoal/artifacts.ts",
+      "find": "aiSlopCleaner",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "ultragoal's `aiSlopCleaner` gate",
+      "why": "ultragoal's aiSlopCleaner evidence comes from deslop."
+    },
+    {
+      "omc": "skills/ralph/SKILL.md",
+      "find": "7. **Reviewer verification**",
+      "ours": "hooks/omc-bridge.md",
+      "uses": "ralph's Step 7 architect or critic check",
+      "why": "OMC keeps ralph's Step 7, which the bridge leaves alone."
+    }
+  ]
+}

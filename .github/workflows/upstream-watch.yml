@@ -1,0 +1,56 @@
+name: upstream-watch
+
+# Weekly, compare the pinned pstack and oh-my-claudecode with their newest versions. When either has newer vendored files,
+# open or update one issue with the report and the steps to sync. When both match, close that issue.
+on:
+  schedule:
+    - cron: "17 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: upstream-watch
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    # An explicit bash shell adds pipefail, so a failed gh call fails the step instead of opening a duplicate issue.
+    defaults:
+      run:
+        shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TITLE: Upstream update available
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Compare the pins with the newest upstream versions
+        id: latest
+        run: |
+          set +e
+          node tools/sync.mjs --latest > report.md
+          code=$?
+          set -e
+          cat report.md
+          case $code in
+            0) echo "newer=false" >> "$GITHUB_OUTPUT" ;;
+            3) echo "newer=true" >> "$GITHUB_OUTPUT" ;;
+            *) exit "$code" ;;
+          esac
+      - name: Open or update the upstream issue
+        if: steps.latest.outputs.newer == 'true'
+        run: |
+          issue=$(gh issue list --state open --limit 200 --json number,title --jq "[.[] | select(.title == env.TITLE) | .number][0] // empty")
+          if [ -n "$issue" ]; then gh issue edit "$issue" --body-file report.md; else gh issue create --title "$TITLE" --body-file report.md; fi
+      - name: Close the upstream issue once the pins are current
+        if: steps.latest.outputs.newer == 'false'
+        run: |
+          issues=$(gh issue list --state open --limit 200 --json number,title --jq ".[] | select(.title == env.TITLE) | .number")
+          for issue in $issues; do
+            gh issue close "$issue" --comment "The pins match the newest pstack and oh-my-claudecode."
+          done

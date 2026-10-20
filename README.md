@@ -1,0 +1,119 @@
+# omc-pstack-fy
+
+pstack's engineering rigor for people who live in [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC). OMC stays your main harness, and every keyword and workflow works as before. omc-pstack-fy adds [pstack](https://github.com/cursor/plugins/tree/main/pstack), the Cursor plugin by Lauren Tan ([poteto](https://x.com/poteto)), rebuilt natively for Claude Code, as the engine OMC hands code to.
+
+pstack is Lauren's work, and oh-my-claudecode is Yeachan Heo's. This is an unofficial companion, not part of either project. It translates pstack faithfully and adds the OMC bridge and a few personal changes. Report pstack ideas to pstack, and OMC ideas to OMC.
+
+## Install
+
+```bash
+/plugin marketplace add kaneyxx/omc-pstack-fy
+/plugin install omc-pstack-fy@omc-pstack-fy
+```
+
+Install oh-my-claudecode as its README says. Every pstack command takes the `omc-pstack-fy:` prefix. Start with `/omc-pstack-fy:setup-pstack`. The plugin's own [README](./plugin/README.md) and [guide](./plugin/docs/guide/README.md) cover the skills.
+
+## How OMC and pstack split the work
+
+| Layer | Runs on | What |
+|---|---|---|
+| Project | oh-my-claudecode | every keyword, `deep-interview`, `plan` and `ralplan`, `ultragoal`, `team`, `ralph`, the wiki, notepad, and project memory, the verifier, the HUD, and notifications |
+| Code | pstack | each unit of code work through a poteto-mode playbook as a `omc-pstack-fy:poteto-agent` delegate, the final code review through `interrogate` (a multi-model panel), and ai-slop-cleaner steps through `deslop` |
+
+A SessionStart hook in the plugin tells OMC's workflows about this split whenever OMC is installed and enabled. Nothing is written to your config, and disabling omc-pstack-fy removes it. Delegates return their diff to OMC's lead, which keeps commits, pushes, and PRs.
+
+You can also run pstack directly. `/omc-pstack-fy:poteto-mode` runs a task under Lauren's playbooks, and inside that run pstack's rules win. Without OMC, omc-pstack-fy is plain pstack.
+
+## How the build works
+
+```
+vendor/                   pristine upstream files at the commits pinned in upstream.json. Never edit it.
+                            pstack/ and cursor-team-kit/ from cursor/plugins, and in oh-my-claudecode/ the parts of an OMC release the bridge relies on
+tools/omc.json            what omc-pstack-fy relies on in oh-my-claudecode: its agents, its skills, and anchored passages
+tools/rules.json          plugin settings, included paths, and the team-kit skills imported into the plugin
+tools/rules/*.json        every change to upstream text, one topic per file, each rule with its reason
+overlays/                 files this fork adds, or replaces (a replaced file is a "fork" pinned to its upstream hash)
+docs/claude-code-mapping.md   how each Cursor name is written for Claude Code, and why
+plugin/                   generated output that Claude Code installs. Never edit it.
+```
+
+`node tools/build.mjs` turns `vendor/` into `plugin/` in this order:
+
+1. Copy the included upstream files and the imported `deslop`, `control-ui`, and `control-cli` skills. Cursor-only parts (`make-bot-ui`, the benny automations) stay out.
+2. Copy `overlays/`. A fork fails the build when upstream changed the file it replaces.
+3. Apply `edits`. Each must match its upstream passage exactly, so an upstream rewrite fails the build instead of being skipped.
+4. Link each "the **name** skill" mention to its `SKILL.md`.
+5. Apply `substitutions`, prefix every `/skill` command with `omc-pstack-fy:`, and link each command to its `SKILL.md`, so the model reads a hidden skill instead of calling a Skill tool that refuses it.
+6. Add a routing note to each skill that names another skill.
+7. Point links to left-out upstream files at GitHub, pinned to the vendored commit.
+8. Check `tools/omc.json` against the vendored OMC release. An OMC agent or skill the file does not list, one it lists that OMC dropped, or an anchored passage OMC rewrote fails the build and names the bridge text to re-check. The build writes that OMC version into the plugin, and the hook tells you when your installed OMC differs.
+9. Count the Cursor names left, which must be 0 now that the runtime adapter is off. `node tools/build.mjs --report` lists them per file.
+10. Check the version. Plugin content must match the last release recorded in `tools/version-lock.json`.
+
+CI runs `node tools/sync.mjs --verify`, `node tools/build.mjs --check`, and the tests.
+
+## Versions and releases
+
+omc-pstack-fy has its own semantic version, separate from both upstreams. Each CHANGELOG entry records the pstack version it was built from and the oh-my-claudecode version it was checked against.
+
+- **patch:** fixes and rule tweaks that change plugin content.
+- **minor:** a pstack or oh-my-claudecode sync, or a new skill or role.
+- **major:** a change that breaks existing role lines, settings, or commands.
+
+Every push that changes `plugin/` is a release, because Claude Code updates an installed plugin only when its version changes. CI fails when plugin content differs from the last release. A local build only warns, so work in progress builds fine.
+
+```bash
+node tools/release.mjs patch --dry-run   # preview the next version and its notes
+node tools/release.mjs patch             # check, bump, CHANGELOG, commit, tag omc-pstack-fy--vX.Y.Z, push, GitHub release
+```
+
+## Keeping up with pstack and oh-my-claudecode
+
+omc-pstack-fy follows both upstreams. Every Monday the `upstream-watch` workflow compares the pins with pstack's main and OMC's newest release, and opens an issue named "Upstream update available" when either has newer vendored files. The issue lists the changed files and closes itself once the pins catch up. Run it by hand from the Actions tab, or locally with `node tools/sync.mjs --latest`.
+
+```bash
+node tools/sync.mjs pstack     # vendor cursor/plugins main and pin the commit (records an REA fingerprint when rea is installed)
+node tools/sync.mjs omc        # vendor OMC's newest release tag and pin it
+node tools/build.mjs           # rebuild; a FAIL line names each edit, fork, or OMC anchor to re-check
+git diff --stat vendor/ plugin/
+node tools/release.mjs minor
+```
+
+## Roadmap
+
+| Phase | Scope | Status |
+|---|---|---|
+| 1 | Build pipeline, `omc-pstack-fy` names, adapter fixes, installable plugin | done |
+| 2 | Native rewrites. Cursor names 293 to 0, degraded skills fixed (interrogate, reflect, automate-me, poteto-help, orchestrate, autopilot), team-kit skills bundled, adapter off | done |
+| 3 | Multi-model cross-review. Role values `[provider:]model [effort]`, the read-only `pstack-ask` bridge to other vendors' CLIs, a `second opinion` role, and panels labeled cross-vendor or same-vendor. Vendor templates ship unverified until a real CLI is wired in | done |
+| 4 | Personal fit. zh-TW reply rules, a personal `fy-mode` | done |
+| 5 | oh-my-claudecode first. OMC keeps every keyword and workflow, and a plugin hook hands code units, ai-slop-cleaner steps, and the final code review to pstack | done |
+| 6 | Follow both upstreams. OMC pinned like pstack, a contract check on what the bridge relies on, a version-aware hook, and a weekly upstream issue | done |
+
+## Other vendors
+
+Review and judging roles can mix in another vendor's model, read-only, through the `pstack-ask` skill. Install and sign in to the vendor's CLI, check it with `node plugin/skills/pstack-ask/scripts/pstack-ask.mjs --detect`, then add the entry with `/omc-pstack-fy:setup-pstack`, for example `interrogate reviewers: opus xhigh, codex:gpt-5-codex high`. [What read-only means here](./plugin/skills/pstack-ask/SKILL.md) lists the three protection layers and their limits. `node --test tests/pstack-ask.test.mjs` tests `pstack-ask` against a fake CLI.
+
+## Personal choices
+
+These are the owner's choices, not translations of Lauren's pstack.
+
+- The oh-my-claudecode bridge above, in `overlays/hooks/` and the poteto-mode edits in `tools/rules/80-personal.json`.
+- When you write in Chinese, replies come in Traditional Chinese (Taiwan) under the `unslop-zh` skill. Code, commits, and docs stay in English.
+- `/omc-pstack-fy:fy-mode` runs poteto-mode with the owner's style on top. It routes each step by what it produces (code to poteto-mode with reproducibility rules for research code, scholarly prose to the research skills), shapes replies action-first, asks with options before big choices, and reviews before every push.
+- They live in `tools/rules/80-personal.json`, `overlays/hooks/`, `overlays/skills/unslop-zh/`, and `overlays/skills/fy-mode/`, apart from the translation rules.
+
+## 中文快速說明
+
+給重度 oh-my-claudecode（OMC）使用者的 pstack。OMC 仍是主要工具，所有關鍵字和流程照常運作。omc-pstack-fy 把 Lauren Tan 的 pstack 原生移植到 Claude Code，當作 OMC 寫程式和審查程式的引擎：OMC 流程裡的每個程式工作交給 poteto-mode 的 playbook，最後的程式審查交給 `interrogate` 多模型審查，ai-slop-cleaner 步驟交給 `deslop`。這個分工由 plugin 內建的 SessionStart hook 告訴 OMC，不會改你的設定，停用 omc-pstack-fy 就會移除。
+
+上游原檔放在 `vendor/`，所有修改寫在 `tools/rules/*.json` 和 `overlays/`，每個 Cursor 名稱怎麼改、為什麼這樣改，都記在 `docs/claude-code-mapping.md`。`plugin/` 由 `node tools/build.mjs` 產生。pstack 和 OMC 兩個上游都會追：每週一的 GitHub Action 發現任一邊有新版就開 issue。更新時跑 `node tools/sync.mjs pstack` 或 `node tools/sync.mjs omc`，再跑 build；OMC 改了 bridge 依賴的名稱或步驟時，build 會失敗並指出要重新檢查哪一段。
+
+## License
+
+MIT. See [LICENSE](./LICENSE). pstack is Copyright (c) 2026 Lauren Tan. The oh-my-claudecode files in `vendor/oh-my-claudecode/` are Copyright (c) 2025 Yeachan Heo, under the MIT license in that folder.
+
+## Acknowledgements
+
+- [pstack](https://github.com/cursor/plugins/tree/main/pstack) by Lauren Tan ([poteto](https://x.com/poteto)): the skills, playbooks, and engineering rules this plugin translates.
+- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) by Yeachan Heo: the harness this plugin works inside.

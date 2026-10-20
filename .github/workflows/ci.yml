@@ -1,0 +1,24 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: vendor/ matches the pinned pstack and oh-my-claudecode commits
+        run: node tools/sync.mjs --verify
+      - name: plugin/ matches what the build generates
+        run: node tools/build.mjs --check
+      - name: Tests (pstack-ask, the oh-my-claudecode hook, and the OMC contract)
+        run: node --test tests/*.test.mjs

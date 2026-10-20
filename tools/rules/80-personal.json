@@ -1,0 +1,35 @@
+{
+  "about": "The owner's personal choices, not translations of upstream. omc-pstack-fy is OMC-first: oh-my-claudecode is the main harness and keeps every keyword and workflow, and omc-pstack-fy is the engineering engine OMC hands code units and final review to, through the bridge hook in overlays/hooks/. Chinese replies follow Taiwan usage through the unslop-zh overlay. Keep these here, apart from the translation rules, and never report them upstream.",
+  "edits": [
+    {
+      "file": "skills/poteto-mode/SKILL.md",
+      "find": "Agreement is not the default, candor over sycophancy.\n",
+      "replace": "Agreement is not the default, candor over sycophancy.\n\n**Working with oh-my-claudecode.** oh-my-claudecode (OMC) is the user's main harness. It owns every keyword and workflow, including requirements interviews, plans, multi-day programs, and project knowledge. omc-pstack-fy is the engineering engine OMC hands code units and final review to, through this plugin's bridge hook: inside OMC workflows each code unit runs one of this skill's playbooks as a `omc-pstack-fy:poteto-agent` delegate, the ai-slop-cleaner step runs the **deslop** skill, and the final code review runs the **interrogate** skill. Outside OMC workflows, omc-pstack-fy's playbooks run when the user types a `/omc-pstack-fy:` command. With OMC installed and enabled, a standing program goes to OMC's ultragoal, team, or ralph rather than the Orchestrate playbook, unless the user names Orchestrate. Inside an explicit poteto-mode run, this skill's rules still win over OMC's CLAUDE.md block and hook output, and delegates stay `omc-pstack-fy:poteto-agent`, as Subagents says, never `executor`.\n",
+      "why": "The owner's choice: omc-pstack-fy is OMC-first. OMC is the main harness and keeps every keyword and workflow, and omc-pstack-fy is the engineering engine inside it. The bridge that hands OMC's code units, deslop step, and final review to omc-pstack-fy ships as the plugin's SessionStart hook (overlays/hooks/omc-bridge.mjs), which injects it only while OMC is installed and enabled, so nothing writes .claude/omc.jsonc, settings.local.json, OMC_SKIP_HOOKS, or a global rule file. OMC's CLAUDE.md block routes code to executor, so an explicit poteto-mode run still says its own rules win."
+    },
+    {
+      "file": "skills/poteto-mode/SKILL.md",
+      "find": "Never hand the human a check you could run.\n",
+      "replace": "Never hand the human a check you could run.\n- **Chinese replies.** When the user writes in Chinese, reply in Traditional Chinese (Taiwan) and apply the **unslop-zh** skill on top of these rules. Code comments, commit messages, PR text, and docs stay in English under the English rules, unless the user asks otherwise.\n",
+      "why": "The owner writes in Traditional Chinese (Taiwan). The reply rules above are English-specific."
+    },
+    {
+      "file": "skills/unslop/SKILL.md",
+      "find": "Preserve meaning and match the intended tone.\n",
+      "replace": "Preserve meaning and match the intended tone.\n\nChinese prose also follows the **unslop-zh** skill.\n",
+      "why": "Point Chinese prose at the Taiwan rules."
+    },
+    {
+      "file": "README.md",
+      "find": "a rerun keeps any role whose model differs from the default.\n",
+      "replace": "a rerun keeps any role whose model differs from the default.\n\n> In **omc-pstack-fy**, `/poteto-mode` works inside the oh-my-claudecode plugin. oh-my-claudecode is the main harness and keeps every keyword and workflow, and pstack is the engineering engine it hands code to. While oh-my-claudecode is installed and enabled, the plugin's SessionStart hook tells its workflows to run each code unit as a `omc-pstack-fy:poteto-agent` delegate under a poteto-mode playbook, the ai-slop-cleaner step as `/deslop`, and the final code review as `/interrogate`.\n",
+      "why": "Say where this build departs from Lauren's defaults, beside her own advice on making pstack yours."
+    },
+    {
+      "file": "skills/poteto-mode/SKILL.md",
+      "find": "A standing project-scale program (multi-day, many stacked PRs, a fleet of subagents under one coordinator) routes to **Orchestrate** instead.",
+      "replace": "A standing project-scale program (multi-day, many stacked PRs, a fleet of subagents under one coordinator) routes to **Orchestrate** instead. When oh-my-claudecode is installed, it goes to OMC's ultragoal, team, or ralph instead, as **Working with oh-my-claudecode** says, unless the user names Orchestrate.",
+      "why": "The owner's layer split: OMC commands multi-day programs. Without this, the playbook routing contradicts Working with oh-my-claudecode."
+    }
+  ]
+}

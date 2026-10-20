@@ -1,0 +1,15 @@
+{
+  "name": "omc-pstack-fy",
+  "owner": {
+    "name": "Fang-Yi Su"
+  },
+  "description": "omc-pstack-fy, Lauren Tan's pstack built for Claude Code as the coding engine for oh-my-claudecode users, generated from a pinned upstream commit.",
+  "plugins": [
+    {
+      "name": "omc-pstack-fy",
+      "version": "1.0.0",
+      "source": "./plugin",
+      "description": "pstack's engineering rigor inside oh-my-claudecode. A Claude Code build of pstack by Lauren Tan (poteto)."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+# Changelog
+
+## [1.0.0] - 2026-10-20
+
+Built from upstream pstack v0.15.29 (https://github.com/cursor/plugins/tree/88d4751), checked against oh-my-claudecode v5.7.5 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/6688a30).
+
+First release of omc-pstack-fy: pstack's engineering rigor for people who live in [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC). [pstack](https://github.com/cursor/plugins/tree/main/pstack) is Lauren Tan's work, and OMC is Yeachan Heo's. This unofficial companion rebuilds pstack natively for Claude Code and makes it the engine OMC hands code to.
+
+### Install
+
+```bash
+/plugin marketplace add kaneyxx/omc-pstack-fy
+/plugin install omc-pstack-fy@omc-pstack-fy
+```
+
+Install oh-my-claudecode as its README says, then run `/omc-pstack-fy:setup-pstack`. Keep using OMC as before; its workflows now hand code to pstack. To run pstack directly, use `/omc-pstack-fy:poteto-mode` or `/omc-pstack-fy:fy-mode`.
+
+### What is in it
+
+- **OMC first, pstack for the code.** OMC keeps every keyword and workflow: interviews, plans, ultragoal, team, ralph, the wiki, memory, and the verifier. A SessionStart hook in the plugin tells OMC's workflows to hand each code unit to a poteto-mode playbook, ai-slop-cleaner steps to `deslop`, and the final code review to `interrogate`. It writes nothing to your config, and disabling the plugin removes it.
+- **Follows both upstreams.** OMC is pinned like pstack, at its newest release. `tools/omc.json` lists the OMC agents, skills, and passages the bridge relies on, and the build fails when an OMC release changes one of them. The hook tells you at startup when your installed OMC differs from the version the bridge was checked against. A weekly workflow opens an issue when pstack or OMC has newer files.
+- **pstack, native to Claude Code.** All 56 upstream skills (minus the Cursor-only `make-bot-ui`), both agents, and the guide, with every Cursor name rewritten for Claude Code (293 to 0) and no runtime adapter. `deslop`, `control-ui`, and `control-cli` from cursor-team-kit are bundled. `docs/claude-code-mapping.md` records each decision.
+- **Built, not hand-copied.** `tools/build.mjs` generates the plugin from pinned upstream commits through checked edits, substitutions, and overlays. An upstream rewrite of an edited passage fails the build instead of being skipped. `tools/sync.mjs` updates either upstream in one command, and `tools/release.mjs` cuts a release.
+- **Cross-vendor review, read-only.** Review and judging roles accept `[provider:]model [effort]`, such as `codex:gpt-5-codex high`. The `pstack-ask` skill runs another vendor's CLI in a throwaway clone, checks the user's repository before and after, and reports any change as `breach`. Vendor command templates ship unverified until a real CLI is wired in.
+- **Personal choices**, kept apart from the translation: replies in Traditional Chinese (Taiwan) under `unslop-zh`, and `fy-mode`, which routes each step by what it produces, with research code held to reproducibility rules and scholarly writing sent to the research skills.
+
+### Known limits
+
+- No vendor CLI has been run for real yet, and there is no OS sandbox. The integrity check runs once, when the CLI exits.
+- The hook does not read managed settings, so it cannot see OMC disabled there.
+- `orch` and `watch-pr` need bun.

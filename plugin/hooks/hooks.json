@@ -1,0 +1,17 @@
+{
+  "description": "omc-pstack-fy's bridge into oh-my-claudecode: while OMC is installed and enabled, its workflows hand code units, deslop, and the final code review to omc-pstack-fy.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/omc-bridge.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

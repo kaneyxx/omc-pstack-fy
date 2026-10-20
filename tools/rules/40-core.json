@@ -1,0 +1,74 @@
+{
+  "about": "Global substitutions for Cursor names whose Claude Code form is right in every context. See docs/claude-code-mapping.md. Context-dependent names are left to the per-file rules.",
+  "except": [
+    "docs/harness/claude-code.md"
+  ],
+  "optional": true,
+  "substitutions": [
+    {
+      "regex": "`Task`",
+      "replace": "`Agent`",
+      "why": "Claude Code spawns subagents with the Agent tool."
+    },
+    {
+      "regex": "\\bTask (tool|subagent|call|spawn)",
+      "replace": "Agent $1",
+      "why": "Claude Code spawns subagents with the Agent tool."
+    },
+    {
+      "find": "AskQuestion",
+      "replace": "AskUserQuestion",
+      "why": "Claude Code's question tool."
+    },
+    {
+      "find": "generalPurpose",
+      "replace": "general-purpose",
+      "why": "Claude Code's general subagent type."
+    },
+    {
+      "regex": "\\btodolist\\b",
+      "replace": "todo list",
+      "why": "Claude Code's todo tool keeps a todo list. How to open one is said once, in poteto-mode."
+    },
+    {
+      "find": "~/.cursor/rules/pstack-models.mdc",
+      "replace": "~/.claude/rules/omc-pstack-fy-models.md",
+      "why": "Claude Code loads every .md file in ~/.claude/rules/. The omc-pstack-fy name lets the official pstack stay installed beside it."
+    },
+    {
+      "find": "pstack-models.mdc",
+      "replace": "omc-pstack-fy-models.md",
+      "why": "Same rule file, named without its folder."
+    },
+    {
+      "find": "inherit-parent",
+      "replace": "inherit",
+      "why": "A role value of inherit omits the Agent model, so the agent runs on the parent's model."
+    },
+    {
+      "regex": "\\bclaude-opus-5-5-(xhigh|max|medium)\\b",
+      "replace": "opus $1",
+      "why": "The Agent tool takes a model alias plus an effort level."
+    },
+    {
+      "regex": "\\bgrok-4\\.7-(xhigh|medium)-fast\\b",
+      "replace": "sonnet $1",
+      "why": "Upstream picks a fast, strong code model. Sonnet is Claude's. Phase 3 adds other vendors through pstack-ask."
+    },
+    {
+      "regex": "\\.cursor/skills\\b",
+      "replace": ".claude/skills",
+      "why": "Claude Code reads project skills from .claude/skills/ and personal skills from ~/.claude/skills/."
+    },
+    {
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job",
+      "replace": "Pick each subagent's effort level for the job",
+      "why": "Claude Code subagents take an effort level and have no per-call fast mode. poteto-mode says how to pick it."
+    },
+    {
+      "find": "Pick each subagent's `effort` for the job",
+      "replace": "Pick each subagent's effort level for the job",
+      "why": "One wording for the shared effort sentence across rules written in parallel."
+    }
+  ]
+}

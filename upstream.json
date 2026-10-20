@@ -1,0 +1,45 @@
+{
+  "pstack": {
+    "repository": "https://github.com/cursor/plugins",
+    "track": "main",
+    "versionFile": "pstack/plugin.json",
+    "ref": "88d47514b82e7c44f00f2b2a72ff6dd12158038c",
+    "committedAt": "2026-10-19T19:24:33-07:00",
+    "version": "0.15.29",
+    "paths": [
+      "pstack",
+      "cursor-team-kit"
+    ],
+    "rea": {
+      "pstack": {
+        "version": "6.5.0",
+        "manifest_id": "hsm_5c19a6a8c3059f84209f8e9a5417b149c17546984905d380125a10e09856c564",
+        "root_sha256": "990b2359666d25b03a84a31d83a3a950e0f94f2ac4c69ac4a973dda5f327c5ec"
+      },
+      "cursor-team-kit": {
+        "version": "6.5.0",
+        "manifest_id": "hsm_18530ded9966a7b89d028d3b438cccc8266bc66e1c8eee5286886dd6d64c7dc1",
+        "root_sha256": "9f80489a6418311f489eb4d4e0c73b980076bc00b70b20f4a94dd0300cb1d1d6"
+      }
+    }
+  },
+  "omc": {
+    "repository": "https://github.com/Yeachan-Heo/oh-my-claudecode",
+    "track": "release",
+    "into": "oh-my-claudecode",
+    "versionFile": ".claude-plugin/plugin.json",
+    "paths": [
+      "LICENSE",
+      ".claude-plugin/plugin.json",
+      "docs/CLAUDE.md",
+      "agents/",
+      "skills/*/SKILL.md",
+      "src/features/delegation-routing/types.ts",
+      "src/ultragoal/artifacts.ts"
+    ],
+    "ref": "6688a30e90d7285ff336af2dc5ab4b9709f1a8bc",
+    "tag": "v5.7.5",
+    "committedAt": "2026-10-18T15:36:38+09:00",
+    "version": "5.7.5"
+  }
+}

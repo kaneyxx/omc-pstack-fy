@@ -1,0 +1,529 @@
+{
+  "about": "Native rewrites for poteto-mode playbooks, references, and scripts. See docs/claude-code-mapping.md.",
+  "edits": [
+    {
+      "file": "skills/poteto-mode/references/bugbot-triage.md",
+      "find": "# Bugbot triage\n\nUse this reference when the Babysit playbook (`../playbooks/babysit.md`) handles Bugbot or review-automation comments. The goal is not to ignore Bugbot by default.",
+      "replace": "# Review-bot triage\n\nUse this reference when the Babysit playbook (`../playbooks/babysit.md`) handles review-bot comments. On GitHub they are ordinary review threads from accounts such as `cursor[bot]` (Bugbot), `claude[bot]`, CodeRabbit, or Copilot. The goal is not to ignore a bot by default.",
+      "why": "A Claude Code user gets review comments from several bots, not only Cursor's Bugbot. The skeptical triage applies to every one of them."
+    },
+    {
+      "file": "skills/poteto-mode/references/bugbot-triage.md",
+      "find": "Classify each Bugbot thread before acting:",
+      "replace": "Classify each review-bot thread before acting:",
+      "why": "The rubric covers every review bot."
+    },
+    {
+      "file": "skills/poteto-mode/references/bugbot-triage.md",
+      "find": "and the Bugbot comment is only restating",
+      "replace": "and the bot's comment is only restating",
+      "why": "The pattern holds for any review bot."
+    },
+    {
+      "file": "skills/poteto-mode/references/bugbot-triage.md",
+      "find": "### Upstack or stack-local usage Bugbot cannot see\n\n- Confidence: candidate\n- Skip when: Bugbot flags an export,",
+      "replace": "### Upstack or stack-local usage the bot cannot see\n\n- Confidence: candidate\n- Skip when: The bot flags an export,",
+      "why": "Every review bot reviews one PR's diff, so none of them sees upstack usage."
+    },
+    {
+      "file": "skills/poteto-mode/references/bugbot-triage.md",
+      "find": "or a later Bugbot reply explicitly says",
+      "replace": "or a later reply from the same bot explicitly says",
+      "why": "The pattern holds for any review bot."
+    },
+    {
+      "file": "skills/poteto-mode/references/bugbot-triage.md",
+      "find": "and Bugbot claims",
+      "replace": "and a review bot claims",
+      "why": "The rubric covers every review bot."
+    },
+    {
+      "file": "skills/poteto-mode/references/bugbot-triage.md",
+      "find": "An agentic security review (or similar) claims",
+      "replace": "A security-review bot (or similar) claims",
+      "why": "The agentic security review is Cursor's. Other security-review bots post the same kind of stale finding."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/babysit.md",
+      "find": " This playbook replaces Cursor's built-in babysit skill for these requests, so do not route there even though its description matches the same words.",
+      "replace": "",
+      "why": "Claude Code has no built-in babysit skill, so there is nothing to route away from."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/babysit.md",
+      "find": "for \"address the bugbot comments\"",
+      "replace": "for \"address the bot comments\"",
+      "why": "A Claude Code user's PR can carry comments from any review bot."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/babysit.md",
+      "find": "Run `drive` and `background` under `/loop` in dynamic mode.",
+      "replace": "Run `drive` and `background` under a self-paced `/loop`, with no interval. Each wake first re-reads poteto-mode's `SKILL.md` and this playbook, because a mid-run compaction keeps only part of them.",
+      "why": "Claude Code's /loop paces itself when it gets no interval. Dynamic mode is Cursor's name for that. A long loop compacts, and compaction re-attaches only the first ~5,000 tokens of a skill, which cuts poteto-mode short and drops this playbook."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/babysit.md",
+      "find": "8. **Bugbot is triaged skeptically, always.**",
+      "replace": "8. **Review bots are triaged skeptically, always.**",
+      "why": "The skeptical triage applies to every review bot."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/babysit.md",
+      "find": "On GitHub, use the watcher's Bugbot pass count.",
+      "replace": "On GitHub, the watcher's `bugbotReviewPasses` counts only `cursor[bot]` passes, so derive another bot's count from its review history (`gh pr view <pr> --json reviews`).",
+      "why": "watch-pr recognizes Bugbot's GitHub account and run ids only. Another bot's passes show up as its reviews on the PR."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "`subagent_type: \"poteto-agent\"`",
+      "replace": "`subagent_type: \"omc-pstack-fy:poteto-agent\"`",
+      "why": "Claude Code prefixes a plugin agent with the plugin name."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "4. Copy the skeleton below into the plan file and fill every placeholder.",
+      "replace": "4. Copy the skeleton below into the plan file and fill every placeholder. Fill `<omc-pstack-fy root>` with the newest installed omc-pstack-fy copy. Search `~/.claude/plugins/cache/omc-pstack-fy/` for a file whose path ends in `skills/poteto-mode/SKILL.md`. If more than one file matches, use the copy whose `.claude-plugin/plugin.json` has the highest `version`. `<omc-pstack-fy root>` is the folder that holds that copy's `skills/`.",
+      "why": "A plugin user's repository has no pstack/ folder. The installed plugin is the copy to read, found by the same rule agents/poteto-agent.md uses."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "The program runs `pstack/skills/poteto-mode/playbooks/<execution playbook>.md`.",
+      "replace": "The program runs `<omc-pstack-fy root>/skills/poteto-mode/playbooks/<execution playbook>.md`.",
+      "why": "A plugin user's repository has no pstack/ folder, so the plan names the installed copy."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "- [ ] Read these from trunk at program start. Re-read them at every tick.\n  - [ ] `git show origin/main:pstack/skills/poteto-mode/playbooks/<execution playbook>.md`\n  - [ ] `git show origin/main:pstack/skills/swarm/SKILL.md`\n  - [ ] `git show origin/main:<control skill path>`\n  - [ ] `git show origin/main:pstack/skills/poteto-mode/playbooks/opening-a-pr.md`\n  - [ ] `git show origin/main:pstack/skills/<each other leaf skill the program uses>`",
+      "replace": "- [ ] Read these from the newest installed omc-pstack-fy copy at program start. Re-read them at every tick.\n  - [ ] Read `<omc-pstack-fy root>/skills/poteto-mode/SKILL.md`.\n  - [ ] Read `<omc-pstack-fy root>/skills/poteto-mode/playbooks/<execution playbook>.md`.\n  - [ ] Read `<omc-pstack-fy root>/skills/swarm/SKILL.md`.\n  - [ ] Read `<control skill path>`.\n  - [ ] Read `<omc-pstack-fy root>/skills/poteto-mode/playbooks/opening-a-pr.md`.\n  - [ ] Read `<omc-pstack-fy root>/skills/<each other leaf skill the program uses>/SKILL.md`.",
+      "why": "A plugin user's repository has no pstack/ folder, so git show on trunk finds nothing. The installed plugin is the copy to read. poteto-mode's SKILL.md joins the list because a mid-run compaction keeps only its first part."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "\"Re-read the execution playbook from trunk.",
+      "replace": "\"Re-read poteto-mode's SKILL.md and the execution playbook from the newest installed omc-pstack-fy copy, because a mid-run compaction keeps only part of them.",
+      "why": "A plugin user's repository has no pstack/ folder, and a long loop compacts away most of poteto-mode and the playbook."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "Run each full swarm per `pstack/skills/swarm/SKILL.md`.",
+      "replace": "Run each full swarm per `<omc-pstack-fy root>/skills/swarm/SKILL.md`.",
+      "why": "A plugin user's repository has no pstack/ folder, so the plan names the installed copy."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "Which PRs get `pstack/skills/how/SKILL.md` and `pstack/skills/interrogate/SKILL.md`. The trail per `pstack/skills/show-me-your-work/SKILL.md`.",
+      "replace": "Which PRs get `<omc-pstack-fy root>/skills/how/SKILL.md` and `<omc-pstack-fy root>/skills/interrogate/SKILL.md`. The trail per `<omc-pstack-fy root>/skills/show-me-your-work/SKILL.md`.",
+      "why": "A plugin user's repository has no pstack/ folder, so the plan names the installed copy."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "Unless the operator names a path, write the file under the agent store's `docs/`.",
+      "replace": "Unless the operator names a path, write the file under `~/.claude/projects/<slug>/omc-pstack-fy/docs/`, where `<slug>` is this workspace's path with every character that is not a letter or digit changed to `-`.",
+      "why": "Claude Code names no agent store in the system prompt. Its folder for the workspace sits outside git and survives a restart, like Cursor's agent store."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "6. Run `node pstack/skills/poteto-mode/scripts/check-plan.mjs <plan.md>`",
+      "replace": "6. Run `node <omc-pstack-fy root>/skills/poteto-mode/scripts/check-plan.mjs <plan.md>`",
+      "why": "omc-pstack-fy installs as a plugin, so the script sits in the installed poteto-mode folder. A bare scripts/ path would resolve inside the user's repository."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "Browser, Electron, and web UIs use `control-ui` from `cursor-team-kit`. CLIs and TUIs use `control-cli` from `cursor-team-kit`.",
+      "replace": "Browser, Electron, and web UIs use the **control-ui** skill. CLIs and TUIs use the **control-cli** skill.",
+      "why": "omc-pstack-fy bundles control-ui and control-cli."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "Use the run's built-in PR tool when it has one, else `origin pr create --status open --base <base-branch>` or `gh pr create --base <base-branch>` according to the resolved forge.",
+      "replace": "Use `origin pr create --status open --base <base-branch>` or `gh pr create --base <base-branch>` according to the resolved forge.",
+      "why": "Claude Code has no built-in PR tool. The resolved forge, gh by default, opens every PR."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "- [ ] Triage every Bugbot and security-reviewer comment per",
+      "replace": "- [ ] Triage every review-bot and security-reviewer comment per",
+      "why": "The triage rubric covers every review bot."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "Each live lane runs on its own cloud VM at the PR head. Drive through `control-ui` or `control-cli` from `cursor-team-kit`.",
+      "replace": "Each live lane is a worktree subagent at the PR head on this machine. Give each lane its own ports and data directory, because all ten lanes share the machine. Drive through `control-ui` or `control-cli`.",
+      "why": "Claude Code has no cloud VMs. A worktree subagent stands in for one, and lanes that share one machine collide on ports and data unless each gets its own."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "- [ ] <Start the backend and the surface. Wait for ready.>",
+      "replace": "- [ ] <Start the backend and the surface on this lane's ports. Wait for ready.>",
+      "why": "Every lane runs on the same machine, so the boot step names the lane's own ports."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "- [ ] Record a 30 to 60 second video of the change on a lane VM.",
+      "replace": "- [ ] Record a 30 to 60 second video of the change running from a lane's worktree.",
+      "why": "A lane is a worktree subagent, not a VM."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "- [ ] Bugbot triage done.",
+      "replace": "- [ ] Review-bot triage done.",
+      "why": "The triage rubric covers every review bot."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "Agents are spawned, resumed, and drained only through the Task tool.",
+      "replace": "Agents are spawned only through the `Agent` tool, resumed only through `SendMessage`, and drained from their completion notifications.",
+      "why": "Claude Code resumes a subagent with SendMessage, and a finished subagent notifies its parent."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "**Sub-coordinator.** Always local, durable,",
+      "replace": "**Sub-coordinator.** Always in this checkout with no `isolation`, durable,",
+      "why": "Every Claude Code agent runs on this machine, so the contrast with a worker is the worktree, not the location."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "a nested spawn has the full Task schema including `environment`)",
+      "replace": "a nested spawn has the full `Agent` schema including `isolation`)",
+      "why": "A Claude Code subagent's Agent tool takes isolation, the field that stands in for Cursor's environment."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "- **Worker / verifier.** Always `environment: \"cloud\"` unless the task needs this machine: `control-ui` or `control-cli` runtime verification (from `cursor-team-kit`). Reading local transcripts under `agent-transcripts/`. Simulators and local IDE state. Auth that exists only here. Cloud agents cannot read the local store, so their briefs inline what they need or point at repo paths. Prefer fewer, broader workers. One writer per worktree or branch (principle-separate-before-serializing-shared-state). Run a unit's verifier on a different model family from its worker.",
+      "replace": "- **Worker / verifier.** Always `isolation: \"worktree\"`, with the branch or commit to check out named in the brief. A worktree worker runs on this machine, so it can still drive `control-ui` or `control-cli`, read local transcripts under `~/.claude/projects/`, and use simulators, local IDE state, and auth that exists only here. Its brief inlines what it needs or points at repo paths, because the brief is its whole contract. Every worker shares this machine's CPU, memory, and ports, so give each one that boots a surface its own port. Prefer fewer, broader workers. One writer per worktree or branch (principle-separate-before-serializing-shared-state). Run a unit's verifier on a different model from its worker, such as opus against sonnet.",
+      "why": "Claude Code has no cloud agents. A worktree subagent stands in for one but shares this machine, and one vendor offers a different model, not a different family."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "Create `orchestrate/<project-slug>/` in the current agent's store (path in the system prompt). Every file has exactly one writer. Owners publish facts, readers aggregate at read time. Use `bun scripts/orch/orch.ts` for bookkeeping, written below as `orch`, while its canonical plain TSV and JSON stay readable without the CLI.",
+      "replace": "Create the store at `~/.claude/projects/<slug>/omc-pstack-fy/orchestrate/<project-slug>/`, where `<slug>` is this workspace's path with every character that is not a letter or digit changed to `-`. Claude Code keeps that folder for this workspace, so the store sits outside git and survives a restart. Every file has exactly one writer. Owners publish facts, readers aggregate at read time. Use `bun scripts/orch/orch.ts --store <store>` for bookkeeping, written below as `orch`, while its canonical plain TSV and JSON stay readable without the CLI. Pass `--store` on every call, because `orch` has no default store and Claude Code's shell keeps no exported variable between commands.",
+      "why": "Claude Code names no agent store in the system prompt. orch takes its store only from --store or ORCH_STORE, and an exported ORCH_STORE is gone by the next Bash call."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "Local spawns may reference the standing-orders file by store path. Verbatim paste is for cloud spawns and every resume.",
+      "replace": "A sub-coordinator spawn may reference the standing-orders file by store path. Verbatim paste is for worker spawns and every resume.",
+      "why": "Worktree workers take the place of cloud workers, so they keep the verbatim paste. Sub-coordinators stay in this checkout and read the store."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "its spawn budget with the cloud default and the local exception list,",
+      "replace": "its spawn budget with the worktree default, the store's absolute path,",
+      "why": "Every worker is a worktree subagent, so the exception list is gone. A sub-coordinator passes the store path to orch on every call."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "Chain rebases run in cloud. A local rebase at this scale takes the laptop down.",
+      "replace": "Chain rebases run in the stacker's own worktree, one at a time across the program, because every agent shares this machine and a rebase at this scale can take the laptop down.",
+      "why": "Claude Code has no cloud to move a rebase to, so the load limit becomes a cap on concurrent rebases."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "A dedicated verifier agent (on a different model family than the worker)",
+      "replace": "A dedicated verifier agent (on a different model than the worker)",
+      "why": "Within one vendor, the closest match to a different family is a different model."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "Work that exists only on one VM when that VM dies was never done.",
+      "replace": "Work that exists only in one worktree when its agent dies was never done.",
+      "why": "A worker lives in a worktree on this machine, not on a VM."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "Probe read-only: the ledger, `units.tsv`, `gh`, pushed branches, the cloud agent's status in the Cursor dashboard. Transcript mtime is not liveness.",
+      "replace": "Probe read-only through the ledger, `units.tsv`, `gh`, pushed branches, and the agent's transcript, which `find ~/.claude/projects/<slug> -name 'agent-<id>.jsonl'` locates. Read its last tool call and result. Transcript mtime is not liveness. An agent that stopped has sent its completion notification.",
+      "why": "Claude Code has no agent dashboard. A subagent's transcript and its completion notification are the read-only signals."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "- After a Cursor restart: local agents are dead, cloud work is not. Re-read the standing orders and `units.tsv`, recompute the frontier, reattach cloud work by PR and branch rather than agent id, respawn one sub-coordinator per track from its stored brief plus current state, drain, resume.",
+      "replace": "- After a Claude Code restart, every agent is dead, because subagents run inside the session that spawned them. Pushed branches, PRs, and the store survive. Re-read the standing orders and `units.tsv`, recompute the frontier, reattach work by PR and branch rather than agent id, respawn one sub-coordinator per track from its stored brief plus current state, drain, resume. A unit with no pushed head gets a fresh worker, because its work was never done.",
+      "why": "Claude Code has no cloud work that outlives the session, so a restart kills workers too."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "the frontier (PR list plus SHAs), verdicts summary,",
+      "replace": "the frontier (PR list plus SHAs), verdicts summary with a note that same-vendor verifiers are weaker evidence than cross-vendor ones,",
+      "why": "Every verifier is a Claude model, and the reply says so plainly."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/opening-a-pr.md",
+      "find": "Run `/deslop` from `cursor-team-kit` over the diff",
+      "replace": "Run `/deslop` over the diff",
+      "why": "omc-pstack-fy bundles deslop."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/opening-a-pr.md",
+      "find": "**Built-in PR tool.** When the run provides a built-in PR tool, create, edit, retarget, and mark ready through it, never through a forge CLI. A CLI-made PR misses what the tool tracks. Use the resolved forge for everything the tool does not cover, and for every PR operation when the run has no such tool.\n\n",
+      "replace": "",
+      "why": "Claude Code has no built-in PR tool. The Forge paragraph already sends every PR operation to the resolved forge, gh by default."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/opening-a-pr.md",
+      "find": "Without a built-in PR tool, per the resolved forge, create a child with",
+      "replace": "Per the resolved forge, create a child with",
+      "why": "Claude Code has no built-in PR tool."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/opening-a-pr.md",
+      "find": "Open every PR ready, never as a draft. A built-in PR tool can default to draft, so set `draft: false` on every creation call through it. With Origin,",
+      "replace": "Open every PR ready, never as a draft. With Origin,",
+      "why": "Claude Code has no built-in PR tool."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/opening-a-pr.md",
+      "find": "If a PR still opens as a draft, mark it ready through the PR tool, or run",
+      "replace": "If a PR still opens as a draft, run",
+      "why": "Claude Code has no built-in PR tool."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/autopilot-full.md",
+      "find": "Each owner is a Cursor cloud agent that builds,",
+      "replace": "Each owner is a subagent with `isolation: \"worktree\"` and a brief that names its branch off current trunk. The owner builds,",
+      "why": "Claude Code has no cloud agents. A worktree subagent runs on this machine, and its brief names the branch because a new worktree can start from a stale commit."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/autopilot-full.md",
+      "find": "(the `deslop` skill from the `cursor-team-kit` plugin (`/deslop`))",
+      "replace": "(the **deslop** skill, `/deslop`)",
+      "why": "omc-pstack-fy bundles deslop."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/autopilot-full.md",
+      "find": "Assume the VM dies. Soon after starting, push and start a decision trail in the root agent's store (path in the system prompt) per the **show-me-your-work** skill, then push after every unit worth keeping.",
+      "replace": "Assume the owner dies, because a subagent ends with the session that runs it. Soon after starting, push and start a decision trail in the root's store per the **show-me-your-work** skill, then push after every unit worth keeping. The root's store is `~/.claude/projects/<slug>/omc-pstack-fy/`, where `<slug>` is the root's workspace path with every character that is not a letter or digit changed to `-`. Every brief names that absolute path.",
+      "why": "Claude Code names no agent store in the system prompt, and an owner in a worktree has a different workspace path from the root."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/autopilot-full.md",
+      "find": "(such as `control-ui` or `control-cli` from `cursor-team-kit`)",
+      "replace": "(such as `control-ui` or `control-cli`)",
+      "why": "omc-pstack-fy bundles control-ui and control-cli."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/shipping.md",
+      "find": "One verifier per PR, each a Cursor cloud agent, runs the change the way a user would with the matching control skill (such as `control-ui` or `control-cli` from `cursor-team-kit`), parent against head,",
+      "replace": "One verifier per PR, each a subagent with `isolation: \"worktree\"` at that PR's head, runs the change the way a user would with the matching control skill (such as `control-ui` or `control-cli`), parent against head,",
+      "why": "Claude Code has no cloud agents. A worktree subagent keeps each verifier on its own checkout. omc-pstack-fy bundles control-ui and control-cli."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/eval.md",
+      "find": "5. **Spawn one blinded judge** on a different model family per the **arena** skill's Phase C.",
+      "replace": "5. **Spawn one blinded judge** as the **arena** skill's Phase C does, but take its model from the `second opinion` line. Prefer an entry on a different vendor from yours, else a different model, such as opus against sonnet. When every entry shares your model, use the no-line rule below. An external judge runs read-only through the **pstack-ask** skill. Its throwaway copy of the repository does not reach the candidates' dirs, so inline each output under its sanitized label. With no line, the judge runs on sonnet when you run on opus, and on opus otherwise. Name the panel in the reply. \"Cross-vendor panel (claude, codex)\" is stronger evidence than \"same-vendor panel (opus, sonnet)\".",
+      "why": "The second opinion line replaces a different model family, per the Phase 3 contract, and may name another vendor's model. With no line, a different Claude model is the closest match. Naming the panel keeps the reply from overstating the verdict."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/eval.md",
+      "find": "Read each candidate's local transcript under the active workspace's `agent-transcripts/` directory (the system prompt names this path). Do not glob across `~/.cursor/projects/*/`.",
+      "replace": "Find each candidate's transcript with `find ~/.claude/projects/<slug> -name 'agent-<id>.jsonl'`, where `<slug>` is this workspace's path with every character that is not a letter or digit changed to `-` and `<id>` is the agent id its spawn returned. Do not glob across `~/.claude/projects/*/`.",
+      "why": "Claude Code stores a subagent's transcript at ~/.claude/projects/<slug>/<session>/subagents/agent-<id>.jsonl, and the system prompt does not name the folder."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/session-pickup.md",
+      "find": "1. Locate the prior trail. A local transcript under the active workspace's `agent-transcripts/` directory (the system prompt names the path. Do not glob across `~/.cursor/projects/*/`, that crosses workspace boundaries and reads private chats from unrelated projects), a cloud-agent URL, or a pushed branch. Read the metadata overview and last messages first, then scan back for the decision points.",
+      "replace": "1. Locate the prior trail. It is a Claude Code transcript, a session id, or a pushed branch. Transcripts live in `~/.claude/projects/<slug>/`, where `<slug>` is this workspace's path with every character that is not a letter or digit changed to `-`. A session id names `<session-id>.jsonl` there, and its subagents' transcripts sit in `<session-id>/subagents/`. Without an id, the newest `.jsonl` other than this session's is the likely prior session, so confirm it against the user's description. Do not glob across `~/.claude/projects/*/`, because that crosses workspace boundaries and reads private chats from unrelated projects. Read the metadata lines, such as `ai-title`, and the last messages first, then scan back for the decision points. A human message is a `type: \"user\"` line with text content. A `tool_result` block is not one.",
+      "why": "Claude Code keeps transcripts in its own per-workspace folder, which the system prompt does not name, and a session id stands in for a cloud-agent URL."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/worktree-cleanup.md",
+      "find": "misses one that lives at `.cursor/worktrees/myrepo/x`",
+      "replace": "misses one that lives at `.claude/worktrees/x` inside the repo",
+      "why": "Claude Code puts the worktrees it creates under .claude/worktrees/ in the repository."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/worktree-cleanup.md",
+      "find": "The pinned and active chats are the real artifact (principle-prove-it-works). Get that set from the user or sidebar and cross-check every candidate. The lever has marked `safe` a worktree the user had pinned, so the pinned set wins.",
+      "replace": "The chats still in use are the real artifact (principle-prove-it-works). Get that set from the user and cross-check every candidate. The lever has marked `safe` a worktree a chat still needed, so the user's set wins.",
+      "why": "Claude Code has no sidebar of pinned chats, so the user names the chats still in use."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/worktree-cleanup.md",
+      "find": "report whether the chat is pinned or ongoing and which worktrees it touches (principle-guard-the-context-window, transcripts are bulk). A pinned chat spawns arena and repro trees into sibling worktrees via background subagents, and those are in use even when their names never hit the sidebar.",
+      "replace": "report whether the chat is still in use and which worktrees it touches (principle-guard-the-context-window, transcripts are bulk). A chat in use spawns arena and repro trees into sibling worktrees via background subagents, and those are in use even when only a subagent's transcript names them.",
+      "why": "Claude Code has no sidebar of pinned chats. A worktree subagent's path shows up in its own transcript under the parent session."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/worktree-cleanup.md",
+      "find": "Xcode `DerivedData` and `iOS DeviceSupport`, `~/Library/Application Support/Cursor` (`state.vscdb.backup`, and `snapshots/roots/<root>` where a `<root>` named for a folder you opened as a workspace balloons), package caches",
+      "replace": "Xcode `DerivedData` and `iOS DeviceSupport`, package caches",
+      "why": "That entry cleans Cursor's own app data, which a Claude Code user does not have."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/authoring-a-skill.md",
+      "find": "1. Use the **create-skill** skill (Cursor's built-in for authoring SKILL.md files).",
+      "replace": "1. Use the `skill-creator` skill when the session lists it. Otherwise write `SKILL.md` with `name` and `description` frontmatter under `.claude/skills/<name>/`, or `~/.claude/skills/<name>/` for a personal skill.",
+      "why": "create-skill is a Cursor built-in. skill-creator is the Claude Code counterpart when it is installed."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/autonomous-run.md",
+      "find": "Pick the wake mechanism using Cursor's `/loop` command",
+      "replace": "Pick the wake mechanism using Claude Code's `/loop` command",
+      "why": "Claude Code has its own /loop."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/bug-fix.md",
+      "find": "Drive a long or stubborn hunt with Cursor's `/loop` command.",
+      "replace": "Drive a long or stubborn hunt with Claude Code's `/loop` command.",
+      "why": "Claude Code has its own /loop."
+    },
+    {
+      "file": "skills/poteto-mode/scripts/worktree-audit.sh",
+      "find": "# Transcripts dir: ~/.cursor/projects/<slugified-repo-path>/agent-transcripts.\nslug=$(printf '%s' \"$main_wt\" | sed 's#^/##; s#/#-#g')\ntranscripts=\"$HOME/.cursor/projects/$slug/agent-transcripts\"",
+      "replace": "# Claude Code keeps transcripts in ~/.claude/projects/<slug>/, where the slug is\n# the workspace path with every character that is not a letter or digit\n# changed to -. The search is recursive, so it also reads\n# <session>/subagents/, where worktree subagents log.\nslug() { printf '%s' \"$1\" | sed 's/[^A-Za-z0-9]/-/g'; }\ntranscripts=\"$HOME/.claude/projects/$(slug \"$main_wt\")\"\n# Claude Code hands rg to its own shell as a function, which a script does not\n# inherit, so fall back to grep.\nif command -v rg >/dev/null 2>&1; then search=\"rg -l\"; else search=\"grep -rl\"; fi",
+      "why": "Claude Code stores transcripts under ~/.claude/projects/ with its own slug rule, and its bundled rg is not on a script's PATH."
+    },
+    {
+      "file": "skills/poteto-mode/scripts/worktree-audit.sh",
+      "find": "\t\tf=$(rg -l -e \"${wt}/\" -e \"${wt}\\\"\" \"$transcripts\" 2>/dev/null \\",
+      "replace": "\t\tf=$($search -e \"${wt}/\" -e \"${wt}\\\"\" \"$transcripts\" \"$HOME/.claude/projects/$(slug \"$wt\")\" 2>/dev/null \\",
+      "why": "A session started inside a worktree gets that worktree's own transcript folder, so a chat still in use there is not missed."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/autopilot-full.md",
+      "find": "Each tick re-reads this playbook from trunk and fixes drift,",
+      "replace": "Each tick re-reads poteto-mode's `SKILL.md` and this playbook from the newest installed omc-pstack-fy copy (the highest `version` under `~/.claude/plugins/cache/omc-pstack-fy/`), because a plugin user's repository has no pstack folder and a mid-run compaction keeps only part of them. It then fixes drift,",
+      "why": "A plugin user's repository has no pstack/ folder, so trunk holds no playbook. A long loop compacts, and compaction re-attaches only the first ~5,000 tokens of a skill."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/autopilot-stack.md",
+      "find": "Each tick re-reads both playbooks from trunk, and this one wins where they differ.",
+      "replace": "Each tick re-reads both playbooks from the newest installed omc-pstack-fy copy, and this one wins where they differ.",
+      "why": "A plugin user's repository has no pstack/ folder, so trunk holds no playbook."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/autonomous-run.md",
+      "find": "No event gets a fixed-interval heartbeat sized to when the result is worth re-checking.",
+      "replace": "No event gets a fixed-interval heartbeat sized to when the result is worth re-checking. Each wake first re-reads poteto-mode's `SKILL.md` and this playbook, because a mid-run compaction keeps only part of them.",
+      "why": "A long loop compacts, and compaction re-attaches only the first ~5,000 tokens of a skill, which cuts poteto-mode short and drops this playbook."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "and before a human report. Begin each batch with `orch inbox drain`.",
+      "replace": "and before a human report. A loop wake first re-reads poteto-mode's `SKILL.md` and this playbook, because a mid-run compaction keeps only part of them. Begin each batch with `orch inbox drain`.",
+      "why": "A multi-day coordinator compacts, and compaction re-attaches only the first ~5,000 tokens of a skill, which cuts poteto-mode short and drops this playbook."
+    },
+    {
+      "file": "skills/poteto-mode/scripts/check-plan.mjs",
+      "find": "const PROGRAM_MARKERS = [\"git show origin/main:\", \"/loop 1h\", \"status message\"];",
+      "replace": "const PROGRAM_MARKERS = [\"/loop 1h\", \"status message\"];\nconst READ_PLAYBOOK = /Read `[^`]*\\/skills\\/poteto-mode\\/playbooks\\/[^`]+\\.md`/;\nconst REPO_PSTACK = \"origin/main:pstack/\";",
+      "why": "The plan reads omc-pstack-fy from the installed plugin, because a plugin user's repository has no pstack/ folder for git show to read."
+    },
+    {
+      "file": "skills/poteto-mode/scripts/check-plan.mjs",
+      "find": "\tlines.push({ n, text, code });\n\tif (code) continue;",
+      "replace": "\tlines.push({ n, text, code });\n\tif (code) continue;\n\tif (text.includes(REPO_PSTACK)) fail(n, \"reads pstack from the repo, not the installed omc-pstack-fy copy\");",
+      "why": "A plan that still reads pstack from trunk fails at its first tick, so the checker catches it first."
+    },
+    {
+      "file": "skills/poteto-mode/scripts/check-plan.mjs",
+      "find": "\tfor (const marker of PROGRAM_MARKERS) {\n\t\tif (!bodyText(program).includes(marker)) fail(program.n, `Program checklist lacks \"${marker}\"`);\n\t}",
+      "replace": "\tfor (const marker of PROGRAM_MARKERS) {\n\t\tif (!bodyText(program).includes(marker)) fail(program.n, `Program checklist lacks \"${marker}\"`);\n\t}\n\tif (!READ_PLAYBOOK.test(bodyText(program))) fail(program.n, 'Program checklist lacks \"Read `<omc-pstack-fy root>/skills/poteto-mode/playbooks/<execution playbook>.md`\"');",
+      "why": "The Read line replaces the git show marker, and its path differs per install, so a pattern checks it."
+    },
+    {
+      "file": "skills/poteto-mode/scripts/check-plan.test.ts",
+      "find": "\\`git show origin/main:\\` /loop 1h status message",
+      "replace": "Read \\`/home/u/.claude/plugins/cache/omc-pstack-fy/omc-pstack-fy/1.0.0/skills/poteto-mode/playbooks/autopilot-full.md\\` /loop 1h status message",
+      "why": "The valid plan reads the installed omc-pstack-fy copy, as check-plan.mjs now requires."
+    },
+    {
+      "file": "skills/poteto-mode/scripts/check-plan.test.ts",
+      "find": "const runPlan = (example: string, expectedExit: number) => {\n\tconst directory = mkdtempSync(join(tmpdir(), \"check-plan-test-\"));\n\tconst file = join(directory, \"plan.md\");\n\twriteFileSync(file, validPlan + example);",
+      "replace": "const runPlan = (example: string, expectedExit: number, base = validPlan) => {\n\tconst directory = mkdtempSync(join(tmpdir(), \"check-plan-test-\"));\n\tconst file = join(directory, \"plan.md\");\n\twriteFileSync(file, base + example);",
+      "why": "The new test needs a plan whose Program checklist differs from the valid one."
+    },
+    {
+      "file": "skills/poteto-mode/scripts/check-plan.test.ts",
+      "find": "\texpect(result.stderr).toContain('\"## Example only\" after Close the program is not an appendix');\n});",
+      "replace": "\texpect(result.stderr).toContain('\"## Example only\" after Close the program is not an appendix');\n});\n\ntest(\"rejects a plan that reads pstack from the repo instead of the installed copy\", () => {\n\tconst stale = validPlan.replace(/Read `[^`]+`/, \"`git show origin/main:pstack/skills/poteto-mode/playbooks/autopilot-full.md`\");\n\tconst result = runPlan(\"\", 1, stale);\n\texpect(result.stderr).toContain('Program checklist lacks \"Read `<omc-pstack-fy root>/skills/poteto-mode/playbooks/<execution playbook>.md`\"');\n\texpect(result.stderr).toContain(\"reads pstack from the repo\");\n});",
+      "why": "Pins both new checks, the required Read line and the rejected in-repo pstack path."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/autonomous-run.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/bug-fix.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/eval.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/feature.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/hillclimb.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/orchestrate.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/perf-issue.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/refactoring.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/runtime-forensics.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/session-pickup.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/trace-forensics.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    },
+    {
+      "file": "skills/poteto-mode/playbooks/worktree-cleanup.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section.",
+      "replace": "Pick each subagent's effort level for the job, per the Subagents section.",
+      "why": "Claude Code's Agent tool takes an effort level and has no per-call fast mode."
+    }
+  ],
+  "allow": [
+    {
+      "file": "skills/poteto-mode/references/bugbot-triage.md",
+      "key": "Cursor-only features",
+      "count": 4,
+      "why": "Names Bugbot beside its GitHub account as one review bot among several, and keeps upstream's Bugbot track record in three evidence lines, because that history is one bot's, not every bot's."
+    }
+  ]
+}

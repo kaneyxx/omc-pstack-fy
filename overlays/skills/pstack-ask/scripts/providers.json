@@ -1,0 +1,41 @@
+{
+  "about": "Command templates for other vendors' CLIs. A string is always passed. An array is a group dropped when any {placeholder} in it has no value. stdin true sends the prompt on stdin; otherwise a {prompt} argument carries it. Every template is unverified until run against the real CLI. Override or add providers in ~/.claude/omc-pstack-fy/providers.json, field by field.",
+  "providers": {
+    "codex": {
+      "binary": "codex",
+      "stdin": true,
+      "args": ["exec", ["--sandbox", "read-only"], ["--model", "{model}"], ["-c", "model_reasoning_effort={effort}"], "-"],
+      "effort": { "low": "low", "medium": "medium", "high": "high", "xhigh": "high", "max": "high" },
+      "readOnly": "--sandbox read-only",
+      "verified": false
+    },
+    "gemini": {
+      "binary": "gemini",
+      "stdin": true,
+      "args": [["--model", "{model}"]],
+      "readOnly": "no --yolo, so tools that need approval stay unapproved in a non-interactive run",
+      "verified": false
+    },
+    "antigravity": {
+      "binary": "agy",
+      "stdin": false,
+      "args": [["--model", "{model}"], "-p", "{prompt}"],
+      "readOnly": "no permission-skipping flag",
+      "verified": false
+    },
+    "grok": {
+      "binary": "grok",
+      "stdin": false,
+      "args": [["--model", "{model}"], "-p", "{prompt}"],
+      "readOnly": "no auto-approve flag",
+      "verified": false
+    },
+    "cursor": {
+      "binary": "cursor-agent",
+      "stdin": false,
+      "args": ["--print", ["--model", "{model}"], "--sandbox", "enabled", "--", "{prompt}"],
+      "readOnly": "--sandbox enabled, without --force",
+      "verified": false
+    }
+  }
+}

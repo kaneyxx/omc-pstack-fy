@@ -1,0 +1,347 @@
+{
+  "about": "Native rewrites for skills that read chat history or author skills, the help and teaching skills, the principles, and the bundled cursor-team-kit skills. See docs/claude-code-mapping.md.",
+  "edits": [
+    {
+      "file": "skills/reflect/SKILL.md",
+      "find": "Before fanning out, find this conversation's transcript in the `agent-transcripts/` directory the system prompt names. Do not glob across `~/.cursor/projects/*/`. That crosses workspace boundaries and reads private chats from unrelated projects.\n\n```bash\nls -t <agent-transcripts>/*.jsonl <agent-transcripts>/*/*.jsonl <agent-transcripts>/*/subagents/*.jsonl 2>/dev/null | head -10\n```\n\nThat covers the legacy flat (`<id>.jsonl`), current nested (`<id>/<id>.jsonl`), and subagent (`<parent>/subagents/<child>.jsonl`) layouts. For each candidate, read the first JSONL line. Take the file whose `message.content[0].text` contains the conversation's opening user prompt. If none matches, pass a tight digest of the session instead.",
+      "replace": "Before fanning out, find this conversation's transcript in the workspace's project folder, `~/.claude/projects/<slug>/`. The slug is the workspace path with every character that is not a letter or digit changed to `-`, so `/Users/you/my_proj` is `-Users-you-my-proj`. Do not glob across `~/.claude/projects/*/`. That crosses workspace boundaries and reads private chats from unrelated projects.\n\n```bash\nls -t ~/.claude/projects/<slug>/*.jsonl ~/.claude/projects/<slug>/*/subagents/*.jsonl 2>/dev/null | head -10\n```\n\nThat covers sessions (`<session>.jsonl`) and their subagents (`<session>/subagents/<agent>.jsonl`). The newest session file is usually this one, but another session in the same workspace can be newer, so check. Each line is a JSON object with a `type`. A human message is a `type: \"user\"` line whose `message.content` is a string or a list of `text` blocks. Tool results are `type: \"user\"` lines too, but their content is `tool_result` blocks, so they are not human messages. Skip `isMeta: true` lines as well, because they carry injected text such as a skill body. For each candidate, find the first human message. Take the file whose first human message contains the conversation's opening user prompt. If none matches, pass a tight digest of the session instead.",
+      "why": "Claude Code keeps transcripts in ~/.claude/projects/<slug>/, and the system prompt does not name the folder. Its first line is metadata, and tool results share type user with human messages, so the match must find the first human message."
+    },
+    {
+      "file": "skills/reflect/SKILL.md",
+      "find": "One message, three `Task` calls, `subagent_type: generalPurpose`, agent mode (`readonly: false`). Reviewers need MCP access to look up the tickets, chat threads, and observability traces the transcript references, and readonly strips MCPs.",
+      "replace": "One message, three `Agent` calls, `subagent_type: \"general-purpose\"`. Reviewers need MCP access to look up the tickets, chat threads, and observability traces the transcript references, and a general-purpose agent keeps the session's MCP servers.",
+      "why": "Claude Code has no readonly flag. The general-purpose agent is the one that keeps MCP access."
+    },
+    {
+      "file": "skills/reflect/SKILL.md",
+      "find": "Each reviewer and the synthesizer name a role line in the `pstack-models.mdc` rule and a default. Set `model` to that line's value, or to the default if the rule or the line is missing. Leave `model` unset when the value is `auto` or `inherit-parent`. If the Task tool rejects a slug, use the default and say so. If it rejects the default, use the closest valid slug of the same family from its error message. Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section of the **poteto-mode** skill.",
+      "replace": "Each reviewer and the synthesizer name a role line in the `omc-pstack-fy-models.md` rule and a default. A role value is `<model> <effort>`, such as `opus xhigh`. Set `model` and `effort` from that line's value, or from the default if the rule or the line is missing. Leave `model` unset when the value is `inherit`, so the agent runs on the parent's model. If the Agent tool rejects a value, use the default and say so. Then adjust each subagent's effort for the job, per the Subagents section of the **poteto-mode** skill.",
+      "why": "The Agent tool takes a model alias and a separate effort, and its fixed model list always accepts the defaults. There is no auto value and no fast mode."
+    },
+    {
+      "file": "skills/reflect/SKILL.md",
+      "find": "| Lens | Role line | Default `model` | Prompt template |",
+      "replace": "| Lens | Role line | Default | Prompt template |",
+      "why": "A default is a model and an effort, not a model alone."
+    },
+    {
+      "file": "skills/reflect/SKILL.md",
+      "find": "Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in the `Task` response body.",
+      "replace": "Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in the `Agent` response body.\n\nThe configured role lines decide each lens's model, as poteto-mode's Subagents section says. Only the `reflect tooling` line may name another vendor, such as `gemini:gemini-2.5-pro`. When it does, read the **pstack-ask** skill and run the Tooling lens through it, read-only, from a background Bash call in the same message as the two `Agent` calls. Its prompt is the filled template, and the text it writes is its findings. Its throwaway worktree may not reach the transcript, so fill in the digest as well as the path. If its CLI is unavailable, run the Claude fallback that skill names. If the Tooling lens runs on the parent's own model, say so in the summary, because one model is then checking its own blind spots. Name the panel in the summary. \"Cross-vendor panel (claude, codex)\" is stronger evidence than \"same-vendor panel (opus, sonnet)\".",
+      "why": "Upstream puts the tooling lens on another vendor's model. The reflect tooling line may name one through pstack-ask, per the Phase 3 contract. Naming the panel keeps the reply from overstating what it proves."
+    },
+    {
+      "file": "skills/reflect/SKILL.md",
+      "find": "One `Task` call, `subagent_type: generalPurpose`, `model` from the `reflect judgment, divergent, synthesizer` line (default `claude-opus-5-5-xhigh`), agent mode (`readonly: false`). It spot-verifies citations through MCP, and readonly strips MCPs.",
+      "replace": "One `Agent` call, `subagent_type: \"general-purpose\"`, `model` and `effort` from the `reflect judgment, divergent, synthesizer` line (default `opus xhigh`). It spot-verifies citations through MCP, and a general-purpose agent keeps the session's MCP servers.",
+      "why": "Claude Code has no readonly flag. The general-purpose agent is the one that keeps MCP access."
+    },
+    {
+      "file": "skills/reflect/SKILL.md",
+      "find": "Follow each approved row's Routing exactly:\n\n- Trivial existing-skill edit (a one-line bullet, a tightened sentence, a stale fact corrected): the parent does it directly.\n- Substantive existing-skill edit (a new section, a new pattern table, more than ~10 lines): hand to Cursor's built-in `create-skill` skill and run its draft / test / iterate loop.\n- `tune description: <skill path>` (the skill exists but didn't trigger when it should have): hand to `create-skill` and run its description-optimization loop.\n- `new skill via create-skill: <kebab-name>`: hand creation to `create-skill`. Do not invent the shape ad hoc.",
+      "replace": "Follow each approved row's Routing exactly. The rows below hand work to the `skill-creator` skill when the session lists it, because it runs the test loop a skill change needs. Without it, the parent makes the edit directly, and a new skill is a `SKILL.md` with `name` and `description` frontmatter under `.claude/skills/<kebab-name>/`, or `~/.claude/skills/<kebab-name>/` for a personal skill.\n\n- Trivial existing-skill edit (a one-line bullet, a tightened sentence, a stale fact corrected): the parent does it directly.\n- Substantive existing-skill edit (a new section, a new pattern table, more than ~10 lines): hand to `skill-creator` and run its draft / test / iterate loop.\n- `tune description: <skill path>` (the skill exists but didn't trigger when it should have): hand to `skill-creator` and run its description-optimization loop.\n- `new skill via skill-creator: <kebab-name>`: hand creation to `skill-creator`. Do not invent the shape ad hoc.",
+      "why": "Claude Code has no create-skill built-in. skill-creator has the same draft, test, and description loops, and is not always installed."
+    },
+    {
+      "file": "skills/reflect/SKILL.md",
+      "find": "- Dropped: one line per rejected finding + reason from the synthesizer.",
+      "replace": "- Dropped: one line per rejected finding + reason from the synthesizer.\n- Panel: the model each reviewer ran on, the panel's name, such as \"cross-vendor panel (claude, codex)\", and any fallback line from the **pstack-ask** skill.",
+      "why": "The summary names the panel, per the Phase 3 contract, so the user knows what its agreement is worth."
+    },
+    {
+      "file": "skills/reflect/references/synthesizer.md",
+      "find": "propose `new skill via create-skill:` only when no existing skill",
+      "replace": "propose `new skill via skill-creator:` only when no existing skill",
+      "why": "The routing label names the skill that creates new skills in Claude Code."
+    },
+    {
+      "file": "skills/reflect/references/synthesizer.md",
+      "find": "- \"Bugbot flagged regex backtracking on May 2\"",
+      "replace": "- \"the review bot flagged regex backtracking on May 2\"",
+      "why": "The example is about a dated fact. Any review bot makes the point."
+    },
+    {
+      "file": "skills/reflect/references/synthesizer.md",
+      "find": "- \"we renamed `gpt-4` to `gpt-4o` in `encodingForModel`\"",
+      "replace": "- \"we renamed `cl100k_base` to `o200k_base` in `encodingForModel`\"",
+      "why": "The example is a rename inside one function that drifts. The tokenizer names `encodingForModel` returns make the same point without a model slug."
+    },
+    {
+      "file": "skills/reflect/references/synthesizer.md",
+      "find": "| <new pattern, no existing skill is a real home> | <draft a new skill via create-skill> | <new skill via create-skill: <kebab-name>> |",
+      "replace": "| <new pattern, no existing skill is a real home> | <draft a new skill via skill-creator> | <new skill via skill-creator: <kebab-name>> |",
+      "why": "The routing label names the skill that creates new skills in Claude Code."
+    },
+    {
+      "file": "skills/reflect/references/judgment-reviewer.md",
+      "find": "A skill counts as used when the transcript shows a `Read` of its `SKILL.md` (under `.cursor/skills/`, `~/.cursor/skills/`, or `~/.cursor/plugins/`), a `Task` prompt naming its path, or a tool call (Shell, Grep, MCP, etc.) matching its documented commands.",
+      "replace": "A skill counts as used when the transcript shows a `Read` of its `SKILL.md` (under `.claude/skills/`, `~/.claude/skills/`, or `~/.claude/plugins/`), a `Skill` tool call or a typed `/<name>` command that loaded it, an `Agent` prompt naming its path, or a tool call (Bash, Grep, MCP, etc.) matching its documented commands.",
+      "why": "Claude Code keeps plugin skills under ~/.claude/plugins/, loads skills through the Skill tool or a typed command as well as Read, and runs shell commands with Bash."
+    },
+    {
+      "file": "skills/reflect/references/judgment-reviewer.md",
+      "find": "Read the active transcript at <ABSOLUTE_PATH> (or use the digest below if no path is given).",
+      "replace": "Read the active transcript at <ABSOLUTE_PATH> (or use the digest below if no path is given). Each line is a JSON object. The user's own words are `type: \"user\"` lines whose `message.content` is a string or `text` blocks, minus `isMeta: true` lines. A `type: \"user\"` line with `tool_result` blocks is tool output, not the user.",
+      "why": "In a Claude Code transcript, tool results are also type user lines. A reviewer that reads them as the user's words invents corrections and preferences."
+    },
+    {
+      "file": "skills/reflect/references/tooling-reviewer.md",
+      "find": "A skill counts as used when the transcript shows a `Read` of its `SKILL.md` (under `.cursor/skills/`, `~/.cursor/skills/`, or `~/.cursor/plugins/`), a `Task` prompt naming its path, or a tool call (Shell, Grep, MCP, etc.) matching its documented commands.",
+      "replace": "A skill counts as used when the transcript shows a `Read` of its `SKILL.md` (under `.claude/skills/`, `~/.claude/skills/`, or `~/.claude/plugins/`), a `Skill` tool call or a typed `/<name>` command that loaded it, an `Agent` prompt naming its path, or a tool call (Bash, Grep, MCP, etc.) matching its documented commands.",
+      "why": "Claude Code keeps plugin skills under ~/.claude/plugins/, loads skills through the Skill tool or a typed command as well as Read, and runs shell commands with Bash."
+    },
+    {
+      "file": "skills/reflect/references/tooling-reviewer.md",
+      "find": "Read the active transcript at <ABSOLUTE_PATH> (or use the digest below if no path is given).",
+      "replace": "Read the active transcript at <ABSOLUTE_PATH> (or use the digest below if no path is given). Each line is a JSON object. The user's own words are `type: \"user\"` lines whose `message.content` is a string or `text` blocks, minus `isMeta: true` lines. A `type: \"user\"` line with `tool_result` blocks is tool output, not the user.",
+      "why": "In a Claude Code transcript, tool results are also type user lines. A reviewer that reads them as the user's words invents corrections and preferences."
+    },
+    {
+      "file": "skills/reflect/references/divergent-reviewer.md",
+      "find": "A skill counts as used when the transcript shows a `Read` of its `SKILL.md` (under `.cursor/skills/`, `~/.cursor/skills/`, or `~/.cursor/plugins/`), a `Task` prompt naming its path, or a tool call (Shell, Grep, MCP, etc.) matching its documented commands.",
+      "replace": "A skill counts as used when the transcript shows a `Read` of its `SKILL.md` (under `.claude/skills/`, `~/.claude/skills/`, or `~/.claude/plugins/`), a `Skill` tool call or a typed `/<name>` command that loaded it, an `Agent` prompt naming its path, or a tool call (Bash, Grep, MCP, etc.) matching its documented commands.",
+      "why": "Claude Code keeps plugin skills under ~/.claude/plugins/, loads skills through the Skill tool or a typed command as well as Read, and runs shell commands with Bash."
+    },
+    {
+      "file": "skills/reflect/references/divergent-reviewer.md",
+      "find": "Read the active transcript at <ABSOLUTE_PATH> (or use the digest below if no path is given).",
+      "replace": "Read the active transcript at <ABSOLUTE_PATH> (or use the digest below if no path is given). Each line is a JSON object. The user's own words are `type: \"user\"` lines whose `message.content` is a string or `text` blocks, minus `isMeta: true` lines. A `type: \"user\"` line with `tool_result` blocks is tool output, not the user.",
+      "why": "In a Claude Code transcript, tool results are also type user lines. A reviewer that reads them as the user's words invents corrections and preferences."
+    },
+    {
+      "file": "skills/automate-me/SKILL.md",
+      "find": "Drafts or revises a personal -mode skill via create-skill + unslop",
+      "replace": "Drafts or revises a personal -mode skill via skill-creator + unslop",
+      "why": "Claude Code has no create-skill built-in. skill-creator authors skills."
+    },
+    {
+      "file": "skills/automate-me/SKILL.md",
+      "find": "an inline mining pass (see step 1), Cursor's built-in `create-skill` (authoring), and the **unslop** skill",
+      "replace": "an inline mining pass (see step 1), the `skill-creator` skill (authoring) when the session lists it, and the **unslop** skill",
+      "why": "Claude Code has no create-skill built-in. skill-creator authors skills and is not always installed."
+    },
+    {
+      "file": "skills/automate-me/SKILL.md",
+      "find": "Locate the active workspace's transcripts before fanning out. The system prompt names the workspace's `agent-transcripts/` directory. Use only that path. Don't glob across `~/.cursor/projects/*/`. That crosses workspace boundaries and reads private chats from unrelated projects.",
+      "replace": "Locate the active workspace's transcripts before fanning out. They live in `~/.claude/projects/<slug>/`, one `<session>.jsonl` per session, where the slug is the workspace path with every character that is not a letter or digit changed to `-`. Use only that folder. Don't glob across `~/.claude/projects/*/`. That crosses workspace boundaries and reads private chats from unrelated projects. The user's own words are the `type: \"user\"` lines whose `message.content` is a string or `text` blocks, minus `isMeta: true` lines. A `type: \"user\"` line with `tool_result` blocks is tool output, so it is no evidence of a preference.",
+      "why": "Claude Code keeps transcripts in ~/.claude/projects/<slug>/, and the system prompt does not name the folder. Tool results share type user with human messages, so miners must tell them apart."
+    },
+    {
+      "file": "skills/automate-me/SKILL.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section of the **poteto-mode** skill.",
+      "replace": "Pick each subagent's effort for the job, per the Subagents section of the **poteto-mode** skill.",
+      "why": "The Agent tool has no per-call fast mode. Effort is the knob poteto-mode's Subagents section adjusts."
+    },
+    {
+      "file": "skills/automate-me/SKILL.md",
+      "find": "Use the `AskQuestion` tool (structured multi-choice) rather than asking the user to type from scratch.\n\nShape: one or two questions with 4-6 options each, `allow_multiple: true` for category questions.",
+      "replace": "Use the `AskUserQuestion` tool (structured multi-choice) rather than asking the user to type from scratch.\n\nShape: one or two questions with up to 4 options each, `multiSelect: true` for category questions. The tool takes at most 4 options, so split a longer category list across two questions.",
+      "why": "AskUserQuestion takes 2 to 4 options per question and names multi-select multiSelect."
+    },
+    {
+      "file": "skills/automate-me/SKILL.md",
+      "find": "Use Cursor's built-in `create-skill` skill to author the skill. Placement:",
+      "replace": "Use the `skill-creator` skill to author the skill when the session lists it. Otherwise write the `SKILL.md` yourself, with `name` and `description` frontmatter. Placement:",
+      "why": "Claude Code has no create-skill built-in. skill-creator authors skills and is not always installed."
+    },
+    {
+      "file": "skills/automate-me/SKILL.md",
+      "find": "- Frontmatter formatting: follow `create-skill`'s YAML rules.",
+      "replace": "- Frontmatter formatting: follow `skill-creator`'s YAML rules when you use it.",
+      "why": "skill-creator is the authoring skill in Claude Code."
+    },
+    {
+      "file": "skills/automate-me/SKILL.md",
+      "find": "- Frontmatter `disable-model-invocation: true` by default. Opt out only if the user explicitly wants their mode to apply on every turn.",
+      "replace": "- Frontmatter `disable-model-invocation: true` by default, so the mode loads only when the user types `/<handle>-mode`. Opt out only if the user explicitly wants Claude to load their mode on its own when a request matches its description.",
+      "why": "In Claude Code the flag decides whether Claude may load the skill on its own. No setting applies a skill on every turn."
+    },
+    {
+      "file": "skills/automate-me/SKILL.md",
+      "find": "Apply the **unslop** skill and `create-skill`'s writing guidelines to every line.",
+      "replace": "Apply the **unslop** skill to every line, and `skill-creator`'s writing guidelines when you use it.",
+      "why": "skill-creator is the authoring skill in Claude Code and is not always installed."
+    },
+    {
+      "file": "skills/automate-me/SKILL.md",
+      "find": "A `create-skill`-style test/iterate benchmark loop isn't useful here.",
+      "replace": "A `skill-creator`-style test/iterate benchmark loop isn't useful here.",
+      "why": "skill-creator runs the test and iterate loop in Claude Code."
+    },
+    {
+      "file": "skills/automate-me/SKILL.md",
+      "find": "- User wants a task-specific skill (not working conventions): `create-skill` alone, no mining required.",
+      "replace": "- User wants a task-specific skill (not working conventions): `skill-creator` alone, no mining required.",
+      "why": "skill-creator is the authoring skill in Claude Code."
+    },
+    {
+      "file": "skills/recall/SKILL.md",
+      "find": "Transcripts live at `~/.cursor/projects/<slug>/agent-transcripts/<uuid>/<uuid>.jsonl`, where `<slug>` is the workspace path with the leading slash dropped and each \"/\" turned into \"-\" (so `/Users/you/proj` becomes `Users-you-proj`). Every line is one chat message.",
+      "replace": "Transcripts live at `~/.claude/projects/<slug>/<uuid>.jsonl`, one file per session, where `<slug>` is the workspace path with every character that is not a letter or digit turned into \"-\" (so `/Users/you/my_proj` becomes `-Users-you-my-proj`). A session's subagent transcripts sit in `<uuid>/subagents/`. Every line is one JSON event. The user's messages are `type: \"user\"` lines whose `message.content` is a string or `text` blocks. Skip `isMeta: true` lines, which hold injected text such as a skill body. A `type: \"user\"` line with `tool_result` blocks is tool output, not the user. The assistant's words are `text` blocks in `type: \"assistant\"` lines.",
+      "why": "Claude Code stores one JSONL file per session under ~/.claude/projects/<slug>/, and its slug keeps the leading dash and replaces every non-alphanumeric character. Lines are events, not messages, so the miners must tell the user's words from tool output."
+    },
+    {
+      "file": "skills/recall/SKILL.md",
+      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section of the **poteto-mode** skill.",
+      "replace": "Pick each subagent's effort for the job, per the Subagents section of the **poteto-mode** skill.",
+      "why": "The Agent tool has no per-call fast mode. Effort is the knob poteto-mode's Subagents section adjusts."
+    },
+    {
+      "file": "skills/show-me-your-work/SKILL.md",
+      "find": "Read this run's transcript under the active workspace's `agent-transcripts/` directory (the system prompt names the path). Don't glob across `~/.cursor/projects/*/`. That reads unrelated private chats.",
+      "replace": "Read this run's transcript in the active workspace's project folder, `~/.claude/projects/<slug>/`, where the slug is the workspace path with every character that is not a letter or digit changed to `-`. The newest `<session>.jsonl` directly in it is the current session, and its subagents' transcripts are in `<session>/subagents/`. Don't glob across `~/.claude/projects/*/`. That reads unrelated private chats. In the transcript, what the agent did is the `tool_use` blocks in `type: \"assistant\"` lines. What came back is the `tool_result` blocks in the `type: \"user\"` lines after them, which are tool output, not the user.",
+      "why": "Claude Code keeps transcripts in ~/.claude/projects/<slug>/, and the system prompt does not name the folder. The audit checks actions, which live in tool_use and tool_result blocks."
+    },
+    {
+      "file": "skills/show-me-your-work/SKILL.md",
+      "find": "Before handing back, spawn a subagent on a different model family from the one that did the work. Self-review is not a substitute. The subagent reads the audit trail and the run's transcript, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky. Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section of the **poteto-mode** skill.",
+      "replace": "Before handing back, get a review from a model other than the one that did the work. Read the `second opinion` line in `~/.claude/rules/omc-pstack-fy-models.md` and pick one entry, on a different vendor from yours when the line offers one, else on a different model. When every entry shares your model, follow the no-line rule below. A Claude entry runs as a subagent. An external entry, such as `gemini:gemini-2.5-pro`, runs read-only through the **pstack-ask** skill. Its throwaway copy of the repository does not reach the transcript or a log kept out of git, so inline the log and a digest of this run's actions in its prompt. With no line, spawn a subagent with `model` set to `sonnet` when the work ran on `opus`, and to `opus` otherwise. Self-review is not a substitute. The reviewer reads the audit trail and the run's transcript, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky. Pick its effort for the job, per the Subagents section of the **poteto-mode** skill.",
+      "why": "The second opinion line may name another vendor's model, which matches upstream's cross-family review, per the Phase 3 contract. With no line, a different Claude model is the closest match. There is no per-call fast mode."
+    },
+    {
+      "file": "skills/show-me-your-work/SKILL.md",
+      "find": "Lead with the reviewer's model on its own line (`reviewed by <model>`), then list each flag pointing to specific rows or moments.",
+      "replace": "Lead with the reviewer's model on its own line (`reviewed by <model>`). On the next line, name the panel. \"Cross-vendor panel (claude, codex)\" is stronger evidence than \"same-vendor panel (opus, sonnet)\". Then list each flag pointing to specific rows or moments.",
+      "why": "The reviewer may be another Claude model or another vendor's. Naming the panel, per the Phase 3 contract, tells the user what the review is worth."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "do the work under it, and mention once that a Custom Mode keeps it on.",
+      "replace": "do the work under it, and mention once that it stays loaded for the rest of the session and needs a fresh `/poteto-mode` after a compaction or in a new session.",
+      "why": "Claude Code has no Custom Mode. A loaded skill stays in context until a compaction trims it or the session ends."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "give the user the file's public copy: `https://github.com/cursor/plugins/blob/main/pstack/` followed by its path.",
+      "replace": "give the user the file's public copy: `https://github.com/kaneyxx/omc-pstack-fy/blob/main/plugin/` followed by its path.",
+      "why": "The installed plugin is omc-pstack-fy, whose files are public in kaneyxx/omc-pstack-fy under plugin/."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "1. Install with `/add-plugin pstack` in chat, or from Customize in the sidebar.",
+      "replace": "1. Install with `/plugin marketplace add kaneyxx/omc-pstack-fy`, then `/plugin install omc-pstack-fy@omc-pstack-fy`. Every command takes the `omc-pstack-fy:` prefix, such as `/poteto-mode`.",
+      "why": "Claude Code installs plugins from a marketplace and prefixes each command with the plugin name."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "It asks for a reasoning budget, maps a model to each role, and writes a rule. The rule applies to new chats.",
+      "replace": "It asks for a reasoning budget, maps a model to each role, and writes a rule. Claude Code loads the rule when a session starts, so it applies to new sessions.",
+      "why": "Claude Code reads ~/.claude/rules/ at session start."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "Installing changes nothing until the user invokes a skill. Only `/setup-pstack` loads from the user's words.",
+      "replace": "Installing changes nothing until the user invokes a skill. Only `/setup-pstack` and the bundled `/deslop`, `/control-ui`, and `/control-cli` load from the user's words.",
+      "why": "The bundled skills do not set disable-model-invocation, so Claude may load them on its own."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "A role set to `auto` or `inherit-parent` runs on the chat's model, which saves tokens when the chat runs on Auto or a cheaper model.",
+      "replace": "A role set to `inherit` runs on the session's model, which saves tokens when the session runs on a cheaper model.",
+      "why": "Claude Code has no Auto model. inherit omits the Agent model, so the role runs on the session's model."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "pstack is built for Cursor, and it also installs in Claude Code with `/plugin marketplace add cursor/plugins`, then `/plugin install pstack@cursor-plugins`. There, each command takes a `pstack:` prefix, such as `/pstack:poteto-mode`. The [Claude Code adapter](../../docs/harness/claude-code.md) maps the Cursor names, and a step that needs a Cursor-only feature, such as Bugbot or Automations, is skipped with a one-line note.\n\nOther tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/poteto-mode`, `/how`, `/why`, and `/teach`, spawn Cursor subagents with per-role models, and Custom Modes and `/loop` are Cursor features, so those parts may not work there.",
+      "replace": "omc-pstack-fy is a personal Claude Code build of pstack, the Cursor plugin by Lauren Tan. A step that needs a Cursor-only service, such as a webhook routine, is skipped with a one-line note.\n\nOther tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/poteto-mode`, `/how`, `/why`, and `/teach`, spawn Claude Code subagents with per-role models, and `/loop` is a Claude Code command, so those parts may not work there.",
+      "why": "The reader runs Claude Code. The skills are native, so the adapter is gone, and install moved to step 1."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "Whether `/poteto-mode` stays on depends on how the user starts it:\n\n- Enter on `/poteto-mode` attaches the skill to one message. It fades as the chat moves on.\n- Option+Enter on Mac or Alt+Enter on Windows, or Use as Mode from the skill entry, makes it a Custom Mode. It stays in context every turn until the user exits the mode, and it stays out of casual turns.\n- Cursor's docs list Custom Modes in the Agents Window and the CLI. Elsewhere, start each new task with `/poteto-mode`.\n\nLink [Cursor's skills docs](https://cursor.com/docs/skills) when this comes up. Mid-chat, \"new task\" makes the mode match a fresh playbook. `/poteto-mode` already uses `poteto-agent` for the subagents its playbook steps spawn. To get the same style from a subagent of your own, spawn it with `subagent_type: \"poteto-agent\"`.",
+      "replace": "How long `/poteto-mode` stays on:\n\n- Typing `/poteto-mode` loads the skill into the session. It stays in context on every later turn. There is no mode to switch on or off.\n- A compaction keeps only the start of a long skill, or drops it, and a new session starts without it. Run `/poteto-mode` again after either one.\n\nLink [Claude Code's skills docs](https://code.claude.com/docs/en/skills) when this comes up. Mid-session, \"new task\" makes the mode match a fresh playbook. `/poteto-mode` already uses `omc-pstack-fy:poteto-agent` for the subagents its playbook steps spawn. To get the same style from a subagent of your own, spawn it with `subagent_type: \"omc-pstack-fy:poteto-agent\"`.",
+      "why": "Claude Code has no Custom Mode. Its skills docs say an invoked skill stays in the conversation, and compaction re-attaches only the first 5,000 tokens of each skill within a shared budget. Plugin agents take the plugin prefix."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "| Run parallel checks over slices, or race workers, as cloud agents |",
+      "replace": "| Run parallel checks over slices, or race workers, each in its own worktree |",
+      "why": "Claude Code has no cloud agents. swarm runs local subagents in worktrees."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "Not in pstack:\n\n- `/deslop`, `control-cli`, and `control-ui` ship in the `cursor-team-kit` plugin.\n- `/loop` and `/create-skill` are Cursor built-ins.",
+      "replace": "Bundled with omc-pstack-fy, but not part of pstack:\n\n- `/deslop` cleans AI slop out of the branch diff. `/control-ui` and `/control-cli` drive a web or Electron UI, or a CLI or TUI, to prove a change works. They come from another plugin in the same upstream repository, because `/poteto-mode` and its playbooks call them.\n\nNot in pstack:\n\n- `/loop` is a Claude Code command, and `skill-creator` is a separate skill for authoring skills.",
+      "why": "omc-pstack-fy bundles deslop, control-ui, and control-cli. Claude Code has its own /loop and no create-skill."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "Without `/poteto-mode`, a phrase such as \"babysit this pr\" can start Cursor's own skill for the same job instead. The Playbooks section",
+      "replace": "The Playbooks section",
+      "why": "Claude Code has no built-in babysit skill, so there is nothing to tell apart."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "pstack has no planning skill. Cursor's Plan Mode works alongside it.",
+      "replace": "pstack has no planning skill. Claude Code's plan mode (shift+tab) works alongside it.",
+      "why": "Claude Code has its own plan mode."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "Typing `/principle-<name>` still loads one on demand.",
+      "replace": "Typing `/omc-pstack-fy:principle-<name>` still loads one on demand.",
+      "why": "Claude Code prefixes plugin commands with the plugin name, and the build cannot prefix a placeholder name."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "| The mode stopped applying after a few turns | It was started with Enter. Start it as a Custom Mode, or start each task with `/poteto-mode`. |",
+      "replace": "| The mode stopped applying after a few turns | A compaction cut the skill short, or this is a new session. Run `/poteto-mode` again. |",
+      "why": "Claude Code has no Custom Mode. Compaction and new sessions are what drop a loaded skill."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "| A new model choice had no effect | The rule from `/setup-pstack` applies to new chats. Start one. |",
+      "replace": "| A new model choice had no effect | The rule from `/setup-pstack` loads when a session starts. Start a new one. |",
+      "why": "Claude Code reads ~/.claude/rules/ at session start."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "| A skill didn't load on its own | Only `/setup-pstack` loads from the user's words.",
+      "replace": "| A skill didn't load on its own | Only `/setup-pstack` and the bundled `/deslop`, `/control-ui`, and `/control-cli` load from the user's words.",
+      "why": "The bundled skills do not set disable-model-invocation, so Claude may load them on its own."
+    },
+    {
+      "file": "skills/poteto-help/SKILL.md",
+      "find": "| Parallel agents overwrote each other | Give each agent its own worktree, or run them as cloud agents, which each get their own machine. |",
+      "replace": "| Parallel agents overwrote each other | Give each agent its own worktree, with `isolation: \"worktree\"` on its `Agent` call. |",
+      "why": "Claude Code has no cloud agents. A worktree is the isolation it offers."
+    },
+    {
+      "file": "skills/teach/SKILL.md",
+      "find": "When the idea is spatial, like layout, overlap, scroll position, or a before and after, reach for the image-generation tool and draw it marker-on-whiteboard style with a few short labels, since image models garble long text. Generate that picture, don't settle for describing it in words. The build-up rule holds for generated images too.",
+      "replace": "When the idea is spatial, like layout, overlap, scroll position, or a before and after, draw it as a text diagram in a code block, marker-on-whiteboard style with boxes, arrows, and a few short labels, since long labels break the layout. Draw that picture, don't settle for describing it in words. The build-up rule holds for text diagrams too.",
+      "why": "Claude Code has no image generation tool. A text diagram shows the same layout in the reply."
+    },
+    {
+      "file": "skills/ketchup/SKILL.md",
+      "find": "a Mermaid diagram, a chart or diagram from `/visualize`, or a generated image.",
+      "replace": "a Mermaid diagram, or a text chart or diagram in a code block.",
+      "why": "Claude Code has no /visualize or image generation."
+    },
+    {
+      "file": "skills/ketchup/SKILL.md",
+      "find": "a Mermaid diagram for how things connect and a `/visualize` chart for numbers. Never invent a number, and never draw or generate a picture of a screen you did not capture.",
+      "replace": "a Mermaid diagram for how things connect and a Mermaid or text chart for numbers. Never invent a number, and never draw a picture of a screen you did not capture.",
+      "why": "Claude Code has no /visualize or image generation. Mermaid and text charts carry numbers."
+    },
+    {
+      "file": "skills/no-comments/SKILL.md",
+      "find": "1. Spawn `Task` with `subagent_type: \"comment-sicko\"`. Pass the scope. Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section of the **poteto-mode** skill.",
+      "replace": "1. Spawn `Agent` with `subagent_type: \"omc-pstack-fy:comment-sicko\"`. Pass the scope. Pick its effort for the job, per the Subagents section of the **poteto-mode** skill.",
+      "why": "Claude Code prefixes plugin agents with the plugin name. The Agent tool has no per-call fast mode."
+    },
+    {
+      "file": "skills/maintain-verification-skill/SKILL.md",
+      "find": "2. **Source wave.** One read-only subagent per feature file, launched concurrently.",
+      "replace": "2. **Source wave.** One read-only `Explore` subagent per feature file, launched concurrently.",
+      "why": "Explore is Claude Code's read-only subagent type. It still has Bash, so the step's never-edit rule stays."
+    },
+    {
+      "file": "skills/control-ui/SKILL.md",
+      "find": "- Creating before/after evidence for `verify-this`.",
+      "replace": "- Creating before/after evidence that a change works.",
+      "why": "verify-this is a cursor-team-kit skill this build does not bundle."
+    }
+  ]
+}
