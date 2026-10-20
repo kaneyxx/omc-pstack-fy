@@ -6,12 +6,30 @@ pstack is Lauren's work, and oh-my-claudecode is Yeachan Heo's. This is an unoff
 
 ## Install
 
-```bash
-/plugin marketplace add kaneyxx/omc-pstack-fy
-/plugin install omc-pstack-fy@omc-pstack-fy
-```
+Enter each command on its own; pasting several lines at once fails. To use pstack alone, skip step 1.
 
-Install oh-my-claudecode as its README says. Every pstack command takes the `omc-pstack-fy:` prefix. Start with `/omc-pstack-fy:setup-pstack`. The plugin's own [README](./plugin/README.md) and [guide](./plugin/docs/guide/README.md) cover the skills.
+1. Install oh-my-claudecode from its own marketplace, as [its README](https://github.com/Yeachan-Heo/oh-my-claudecode#readme) says:
+   ```bash
+   /plugin marketplace add https://github.com/Yeachan-Heo/oh-my-claudecode
+   ```
+   ```bash
+   /plugin install oh-my-claudecode
+   ```
+   ```bash
+   /omc-setup
+   ```
+2. Install omc-pstack-fy:
+   ```bash
+   /plugin marketplace add kaneyxx/omc-pstack-fy
+   ```
+   ```bash
+   /plugin install omc-pstack-fy@omc-pstack-fy
+   ```
+3. Restart Claude Code, then run `/omc-pstack-fy:setup-pstack`.
+
+The SessionStart hook that hands OMC's code work to pstack looks for the plugin entry `oh-my-claudecode@omc`, which OMC's own marketplace creates. OMC registered under another marketplace or plugin name, as some forks do, or installed in a way that leaves no such entry, gets no bridge. The order is not strict: the hook checks for OMC at every session start, so adding OMC later takes only a restart.
+
+Every pstack command takes the `omc-pstack-fy:` prefix. The plugin's own [README](./plugin/README.md) and [guide](./plugin/docs/guide/README.md) cover the skills.
 
 ## How OMC and pstack split the work
 
@@ -106,6 +124,8 @@ These are the owner's choices, not translations of Lauren's pstack.
 ## 中文快速說明
 
 給重度 oh-my-claudecode（OMC）使用者的 pstack。OMC 仍是主要工具，所有關鍵字和流程照常運作。omc-pstack-fy 把 Lauren Tan 的 pstack 原生移植到 Claude Code，當作 OMC 寫程式和審查程式的引擎：OMC 流程裡的每個程式工作交給 poteto-mode 的 playbook，最後的程式審查交給 `interrogate` 多模型審查，ai-slop-cleaner 步驟交給 `deslop`。這個分工由 plugin 內建的 SessionStart hook 告訴 OMC，不會改你的設定，停用 omc-pstack-fy 就會移除。
+
+安裝時先裝 OMC，再裝 omc-pstack-fy，指令照上面 Install 一行一行輸入，最後重開 Claude Code 並執行 `/omc-pstack-fy:setup-pstack`。只想用 pstack 就跳過 OMC。OMC 要從它自己的 marketplace 安裝，因為 SessionStart hook 只認 `oh-my-claudecode@omc` 這個 plugin 項目；用其他 marketplace 或 plugin 名稱註冊的 OMC（有些 fork 會這樣），hook 就不會把分工告訴它。順序反了也沒關係，hook 每次開 session 都會重新檢查，之後補裝 OMC 再重開就好。
 
 上游原檔放在 `vendor/`，所有修改寫在 `tools/rules/*.json` 和 `overlays/`，每個 Cursor 名稱怎麼改、為什麼這樣改，都記在 `docs/claude-code-mapping.md`。`plugin/` 由 `node tools/build.mjs` 產生。pstack 和 OMC 兩個上游都會追：每週一的 GitHub Action 發現任一邊有新版就開 issue。更新時跑 `node tools/sync.mjs pstack` 或 `node tools/sync.mjs omc`，再跑 build；OMC 改了 bridge 依賴的名稱或步驟時，build 會失敗並指出要重新檢查哪一段。
 
