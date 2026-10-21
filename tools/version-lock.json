@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "contentSha256": "2e2d58f9d1bcad725512460b1c94548c7df27b7c512a477204cf6652e559cd3c",
+  "version": "1.0.1",
+  "contentSha256": "fce711ea5168d4ab23207cb80c33949a2c0bd0ca6603ebf52e79a8ee6587dcb1",
   "upstream": {
     "ref": "88d47514b82e7c44f00f2b2a72ff6dd12158038c",
     "version": "0.15.29"

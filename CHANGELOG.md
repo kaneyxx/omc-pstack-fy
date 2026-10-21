@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.0.1] - 2026-10-21
+
+Built from upstream pstack v0.15.29 (https://github.com/cursor/plugins/tree/88d4751), checked against oh-my-claudecode v5.7.5 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/6688a30).
+
+### Added
+
+- The `omc-pstack-fy:fy` output style. It puts fy-mode's reply rules in every reply without running a playbook, so a quick question gets a short answer, and it keeps Claude Code's coding instructions. Pick it for one project with `/output-style omc-pstack-fy:fy`, or for every project with `"outputStyle": "omc-pstack-fy:fy"` in `~/.claude/settings.json`.
+
+### Docs
+
+- The README now says how to update an installed copy.
+- The README spells out the install order and why OMC must come from its own marketplace.
+
+### Update
+
+Run these in a terminal, one at a time, then restart Claude Code:
+
+```bash
+claude plugin marketplace update omc-pstack-fy
+```
+```bash
+claude plugin update omc-pstack-fy@omc-pstack-fy
+```
+
 ## [1.0.0] - 2026-10-20
 
 Built from upstream pstack v0.15.29 (https://github.com/cursor/plugins/tree/88d4751), checked against oh-my-claudecode v5.7.5 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/6688a30).

@@ -1,6 +1,6 @@
 {
   "name": "omc-pstack-fy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "pstack's engineering rigor inside oh-my-claudecode. A Claude Code build of pstack by Lauren Tan (poteto): oh-my-claudecode runs the project, pstack writes and reviews the code. if you want to go fast, go deep first.",
   "author": {
     "name": "Fang-Yi Su"
