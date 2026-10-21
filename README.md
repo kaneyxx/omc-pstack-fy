@@ -31,6 +31,19 @@ The SessionStart hook that hands OMC's code work to pstack looks for the plugin 
 
 Every pstack command takes the `omc-pstack-fy:` prefix. The plugin's own [README](./plugin/README.md) and [guide](./plugin/docs/guide/README.md) cover the skills.
 
+### Update
+
+Claude Code does not auto-update a third-party marketplace unless you turn it on. Run these in a terminal, one at a time, then restart Claude Code:
+
+```bash
+claude plugin marketplace update omc-pstack-fy
+```
+```bash
+claude plugin update omc-pstack-fy@omc-pstack-fy
+```
+
+To update on its own from now on, open `/plugin`, go to **Marketplaces**, pick `omc-pstack-fy`, and turn on auto-update.
+
 ## How OMC and pstack split the work
 
 | Layer | Runs on | What |
@@ -104,7 +117,7 @@ node tools/release.mjs minor
 | 1 | Build pipeline, `omc-pstack-fy` names, adapter fixes, installable plugin | done |
 | 2 | Native rewrites. Cursor names 293 to 0, degraded skills fixed (interrogate, reflect, automate-me, poteto-help, orchestrate, autopilot), team-kit skills bundled, adapter off | done |
 | 3 | Multi-model cross-review. Role values `[provider:]model [effort]`, the read-only `pstack-ask` bridge to other vendors' CLIs, a `second opinion` role, and panels labeled cross-vendor or same-vendor. Vendor templates ship unverified until a real CLI is wired in | done |
-| 4 | Personal fit. zh-TW reply rules, a personal `fy-mode` | done |
+| 4 | Personal fit. zh-TW reply rules, a personal `fy-mode`, and the `fy` output style | done |
 | 5 | oh-my-claudecode first. OMC keeps every keyword and workflow, and a plugin hook hands code units, ai-slop-cleaner steps, and the final code review to pstack | done |
 | 6 | Follow both upstreams. OMC pinned like pstack, a contract check on what the bridge relies on, a version-aware hook, and a weekly upstream issue | done |
 
@@ -119,13 +132,16 @@ These are the owner's choices, not translations of Lauren's pstack.
 - The oh-my-claudecode bridge above, in `overlays/hooks/` and the poteto-mode edits in `tools/rules/80-personal.json`.
 - When you write in Chinese, replies come in Traditional Chinese (Taiwan) under the `unslop-zh` skill. Code, commits, and docs stay in English.
 - `/omc-pstack-fy:fy-mode` runs poteto-mode with the owner's style on top. It routes each step by what it produces (code to poteto-mode with reproducibility rules for research code, scholarly prose to the research skills), shapes replies action-first, asks with options before big choices, and reviews before every push.
-- They live in `tools/rules/80-personal.json`, `overlays/hooks/`, `overlays/skills/unslop-zh/`, and `overlays/skills/fy-mode/`, apart from the translation rules.
+- The `omc-pstack-fy:fy` output style puts fy-mode's reply rules in every reply without running a playbook, so a quick question gets a short answer. It keeps Claude Code's coding instructions wherever the system prompt includes them. Pick it for one project with `/output-style omc-pstack-fy:fy` (Claude Code v2.1.269 or later; otherwise `/config` > Output style), or for every project with `"outputStyle": "omc-pstack-fy:fy"` in `~/.claude/settings.json`.
+- They live in `tools/rules/80-personal.json`, `overlays/hooks/`, `overlays/output-styles/`, `overlays/skills/unslop-zh/`, and `overlays/skills/fy-mode/`, apart from the translation rules.
 
 ## 中文快速說明
 
 給重度 oh-my-claudecode（OMC）使用者的 pstack。OMC 仍是主要工具，所有關鍵字和流程照常運作。omc-pstack-fy 把 Lauren Tan 的 pstack 原生移植到 Claude Code，當作 OMC 寫程式和審查程式的引擎：OMC 流程裡的每個程式工作交給 poteto-mode 的 playbook，最後的程式審查交給 `interrogate` 多模型審查，ai-slop-cleaner 步驟交給 `deslop`。這個分工由 plugin 內建的 SessionStart hook 告訴 OMC，不會改你的設定，停用 omc-pstack-fy 就會移除。
 
 安裝時先裝 OMC，再裝 omc-pstack-fy，指令照上面 Install 一行一行輸入，最後重開 Claude Code 並執行 `/omc-pstack-fy:setup-pstack`。只想用 pstack 就跳過 OMC。OMC 要從它自己的 marketplace 安裝，因為 SessionStart hook 只認 `oh-my-claudecode@omc` 這個 plugin 項目；用其他 marketplace 或 plugin 名稱註冊的 OMC（有些 fork 會這樣），hook 就不會把分工告訴它。順序反了也沒關係，hook 每次開 session 都會重新檢查，之後補裝 OMC 再重開就好。
+
+要更新已安裝的 omc-pstack-fy，在終端機先跑 `claude plugin marketplace update omc-pstack-fy`，再跑 `claude plugin update omc-pstack-fy@omc-pstack-fy`，然後重開 Claude Code。Claude Code 預設不會自動更新第三方 marketplace，要自動更新就在 `/plugin` 的 Marketplaces 選 `omc-pstack-fy`，開啟 auto-update。想讓簡單問題得到簡短回答，又不想觸發 playbook，可以選 `omc-pstack-fy:fy` output style，做法見上面 Personal choices。
 
 上游原檔放在 `vendor/`，所有修改寫在 `tools/rules/*.json` 和 `overlays/`，每個 Cursor 名稱怎麼改、為什麼這樣改，都記在 `docs/claude-code-mapping.md`。`plugin/` 由 `node tools/build.mjs` 產生。pstack 和 OMC 兩個上游都會追：每週一的 GitHub Action 發現任一邊有新版就開 issue。更新時跑 `node tools/sync.mjs pstack` 或 `node tools/sync.mjs omc`，再跑 build；OMC 改了 bridge 依賴的名稱或步驟時，build 會失敗並指出要重新檢查哪一段。
 
