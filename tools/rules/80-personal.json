@@ -1,5 +1,5 @@
 {
-  "about": "The owner's personal choices, not translations of upstream. omc-pstack-fy is OMC-first: oh-my-claudecode is the main harness and keeps every keyword and workflow, and omc-pstack-fy is the engineering engine OMC hands code units and final review to, through the bridge hook in overlays/hooks/. Chinese replies follow Taiwan usage through the unslop-zh overlay. Keep these here, apart from the translation rules, and never report them upstream.",
+  "about": "The owner's personal choices, not translations of upstream. omc-pstack-fy is OMC-first: oh-my-claudecode is the main harness and keeps every keyword and workflow, and omc-pstack-fy is the engineering engine OMC hands code units and final review to, through the bridge hook in overlays/hooks/. Chinese replies match the user's script and follow the unslop-zh overlay, which adds Taiwan usage for Traditional Chinese. Keep these here, apart from the translation rules, and never report them upstream.",
   "edits": [
     {
       "file": "skills/poteto-mode/SKILL.md",
@@ -10,14 +10,14 @@
     {
       "file": "skills/poteto-mode/SKILL.md",
       "find": "Never hand the human a check you could run.\n",
-      "replace": "Never hand the human a check you could run.\n- **Chinese replies.** When the user writes in Chinese, reply in Traditional Chinese (Taiwan) and apply the **unslop-zh** skill on top of these rules. Code comments, commit messages, PR text, and docs stay in English under the English rules, unless the user asks otherwise.\n",
-      "why": "The owner writes in Traditional Chinese (Taiwan). The reply rules above are English-specific."
+      "replace": "Never hand the human a check you could run.\n- **Chinese replies.** When the user writes in Chinese, reply in the script they write and apply the **unslop-zh** skill on top of these rules. Traditional Chinese uses Taiwan terms, and Simplified Chinese keeps mainland terms. When a message does not show the script, keep the one the conversation already uses. An explicit request for either script wins. Code comments, commit messages, PR text, and docs stay in English under the English rules, unless the user asks otherwise.\n",
+      "why": "The owner writes Traditional Chinese (Taiwan), and a user who writes Simplified Chinese should get Simplified replies. The reply rules above are English-specific."
     },
     {
       "file": "skills/unslop/SKILL.md",
       "find": "Preserve meaning and match the intended tone.\n",
       "replace": "Preserve meaning and match the intended tone.\n\nChinese prose also follows the **unslop-zh** skill.\n",
-      "why": "Point Chinese prose at the Taiwan rules."
+      "why": "Point Chinese prose at the Chinese rules, which add Taiwan terms for Traditional Chinese."
     },
     {
       "file": "README.md",

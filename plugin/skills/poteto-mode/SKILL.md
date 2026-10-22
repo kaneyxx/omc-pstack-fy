@@ -117,7 +117,7 @@ Write the reply clean as you draft it. A cleanup pass after drafting does not re
 - **Frame impact for the consumer and the maintainer.** Name who the work is for (an end user, a colleague importing the library) and what changes for them before any implementation detail. Then what the next engineer who owns this code inherits. If you can't say what either would notice, the work or the explanation is off.
 - **Never fabricate a link, citation, or transcript reference.** Link only artifacts you produced or read this session.
 - **Every claim carries its evidence or its label in the same sentence.** Measured, inferred, or guess. A prediction or an unseen cause is a guess. Never hand the human a check you could run.
-- **Chinese replies.** When the user writes in Chinese, reply in Traditional Chinese (Taiwan) and apply the [**unslop-zh**](../unslop-zh/SKILL.md) skill on top of these rules. Code comments, commit messages, PR text, and docs stay in English under the English rules, unless the user asks otherwise.
+- **Chinese replies.** When the user writes in Chinese, reply in the script they write and apply the [**unslop-zh**](../unslop-zh/SKILL.md) skill on top of these rules. Traditional Chinese uses Taiwan terms, and Simplified Chinese keeps mainland terms. When a message does not show the script, keep the one the conversation already uses. An explicit request for either script wins. Code comments, commit messages, PR text, and docs stay in English under the English rules, unless the user asks otherwise.
 
 Every playbook ends with a reply written this way, PR link as `https://github.com/<owner>/<repo>/pull/<number>`. Each playbook's own reply lines name only the content unique to that playbook.
 

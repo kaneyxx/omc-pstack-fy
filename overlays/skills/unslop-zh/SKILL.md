@@ -1,12 +1,12 @@
 ---
 name: unslop-zh
-description: Cut AI tells and mainland usage from Traditional Chinese (Taiwan) writing.
+description: Cut AI tells from Chinese writing, and mainland usage from Traditional Chinese (Taiwan) writing.
 disable-model-invocation: true
 ---
 
 # Unslop zh
 
-Edit Chinese text to remove AI patterns and mainland usage. Scan for the patterns below, then rewrite. Preserve meaning and match the intended tone.
+Edit Chinese text to remove AI patterns. Keep the script the text is written in, Simplified or Traditional. Scan for the patterns below, then rewrite. Preserve meaning and match the intended tone. The examples are in Traditional Chinese, and every rule except rule 4 and the quote marks in rule 5 applies to Simplified Chinese the same way.
 
 Run this skill with the **unslop** skill. Every unslop rule still applies to Chinese unless it is about English words or punctuation. For punctuation in Chinese text, this skill decides.
 
@@ -31,7 +31,7 @@ Rule numbers are stable ids that other skills cite. A removed rule leaves a gap.
 
 ### Terminology
 
-4. **Taiwan terms, not mainland usage.** Write Traditional characters and the word Taiwan uses. A quoted name or quoted text stays as written. So does text the user asked for in Simplified Chinese, and text inside a code or data file. Several pairs below hold only in the software sense that their row names.
+4. **Taiwan terms in Traditional Chinese.** Traditional Chinese uses the word Taiwan uses. Simplified Chinese keeps mainland terms, so this rule skips it. A quoted name or quoted text stays as written, and so does text inside a code or data file. Several pairs below hold only in the software sense that their row names.
 
 | Mainland | Taiwan |
 | --- | --- |
@@ -88,7 +88,7 @@ In Taiwan 文件 means a document, so a mainland 文件 that means a file become
 
 ### Punctuation
 
-5. **Full-width punctuation.** Chinese sentences use full-width marks: ，。、；：？！. Quotes are 「」, and a quote inside a quote is 『』. No half-width comma or period and no curly quotes inside Chinese.
+5. **Full-width punctuation.** Chinese sentences use full-width marks: ，。、；：？！. No half-width comma or period inside Chinese. Traditional Chinese quotes with 「」, and a quote inside a quote is 『』, never curly quotes. Simplified Chinese quotes with “” and ‘’.
 6. **Space between Chinese and Latin.** One space between a Chinese character and a Latin letter, a number, or inline code. 「用Node 22跑`npm test`」 becomes 「用 Node 22 跑 `npm test`」. No space next to full-width punctuation.
 7. **No 「——」.** Avoid the Chinese dash entirely, as unslop rule 13 does the em dash. End the sentence with 。 or use ，.
 8. **Colon.** 「：」 is fine before a list or an example, not as a mid-sentence connector. 「原因：快取沒有清掉」 becomes 「原因是快取沒有清掉。」

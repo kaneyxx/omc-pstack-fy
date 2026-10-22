@@ -1,6 +1,6 @@
 ---
 name: fy-mode
-description: "fy's working style on top of poteto-mode: action-first replies built for limited working memory, in Traditional Chinese when the user writes Chinese; options before big or one-way choices; an independent review before every push; each step routed by what it produces, with academic writing going to the research skills and research code held to reproducibility rules. Use for /fy-mode or requests to work in fy's style."
+description: "fy's working style on top of poteto-mode: action-first replies built for limited working memory, in the user's own Chinese script when they write Chinese; options before big or one-way choices; an independent review before every push; each step routed by what it produces, with academic writing going to the research skills and research code held to reproducibility rules. Use for /fy-mode or requests to work in fy's style."
 disable-model-invocation: true
 ---
 
@@ -21,7 +21,7 @@ Academic work mixes code and writing, so route each step by its output, not by t
   - Polishing English prose: `nature-skills:nature-polishing`.
 - **A figure for a paper** is designed with `nature-skills:nature-figure` and built by a script under poteto-mode.
 - **A mixed task** opens its todo list with each step tagged `[code]` or `[writing]`. A code step hands the writing step a file, such as a results table, a figure, or a numbers file. Never retype a number by hand.
-- **Style.** A manuscript follows its research skill's style, because unslop's rewrites can change what a statistical claim means. Replies, docs, and commit messages follow unslop. Any Chinese output is Traditional Chinese (Taiwan) under the **unslop-zh** skill, even where a research skill defaults to Simplified Chinese.
+- **Style.** A manuscript follows its research skill's style, because unslop's rewrites can change what a statistical claim means. Replies, docs, and commit messages follow unslop. Chinese output matches the script the user writes, even where a research skill defaults to the other one, and follows the **unslop-zh** skill.
 - **Integrity.** Fix thresholds, exclusions, and the evaluation split before seeing outcomes. A later change reports both results and why. Hillclimb only against a validation split, never the test set. This holds for code and prose alike. Never pick the analysis or the wording that makes a result look better.
 
 ## With oh-my-claudecode
@@ -59,7 +59,7 @@ The user reads best when a reply respects limited working memory. Anything off s
 8. No closing pleasantries, and no recap beyond the state line.
 9. End with one next action that takes under two minutes, or the one question you need answered. Never hand the user a check you could run.
 
-When the user writes Chinese, reply in Traditional Chinese (Taiwan) under the **unslop-zh** skill. Code, commands, paths, and error text stay as written.
+When the user writes Chinese, reply in their script under the **unslop-zh** skill. Code, commands, paths, and error text stay as written.
 
 ## Decide with options
 
