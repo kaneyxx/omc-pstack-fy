@@ -37,9 +37,9 @@
       "src/features/delegation-routing/types.ts",
       "src/ultragoal/artifacts.ts"
     ],
-    "ref": "6688a30e90d7285ff336af2dc5ab4b9709f1a8bc",
-    "tag": "v5.7.5",
-    "committedAt": "2026-10-18T15:36:38+09:00",
-    "version": "5.7.5"
+    "ref": "057ac169f1c1c405aa2022878a187b762b6af1d4",
+    "tag": "v5.7.7",
+    "committedAt": "2026-10-22T05:15:58+09:00",
+    "version": "5.7.7"
   }
 }
