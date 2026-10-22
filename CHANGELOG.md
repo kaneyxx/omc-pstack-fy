@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.2.0] - 2026-10-22
+
+Built from upstream pstack v0.15.30 (https://github.com/cursor/plugins/tree/eb4db2b), checked against oh-my-claudecode v5.7.7 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/057ac16).
+
+### Added
+
+- `/omc-pstack-fy:update` updates omc-pstack-fy in one step. It refreshes the marketplace, updates the plugin, and tells you to restart Claude Code.
+- `npx -y github:kaneyxx/omc-pstack-fy update` does the same from a terminal, straight from GitHub, with nothing installed globally. It needs Node 18 or later and git. The README shows an alias, so you can type `omc-pstack-fy update`. Do not install `omc-pstack-fy` from the npm registry, because that name does not belong to this project.
+
+### Docs
+
+- The README now leads with turning on auto-update once, in `/plugin` > Marketplaces > `omc-pstack-fy` > Enable auto-update, or with `"autoUpdate": true` in `settings.json`.
+
+### Update
+
+This release adds the update skill, so get it with the npx command above, or by hand. By hand, run these in a terminal, one at a time, then restart Claude Code:
+
+```bash
+claude plugin marketplace update omc-pstack-fy
+```
+```bash
+claude plugin update omc-pstack-fy@omc-pstack-fy
+```
+
+From the next release on, `/omc-pstack-fy:update` or the npx command is enough.
+
 ## [1.1.1] - 2026-10-22
 
 Built from upstream pstack v0.15.30 (https://github.com/cursor/plugins/tree/eb4db2b), checked against oh-my-claudecode v5.7.7 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/057ac16).
