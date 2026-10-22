@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.1.0] - 2026-10-22
+
+Built from upstream pstack v0.15.30 (https://github.com/cursor/plugins/tree/eb4db2b), checked against oh-my-claudecode v5.7.7 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/057ac16).
+
+### Added
+
+- `/omc-pstack-fy:statechart`, from upstream pstack v0.15.30. It draws what an app's user sees as a Mermaid statechart generated from a TLA+ model, and marks each bug TLC finds as a numbered path.
+
+### Changed
+
+- Chinese replies match the script you write. Write Simplified Chinese and replies come in Simplified Chinese with mainland terms. Write Traditional Chinese and replies keep Taiwan terms. Both follow the `unslop-zh` skill. This holds in poteto-mode, fy-mode, and the `fy` output style.
+- `/omc-pstack-fy:setup-pstack` first asks which language to run in: English, 简体中文, or 繁體中文. It skips the question when your message already shows the language. The rule file it writes stays in English.
+- Checked against oh-my-claudecode v5.7.7. The bridge needed no change.
+
+### Maintenance
+
+- The upstream watch runs daily. When pstack or oh-my-claudecode has a newer version, CI tries the sync, and the issue says whether the update needs only a version bump or real work.
+
+### Update
+
+Run these in a terminal, one at a time, then restart Claude Code:
+
+```bash
+claude plugin marketplace update omc-pstack-fy
+```
+```bash
+claude plugin update omc-pstack-fy@omc-pstack-fy
+```
+
 ## [1.0.1] - 2026-10-21
 
 Built from upstream pstack v0.15.29 (https://github.com/cursor/plugins/tree/88d4751), checked against oh-my-claudecode v5.7.5 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/6688a30).

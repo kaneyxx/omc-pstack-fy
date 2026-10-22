@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "omc-pstack-fy",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "source": "./plugin",
       "description": "pstack's engineering rigor inside oh-my-claudecode. A Claude Code build of pstack by Lauren Tan (poteto)."
     }
