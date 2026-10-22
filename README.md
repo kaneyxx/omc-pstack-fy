@@ -33,7 +33,40 @@ Every pstack command takes the `omc-pstack-fy:` prefix. The plugin's own [README
 
 ### Update
 
-Claude Code does not auto-update a third-party marketplace unless you turn it on. Run these in a terminal, one at a time, then restart Claude Code:
+Claude Code does not auto-update a third-party marketplace unless you turn it on. There are three ways to update, and this is the order to prefer. Each one loads the new version the next time Claude Code starts. In a session that is already open, run `/reload-plugins` once the update has finished.
+
+**Turn on auto-update once.** Open `/plugin`, go to **Marketplaces**, pick `omc-pstack-fy`, and choose **Enable auto-update**. Or merge this into `~/.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "omc-pstack-fy": {
+      "source": { "source": "github", "repo": "kaneyxx/omc-pstack-fy" },
+      "autoUpdate": true
+    }
+  }
+}
+```
+
+In an interactive session, Claude Code waits a random delay of up to ten minutes after your first message. Then it refreshes the marketplace and updates the plugin in the background. The running session keeps the version it loaded, and the next launch loads the new one.
+
+**Run the update skill.** Type `/omc-pstack-fy:update` in Claude Code. It runs the two commands under "Update by hand" below and tells you to restart Claude Code. Versions of the plugin from before this skill do not have it, so update once another way first.
+
+**Run the terminal command.** Install it once from GitHub. It needs Node 18 or later and git, and no npm registry.
+
+```bash
+npm install -g github:kaneyxx/omc-pstack-fy
+```
+
+Then run this whenever you want to update.
+
+```bash
+omc-pstack-fy update
+```
+
+It runs the same two commands in order and streams their output. It stops at the first one that fails and exits with that command's exit code. When both succeed, it tells you to restart Claude Code. `omc-pstack-fy help` prints the usage.
+
+**Update by hand.** This is the fallback. The skill and the command both run these two commands. Enter each on its own, then restart Claude Code.
 
 ```bash
 claude plugin marketplace update omc-pstack-fy
@@ -41,8 +74,6 @@ claude plugin marketplace update omc-pstack-fy
 ```bash
 claude plugin update omc-pstack-fy@omc-pstack-fy
 ```
-
-To update on its own from now on, open `/plugin`, go to **Marketplaces**, pick `omc-pstack-fy`, and turn on auto-update.
 
 ## How OMC and pstack split the work
 
@@ -66,6 +97,7 @@ tools/rules/*.json        every change to upstream text, one topic per file, eac
 overlays/                 files this fork adds, or replaces (a replaced file is a "fork" pinned to its upstream hash)
 docs/claude-code-mapping.md   how each Cursor name is written for Claude Code, and why
 plugin/                   generated output that Claude Code installs. Never edit it.
+package.json              the npm package for the omc-pstack-fy command. Its bin is the update skill's script in plugin/.
 ```
 
 `node tools/build.mjs` turns `vendor/` into `plugin/` in this order:
@@ -90,6 +122,8 @@ omc-pstack-fy has its own semantic version, separate from both upstreams. Each C
 - **patch:** fixes and rule tweaks that change plugin content.
 - **minor:** a pstack or oh-my-claudecode sync, or a new skill or role.
 - **major:** a change that breaks existing role lines, settings, or commands.
+
+A release moves `tools/rules.json`, the marketplace entry, and `package.json` to the same version, and the build fails when they differ.
 
 Every push that changes `plugin/` is a release, because Claude Code updates an installed plugin only when its version changes. CI fails when plugin content differs from the last release. A local build only warns, so work in progress builds fine.
 
@@ -143,7 +177,13 @@ These are the owner's choices, not translations of Lauren's pstack.
 
 安裝時先裝 OMC，再裝 omc-pstack-fy，指令照上面 Install 一行一行輸入，最後重開 Claude Code 並執行 `/omc-pstack-fy:setup-pstack`，它會先問設定過程要用英文、簡體中文還是繁體中文。只想用 pstack 就跳過 OMC。OMC 要從它自己的 marketplace 安裝，因為 SessionStart hook 只認 `oh-my-claudecode@omc` 這個 plugin 項目；用其他 marketplace 或 plugin 名稱註冊的 OMC（有些 fork 會這樣），hook 就不會把分工告訴它。順序反了也沒關係，hook 每次開 session 都會重新檢查，之後補裝 OMC 再重開就好。
 
-要更新已安裝的 omc-pstack-fy，在終端機先跑 `claude plugin marketplace update omc-pstack-fy`，再跑 `claude plugin update omc-pstack-fy@omc-pstack-fy`，然後重開 Claude Code。Claude Code 預設不會自動更新第三方 marketplace，要自動更新就在 `/plugin` 的 Marketplaces 選 `omc-pstack-fy`，開啟 auto-update。想讓簡單問題得到簡短回答，又不想觸發 playbook，可以選 `omc-pstack-fy:fy` output style，做法見上面 Personal choices。
+更新 omc-pstack-fy 有三種方式，建議照這個順序。第一種是開一次自動更新，之後不用再管。在 `/plugin` 的 Marketplaces 選 `omc-pstack-fy`，按 Enable auto-update，或把上面 Update 段落的 `extraKnownMarketplaces` 設定合併進 `~/.claude/settings.json`。開啟後，你在 session 送出第一則訊息，Claude Code 最多等十分鐘，就會在背景更新。正在執行的 session 仍用已載入的版本，下次啟動才載入新版。
+
+第二種是在 Claude Code 裡輸入 `/omc-pstack-fy:update`。它會依序執行下面的兩個指令，再提醒你重開 Claude Code。這個 skill 在加入它的版本才有，舊版要先用別的方式更新一次。第三種是在終端機輸入 `omc-pstack-fy update`。先用 `npm install -g github:kaneyxx/omc-pstack-fy` 從 GitHub 安裝一次，需要 Node 18 以上和 git，不需要 npm registry。它同樣依序執行那兩個指令並顯示輸出，第一個失敗就停下來，回傳該指令的 exit code。
+
+手動更新就在終端機先跑 `claude plugin marketplace update omc-pstack-fy`，再跑 `claude plugin update omc-pstack-fy@omc-pstack-fy`。三種方式更新完，都要重開 Claude Code，或在已開啟的 session 裡輸入 `/reload-plugins`。
+
+想讓簡單問題得到簡短回答，又不想觸發 playbook，可以選 `omc-pstack-fy:fy` output style，做法見上面 Personal choices。
 
 上游原檔放在 `vendor/`，所有修改寫在 `tools/rules/*.json` 和 `overlays/`，每個 Cursor 名稱怎麼改、為什麼這樣改，都記在 `docs/claude-code-mapping.md`。`plugin/` 由 `node tools/build.mjs` 產生。pstack 和 OMC 兩個上游都會追。GitHub Action 每天檢查，任一邊有新版就先試跑 sync、build 和測試，再開 issue 寫明結論：只差版本號、plugin 檔案有變要審查，或哪一步失敗。更新時跑 `node tools/sync.mjs pstack` 或 `node tools/sync.mjs omc`，再跑 build；OMC 改了 bridge 依賴的名稱或步驟時，build 會失敗並指出要重新檢查哪一段。
 

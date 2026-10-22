@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const RULES = join(ROOT, "tools", "rules.json");
 const MARKETPLACE = join(ROOT, ".claude-plugin", "marketplace.json");
+const PACKAGE = join(ROOT, "package.json");
 const CHANGELOG = join(ROOT, "CHANGELOG.md");
 const USAGE = `node tools/release.mjs <patch|minor|major|X.Y.Z> [--notes <file>] [--trailer <line>] [--dry-run] [--no-publish]
 node tools/release.mjs --resume
@@ -17,7 +18,7 @@ patch  fixes and rule tweaks that change plugin content
 minor  an upstream sync, or a new skill or role
 major  a change that breaks existing role lines, settings, or commands
 
-It checks, bumps tools/rules.json and the marketplace entry, records the release in tools/version-lock.json,
+It checks, bumps tools/rules.json, the marketplace entry, and package.json, records the release in tools/version-lock.json,
 prepends CHANGELOG.md, commits, tags {name}--v{version}, pushes main and the tag atomically, and creates the
 GitHub release. --no-publish stops after the commit. --dry-run runs the checks and changes nothing.
 --resume finishes a release whose commit exists but whose tag, push, or GitHub release does not.`;
@@ -203,6 +204,7 @@ function release(options, name) {
     const marketplace = readJson(MARKETPLACE);
     marketplace.plugins.find((plugin) => plugin.name === name).version = version;
     writeJson(MARKETPLACE, marketplace);
+    writeJson(PACKAGE, { ...readJson(PACKAGE), version });
     run("node", ["tools/build.mjs", "--release"]);
     run("node", ["tools/build.mjs", "--check"]);
     prependChangelog(section);

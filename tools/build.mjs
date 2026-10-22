@@ -15,6 +15,7 @@ const OUT = join(ROOT, "plugin");
 const BASELINE = join(ROOT, "tools", "denylist-baseline.json");
 const LOCK = join(ROOT, "tools", "version-lock.json");
 const MARKETPLACE = join(ROOT, ".claude-plugin", "marketplace.json");
+const PACKAGE = join(ROOT, "package.json");
 const MANIFEST = ".claude-plugin/plugin.json";
 const OMC_VERSION = "hooks/omc-version.json";
 const ADAPTER = "docs/harness/claude-code.md";
@@ -350,6 +351,14 @@ function checkMarketplace() {
   if (!rules.substitutions.some(({ replace }) => replace === install)) problems.push(`no substitution installs with ${JSON.stringify(install)}`);
 }
 
+// The npm package ships one file out of plugin/, so its version tracks the plugin and its bin must be a file the build writes.
+function checkPackage(files) {
+  const pkg = JSON.parse(readFileSync(PACKAGE, "utf8"));
+  if (pkg.version !== rules.plugin.version) problems.push(`package.json is at ${pkg.version}, not ${rules.plugin.version}`);
+  const bin = pkg.bin?.[rules.plugin.name];
+  if (!bin?.startsWith("plugin/") || !files.has(bin.slice("plugin/".length))) problems.push(`package.json bin ${rules.plugin.name} must point at a file in plugin/ that the build writes, not ${JSON.stringify(bin)}`);
+}
+
 // omc-pstack-fy has its own semantic version in tools/rules.json, moved only by tools/release.mjs, which records the released
 // content here with --release. Claude Code refreshes an installed plugin only when its version changes, so plugin content
 // that differs from the released content must not reach main without a release. A local build only warns, so work can go on.
@@ -442,6 +451,7 @@ rewriteLinks(files, ours);
 checkSkillNames(files);
 checkOmc(files);
 checkMarketplace();
+checkPackage(files);
 fail();
 const cursorNames = countCursorNames(files);
 checkRatchet(cursorNames);

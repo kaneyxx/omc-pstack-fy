@@ -1,0 +1,17 @@
+{
+  "name": "omc-pstack-fy",
+  "version": "1.1.1",
+  "description": "The omc-pstack-fy command. It updates the omc-pstack-fy plugin for Claude Code in one step.",
+  "license": "MIT",
+  "homepage": "https://github.com/kaneyxx/omc-pstack-fy",
+  "repository": "github:kaneyxx/omc-pstack-fy",
+  "bin": {
+    "omc-pstack-fy": "plugin/skills/update/scripts/omc-pstack-fy.mjs"
+  },
+  "files": [
+    "plugin/skills/update/scripts/omc-pstack-fy.mjs"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
