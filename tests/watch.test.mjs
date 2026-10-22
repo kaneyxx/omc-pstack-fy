@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, realpathSync, writeFileSync } from "node:fs";
+import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, test } from "node:test";
@@ -78,8 +78,9 @@ describe("failure lines", () => {
     assert.deepEqual(failLines(crash), Array.from({ length: 10 }, (_, i) => `at frame ${i + 5}`));
   });
 
-  test("reads the failing tests out of what node --test prints, keeping a failing test and dropping its failing suite", () => {
+  test("reads the failing tests out of what node --test prints, keeping a failing test and dropping its failing suite", (t) => {
     const dir = realpathSync(mkdtempSync(join(tmpdir(), "watch-test-")));
+    t.after(() => rmSync(dir, { recursive: true, force: true }));
     writeFileSync(
       join(dir, "a.test.mjs"),
       `import assert from "node:assert/strict";

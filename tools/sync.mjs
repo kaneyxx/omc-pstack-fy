@@ -82,6 +82,8 @@ function fetchUpstream(pin, ref, dir) {
   git("fetch", "-q", "--depth", "1", "--filter=blob:none", "origin", ref);
   git("checkout", "-q", "FETCH_HEAD");
   const version = JSON.parse(readFileSync(join(dir, pin.versionFile), "utf8")).version;
+  // The version lands in upstream.json and in a public issue, so text that is not a version stops here.
+  if (!/^v?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(String(version))) throw new Error(`${pin.versionFile} in ${pin.repository} has version ${JSON.stringify(version)}, not X.Y.Z`);
   return { sha: git("rev-parse", "HEAD"), committedAt: git("log", "-1", "--format=%cI"), version };
 }
 

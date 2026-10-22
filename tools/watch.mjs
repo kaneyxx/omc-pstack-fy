@@ -18,7 +18,8 @@ const LIMIT = 30;
 const USAGE = `node tools/watch.mjs           print the upstream report with a verdict on whether syncing breaks anything
                                 (exit 0 when the pins are current, 3 when an upstream is newer). The sync runs in a scratch
                                 copy of the working tree, so nothing in this checkout changes.
-node tools/watch.mjs --issue   also open, update, or close the "${TITLE}" issue with gh`;
+node tools/watch.mjs --issue   also open, update, or close the "${TITLE}" issue with gh. Meant for the workflow: it only
+                                touches issues that GitHub Actions opened.`;
 
 const STAGES = {
   sync: { says: "The sync fails to run.", fix: "Rerun it. If it fails again, check `paths` and `versionFile` for that upstream in `upstream.json`." },
@@ -144,7 +145,8 @@ const ACTIONS = {
 };
 
 function publish({ newer, body, summary }) {
-  const listed = JSON.parse(gh(["issue", "list", "--state", "open", "--limit", "200", "--json", "number,title,body"]));
+  // The repo is public, so anyone can open an issue with this title. Only the workflow's own issues count.
+  const listed = JSON.parse(gh(["issue", "list", "--state", "open", "--app", "github-actions", "--limit", "200", "--json", "number,title,body"]));
   const open = listed.filter(({ title }) => title === TITLE);
   for (const action of issuePlan({ open, body, newer, summary })) ACTIONS[action.act](action, body);
 }
@@ -173,7 +175,9 @@ function trial(behind, dir) {
   copyTree(dir);
   git(dir, "init", "-q");
   git(dir, "add", "-A", "plugin");
-  const run = (...args) => spawnSync(process.execPath, args, { cwd: dir, encoding: "utf8", maxBuffer: 1 << 26 });
+  // The build and tests need no GitHub token, so a future script that runs upstream code never sees one.
+  const { GH_TOKEN, GITHUB_TOKEN, ...env } = process.env;
+  const run = (...args) => spawnSync(process.execPath, args, { cwd: dir, encoding: "utf8", maxBuffer: 1 << 26, env });
   const problems = [];
   const check = (stage, command, result, lines = failLines) => {
     if (result.status !== 0) problems.push({ stage, command, lines: lines(tidy(`${result.stdout}\n${result.stderr}`, dir)) });

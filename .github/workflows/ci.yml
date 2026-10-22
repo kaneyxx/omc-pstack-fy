@@ -20,5 +20,5 @@ jobs:
         run: node tools/sync.mjs --verify
       - name: plugin/ matches what the build generates
         run: node tools/build.mjs --check
-      - name: Tests (pstack-ask, the oh-my-claudecode hook, and the OMC contract)
+      - name: Tests
         run: node --test tests/*.test.mjs
