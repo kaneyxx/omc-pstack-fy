@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.1.1] - 2026-10-22
+
+Built from upstream pstack v0.15.30 (https://github.com/cursor/plugins/tree/eb4db2b), checked against oh-my-claudecode v5.7.7 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/057ac16).
+
+### Fixed
+
+- The startup notice no longer asks you to update oh-my-claudecode when your release passed the same bridge contract. OMC 5.7.5 and 5.7.7 are both quiet now. A newer OMC release, or an older one that was never checked, still gets the notice.
+
+### Maintenance
+
+- `node tools/sync.mjs omc` records the release it replaces as compatible only after checking it against `tools/omc.json`. Editing that file drops every recorded release, so the notice comes back until the new contract is checked.
+
+### Update
+
+Run these in a terminal, one at a time, then restart Claude Code:
+
+```bash
+claude plugin marketplace update omc-pstack-fy
+```
+```bash
+claude plugin update omc-pstack-fy@omc-pstack-fy
+```
+
 ## [1.1.0] - 2026-10-22
 
 Built from upstream pstack v0.15.30 (https://github.com/cursor/plugins/tree/eb4db2b), checked against oh-my-claudecode v5.7.7 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/057ac16).
