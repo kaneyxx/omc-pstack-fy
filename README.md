@@ -110,7 +110,7 @@ git diff --stat vendor/ plugin/
 node tools/release.mjs minor
 ```
 
-`node tools/sync.mjs omc` also records the release it replaces under `compatible` in `upstream.json`, with the hash of `tools/omc.json`. A pin that main's CI built passed the contract, so a user who still runs that release keeps a quiet hook. Editing `tools/omc.json` changes the hash, so the next build drops every other release and the hook warns for them again. Run the sync before you edit `tools/omc.json`. If a sync lands on a release that fails the build, restore `upstream.json` and `vendor/` from git instead of syncing back.
+`node tools/sync.mjs omc` also records the release it replaces under `compatible` in `upstream.json`, with the hash of `tools/omc.json`, when that release passes the OMC side of the contract. That means it ships every agent and skill the file lists and no others, and each anchor's `find` text is still in its `omc` file. A user who still runs a recorded release keeps a quiet hook. A release that fails is left out, and the sync prints one line saying how many checks it failed, so syncing back from a broken release never vouches for it. Editing `tools/omc.json` changes the hash, so the next build drops every other release and the hook warns for them again.
 
 ## Roadmap
 

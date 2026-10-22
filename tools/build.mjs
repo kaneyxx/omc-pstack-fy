@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, posix, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { compatibleVersions, CONTRACT, contractHash, omcProblems } from "./omc.mjs";
+import { compatibleVersions, contractHash, isCompatibleList, omcProblems, readContract, vendoredOmc } from "./omc.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const VENDOR_ROOT = join(ROOT, "vendor");
@@ -330,23 +330,14 @@ function checkSkillNames(files) {
 // against vendor/, and writes that release's version for the hook, which compares it with the installed OMC. Other releases that
 // passed this same contract go in beside it, so the hook stays quiet for them.
 function checkOmc(files) {
-  const base = join(VENDOR_ROOT, omc.into);
-  const read = (path) => (existsSync(join(base, path)) ? readFileSync(join(base, path), "utf8") : undefined);
-  const list = (dir) => (existsSync(join(base, dir)) ? readdirSync(join(base, dir)) : []);
-  problems.push(
-    ...omcProblems({
-      contract: JSON.parse(readFileSync(CONTRACT, "utf8")),
-      version: omc.version,
-      omcFile: read,
-      omcAgents: list("agents").filter((name) => name.endsWith(".md")).map((name) => name.slice(0, -3)),
-      omcSkills: list("skills").filter((name) => read(`skills/${name}/SKILL.md`) !== undefined),
-      ourFile: (path) => files.get(path)?.bytes.toString("utf8"),
-    }),
-  );
+  const { omcFile, ...shipped } = vendoredOmc(join(VENDOR_ROOT, omc.into));
+  problems.push(...omcProblems({ contract: readContract(), version: omc.version, omcFile, ...shipped, ourFile: (path) => files.get(path)?.bytes.toString("utf8") }));
   // The version comes from the vendored release itself, and must match the pin, so the hook never names a release that is not in vendor/.
-  const verified = JSON.parse(read(omc.versionFile) ?? "{}").version;
+  const verified = JSON.parse(omcFile(omc.versionFile) ?? "{}").version;
   if (verified !== omc.version) problems.push(`vendor/${omc.into}/${omc.versionFile} says ${verified}, but upstream.json pins oh-my-claudecode ${omc.version}. Run \`node tools/sync.mjs omc\`.`);
-  const compatible = compatibleVersions(omc.compatible ?? [], contractHash(), verified);
+  const listed = omc.compatible ?? [];
+  if (!isCompatibleList(listed)) problems.push(`upstream.json lists oh-my-claudecode's compatible releases as something other than [{ "version": ..., "contract": ... }, ...]. Restore it from git.`);
+  const compatible = isCompatibleList(listed) ? compatibleVersions(listed, contractHash(), verified) : [];
   files.set(OMC_VERSION, { bytes: Buffer.from(`${JSON.stringify({ verified, compatible }, null, 2)}\n`), executable: false });
 }
 

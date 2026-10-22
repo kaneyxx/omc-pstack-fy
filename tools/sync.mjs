@@ -6,7 +6,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from "node:os";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { bare, contractHash } from "./omc.mjs";
+import { bare, contractHash, vendoredProblems } from "./omc.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const VENDOR = join(ROOT, "vendor");
@@ -143,19 +143,25 @@ function verify(pins, dir) {
 // satisfy.
 export const hasContract = (pin) => Array.isArray(pin.compatible);
 
-// The release a sync leaves behind joins the list under the contract's hash. A pin that main's CI built passed the contract,
-// because CI runs build --check. A pin from a local sync that failed the build did not, so undo such a sync by restoring
-// upstream.json and vendor/ from git, not with another sync. Run the sync before editing the contract, or the hash names a
-// contract the release never passed. A release that is already listed keeps one entry, with the newest hash.
-export function carryForward(pin, next, contract) {
-  if (!pin.version || bare(pin.version) === bare(next)) return pin.compatible;
+// A sync leaves a release behind when the pin names one and the fetched release is a different one.
+const leaves = (pin, next) => Boolean(pin.version) && bare(pin.version) !== bare(next);
+
+// The release a sync leaves behind joins the list under the contract's hash, unless `problems` says it fails the contract. The
+// hash promises that the release passed, and a sync cannot take that on trust: the pin may come from an earlier local sync that
+// failed the build. A release that is already listed keeps one entry, with the newest hash.
+export function carryForward(pin, next, contract, problems = []) {
+  if (!leaves(pin, next) || problems.length > 0) return pin.compatible;
   return [...pin.compatible.filter(({ version }) => bare(version) !== bare(pin.version)), { version: bare(pin.version), contract }];
 }
 
+// What stops the release a sync leaves behind from being recorded: the problems the OMC side of the contract finds in the release
+// vendored at `base`. A sync that stays on its release leaves nothing behind, so it has none. `contract` defaults to tools/omc.json.
+export const outgoingProblems = (pin, next, base, contract) => (hasContract(pin) && leaves(pin, next) ? vendoredProblems(base, pin.version, contract) : []);
+
 // The pin a sync writes. The fetched fields replace the old ones, and a pin with a contract carries its list forward.
 // `contract` is a function, so a pin without one never reads tools/omc.json.
-export function repin(pin, found, contract) {
-  const compatible = hasContract(pin) ? carryForward(pin, found.version, contract()) : undefined;
+export function repin(pin, found, contract, problems = []) {
+  const compatible = hasContract(pin) ? carryForward(pin, found.version, contract(), problems) : undefined;
   return { ...pin, ...found, ...(compatible ? { compatible } : {}) };
 }
 
@@ -166,7 +172,9 @@ function sync(pins, name, ref, dir) {
   const { sha, committedAt, version } = fetchUpstream(pin, target, dir);
   const rea = pin.rea ? Object.fromEntries(pin.paths.map((path) => [path, reaFingerprint(join(dir, path))])) : undefined;
   const tag = pin.track === "release" ? { tag: RELEASE.test(target) ? target : undefined } : {};
-  const moved = repin(pin, { ref: sha, ...tag, committedAt, version, ...(rea ? { rea } : {}) }, contractHash);
+  // vendor/ still holds the release this sync leaves behind, so check it before the copy below replaces it.
+  const unrecorded = outgoingProblems(pin, version, home(pin));
+  const moved = repin(pin, { ref: sha, ...tag, committedAt, version, ...(rea ? { rea } : {}) }, contractHash, unrecorded);
   const staged = join(VENDOR, `.${name}.staged`);
   rmSync(staged, { recursive: true, force: true });
   for (const file of fetched(dir, pin).keys()) cpSync(join(dir, file), join(staged, pin.into ?? "", file));
@@ -179,6 +187,7 @@ function sync(pins, name, ref, dir) {
   writeFileSync(PIN, `${JSON.stringify(pins, null, 2)}\n`);
   const from = pin.ref ? `${pin.ref.slice(0, 7)} (v${pin.version})` : "nothing";
   console.log(`vendor/ ${name}: ${from} -> ${sha.slice(0, 7)} (v${version})`);
+  if (unrecorded.length > 0) console.log(`oh-my-claudecode ${pin.version} is not recorded as compatible, because it fails ${unrecorded.length} ${unrecorded.length === 1 ? "check" : "checks"} in tools/omc.json.`);
   if (rea && Object.values(rea).includes(null)) console.log("rea is not installed, so upstream.json has no REA fingerprint.");
   console.log("Next: node tools/build.mjs, then review `git diff --stat vendor/ plugin/`.");
 }
