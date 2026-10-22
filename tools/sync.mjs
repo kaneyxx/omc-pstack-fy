@@ -16,7 +16,7 @@ node tools/sync.mjs --verify                             check vendor/ still mat
 node tools/sync.mjs --latest                             report, as Markdown, which upstream has newer vendored files (exit 3 when one has)`;
 // vendor/ is data, not a working tree. Upstream's .gitignore would hide files from this repo, and Finder litters .DS_Store.
 const SKIP = new Set([".DS_Store", ".gitignore"]);
-const NEWER = 3;
+export const NEWER = 3;
 
 function parseArgs(argv) {
   const options = { name: "pstack", ref: undefined, verify: false, latest: false };
@@ -159,34 +159,35 @@ function sync(pins, name, ref, dir) {
   console.log("Next: node tools/build.mjs, then review `git diff --stat vendor/ plugin/`.");
 }
 
-// Markdown for the weekly upstream issue. Only vendored files count, so commits to the rest of an upstream repository stay quiet.
-function latest(pins, dir) {
-  let newer = false;
-  const sections = Object.entries(pins).map(([name, pin]) => {
+const NEXT = [
+  "## Next",
+  "",
+  "1. `node tools/sync.mjs <name>` for each upstream above that differs.",
+  "2. `node tools/build.mjs`. Fix each FAIL line in `tools/rules/`, `overlays/`, or `tools/omc.json`.",
+  "3. `node --test tests/*.test.mjs`.",
+  "4. `node tools/release.mjs minor`.",
+].join("\n");
+
+// One Markdown section per upstream, for the upstream issue. Only vendored files count, so commits to the rest of an upstream
+// repository stay quiet.
+export function latest(pins, dir) {
+  return Object.entries(pins).map(([name, pin]) => {
     const target = tracked(pin);
     const checkout = join(dir, name);
     const { sha, version } = fetchUpstream(pin, target, checkout);
     const changed = differences(fetched(checkout, pin), vendored(pin));
     const where = `[${target}](${pin.repository}/tree/${sha})`;
     const pinned = `Pinned v${pin.version} (${pin.ref.slice(0, 7)}).`;
-    if (changed.length === 0) return `## ${name}\n\n${pinned} The vendored files match ${where}.`;
+    if (changed.length === 0) return { name, newer: false, section: `## ${name}\n\n${pinned} The vendored files match ${where}.` };
     // A pin past the newest release, such as a fix taken from a commit, is not behind it.
-    if (pin.track === "release" && compare(version, pin.version) <= 0) return `## ${name}\n\n${pinned} The newest release, ${where}, is not newer, so there is nothing to sync.`;
-    newer = true;
+    if (pin.track === "release" && compare(version, pin.version) <= 0) {
+      return { name, newer: false, section: `## ${name}\n\n${pinned} The newest release, ${where}, is not newer, so there is nothing to sync.` };
+    }
     const list = changed.slice(0, 30).map((file) => `- \`${file}\``);
     if (changed.length > 30) list.push(`- and ${changed.length - 30} more`);
-    return `## ${name}\n\n${pinned} ${where} is v${version}, and ${changed.length} vendored files differ:\n\n${list.join("\n")}\n\nRun \`node tools/sync.mjs ${name}\`.`;
+    const section = `## ${name}\n\n${pinned} ${where} is v${version}, and ${changed.length} vendored files differ:\n\n${list.join("\n")}\n\nRun \`node tools/sync.mjs ${name}\`.`;
+    return { name, newer: true, section };
   });
-  const steps = [
-    "## Next",
-    "",
-    "1. `node tools/sync.mjs <name>` for each upstream above that differs.",
-    "2. `node tools/build.mjs`. Fix each FAIL line in `tools/rules/`, `overlays/`, or `tools/omc.json`.",
-    "3. `node --test tests/*.test.mjs`.",
-    "4. `node tools/release.mjs minor`.",
-  ].join("\n");
-  console.log([...sections, ...(newer ? [steps] : [])].join("\n\n"));
-  return newer;
 }
 
 function main() {
@@ -196,8 +197,12 @@ function main() {
     const pins = JSON.parse(readFileSync(PIN, "utf8"));
     if (options.help) console.log(USAGE);
     else if (options.verify) verify(pins, dir);
-    else if (options.latest) process.exitCode = latest(pins, dir) ? NEWER : 0;
-    else sync(pins, options.name, options.ref, dir);
+    else if (options.latest) {
+      const upstreams = latest(pins, dir);
+      const newer = upstreams.some((upstream) => upstream.newer);
+      console.log([...upstreams.map(({ section }) => section), ...(newer ? [NEXT] : [])].join("\n\n"));
+      process.exitCode = newer ? NEWER : 0;
+    } else sync(pins, options.name, options.ref, dir);
   } catch (error) {
     console.error(`FAIL ${error.message}`);
     process.exitCode = 1;
@@ -208,11 +213,11 @@ function main() {
 
 // Tests import matcher and newest without running a sync. Node runs the real path, so compare against argv's real path too,
 // or a run through a symlinked folder (such as /tmp on macOS) would do nothing.
-const invoked = (() => {
+export function isMain(url) {
   try {
-    return realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+    return realpathSync(process.argv[1]) === fileURLToPath(url);
   } catch {
     return false;
   }
-})();
-if (invoked) main();
+}
+if (isMain(import.meta.url)) main();

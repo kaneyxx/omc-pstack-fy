@@ -100,7 +100,7 @@ node tools/release.mjs patch             # check, bump, CHANGELOG, commit, tag o
 
 ## Keeping up with pstack and oh-my-claudecode
 
-omc-pstack-fy follows both upstreams. Every Monday the `upstream-watch` workflow compares the pins with pstack's main and OMC's newest release, and opens an issue named "Upstream update available" when either has newer vendored files. The issue lists the changed files and closes itself once the pins catch up. Run it by hand from the Actions tab, or locally with `node tools/sync.mjs --latest`.
+omc-pstack-fy follows both upstreams. Every day the `upstream-watch` workflow compares the pins with pstack's main and OMC's newest release. When either has newer vendored files, it tries the sync, the build, and the tests in a scratch copy, then opens an issue named "Upstream update available". The issue lists the changed files and gives a verdict: only a version bump is left, plugin files changed and need a review, or a named step fails. A changed report also posts a comment, so watchers get notified. The issue closes itself once the pins catch up. Run it by hand from the Actions tab, or locally with `node tools/watch.mjs`, which leaves the checkout untouched.
 
 ```bash
 node tools/sync.mjs pstack     # vendor cursor/plugins main and pin the commit (records an REA fingerprint when rea is installed)
@@ -119,7 +119,7 @@ node tools/release.mjs minor
 | 3 | Multi-model cross-review. Role values `[provider:]model [effort]`, the read-only `pstack-ask` bridge to other vendors' CLIs, a `second opinion` role, and panels labeled cross-vendor or same-vendor. Vendor templates ship unverified until a real CLI is wired in | done |
 | 4 | Personal fit. Chinese reply rules, a personal `fy-mode`, and the `fy` output style | done |
 | 5 | oh-my-claudecode first. OMC keeps every keyword and workflow, and a plugin hook hands code units, ai-slop-cleaner steps, and the final code review to pstack | done |
-| 6 | Follow both upstreams. OMC pinned like pstack, a contract check on what the bridge relies on, a version-aware hook, and a weekly upstream issue | done |
+| 6 | Follow both upstreams. OMC pinned like pstack, a contract check on what the bridge relies on, a version-aware hook, and a daily upstream issue with a verdict | done |
 
 ## Other vendors
 
@@ -143,7 +143,7 @@ These are the owner's choices, not translations of Lauren's pstack.
 
 要更新已安裝的 omc-pstack-fy，在終端機先跑 `claude plugin marketplace update omc-pstack-fy`，再跑 `claude plugin update omc-pstack-fy@omc-pstack-fy`，然後重開 Claude Code。Claude Code 預設不會自動更新第三方 marketplace，要自動更新就在 `/plugin` 的 Marketplaces 選 `omc-pstack-fy`，開啟 auto-update。想讓簡單問題得到簡短回答，又不想觸發 playbook，可以選 `omc-pstack-fy:fy` output style，做法見上面 Personal choices。
 
-上游原檔放在 `vendor/`，所有修改寫在 `tools/rules/*.json` 和 `overlays/`，每個 Cursor 名稱怎麼改、為什麼這樣改，都記在 `docs/claude-code-mapping.md`。`plugin/` 由 `node tools/build.mjs` 產生。pstack 和 OMC 兩個上游都會追：每週一的 GitHub Action 發現任一邊有新版就開 issue。更新時跑 `node tools/sync.mjs pstack` 或 `node tools/sync.mjs omc`，再跑 build；OMC 改了 bridge 依賴的名稱或步驟時，build 會失敗並指出要重新檢查哪一段。
+上游原檔放在 `vendor/`，所有修改寫在 `tools/rules/*.json` 和 `overlays/`，每個 Cursor 名稱怎麼改、為什麼這樣改，都記在 `docs/claude-code-mapping.md`。`plugin/` 由 `node tools/build.mjs` 產生。pstack 和 OMC 兩個上游都會追。GitHub Action 每天檢查，任一邊有新版就先試跑 sync、build 和測試，再開 issue 寫明結論：只差版本號、plugin 檔案有變要審查，或哪一步失敗。更新時跑 `node tools/sync.mjs pstack` 或 `node tools/sync.mjs omc`，再跑 build；OMC 改了 bridge 依賴的名稱或步驟時，build 會失敗並指出要重新檢查哪一段。
 
 ## License
 
