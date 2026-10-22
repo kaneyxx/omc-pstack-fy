@@ -108,14 +108,23 @@ describe("sync", () => {
       skills: ["ralph"],
       anchors: [{ omc: "skills/ralph/SKILL.md", find: "7.5 **Mandatory Deslop Pass**", ours: "hooks/omc-bridge.md", why: "ralph's step 7.5 runs deslop." }],
     };
-    const omc = { repository: "r", track: "release", into: "oh-my-claudecode", version: "5.7.7", ref: "aaa", compatible: [{ version: "5.7.5", contract: "now" }] };
+    const omc = {
+      repository: "r",
+      track: "release",
+      into: "oh-my-claudecode",
+      versionFile: ".claude-plugin/plugin.json",
+      version: "5.7.7",
+      ref: "aaa",
+      compatible: [{ version: "5.7.5", contract: "now" }],
+    };
     const found = { ref: "bbb", version: "5.7.5" };
     const made = [];
     after(() => made.forEach((dir) => rmSync(dir, { recursive: true, force: true })));
-    const vendor = (ralph) => {
+    const vendor = (ralph, shipped = "5.7.7") => {
       const dir = mkdtempSync(join(tmpdir(), "omc-sync-"));
       made.push(dir);
-      for (const [path, text] of Object.entries({ "agents/executor.md": "", "skills/ralph/SKILL.md": ralph })) {
+      const files = { "agents/executor.md": "", "skills/ralph/SKILL.md": ralph, ".claude-plugin/plugin.json": JSON.stringify({ version: shipped }) };
+      for (const [path, text] of Object.entries(files)) {
         mkdirSync(dirname(join(dir, path)), { recursive: true });
         writeFileSync(join(dir, path), text);
       }
@@ -144,6 +153,16 @@ describe("sync", () => {
       assert.deepEqual(outgoingProblems({ ...omc, version: undefined }, "5.7.5", failing, contract), []);
       const { compatible, ...pstack } = omc;
       assert.deepEqual(outgoingProblems(pstack, "5.7.5", failing, contract), []);
+    });
+
+    test("is not recorded when vendor/ holds another release than the pin names, or no readable version", () => {
+      const passing = "7.5 **Mandatory Deslop Pass**";
+      for (const shipped of ["5.7.6", null]) {
+        const problems = outgoingProblems(omc, "5.7.5", vendor(passing, shipped), contract);
+        assert.equal(problems.length, 1);
+        assert.match(problems[0], /not the pinned 5\.7\.7/);
+      }
+      assert.deepEqual(outgoingProblems(omc, "5.7.5", vendor(passing, "v5.7.7"), contract), []);
     });
 
     test("keeps the list when the sync stays on the release, even though the vendored release fails", () => {

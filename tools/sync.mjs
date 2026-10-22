@@ -156,7 +156,17 @@ export function carryForward(pin, next, contract, problems = []) {
 
 // What stops the release a sync leaves behind from being recorded: the problems the OMC side of the contract finds in the release
 // vendored at `base`. A sync that stays on its release leaves nothing behind, so it has none. `contract` defaults to tools/omc.json.
-export const outgoingProblems = (pin, next, base, contract) => (hasContract(pin) && leaves(pin, next) ? vendoredProblems(base, pin.version, contract) : []);
+// vendor/ can hold another release than the pin names, after a hand edit or a checkout of vendor/ alone, and the entry would then
+// vouch for files it never checked.
+export function outgoingProblems(pin, next, base, contract) {
+  if (!hasContract(pin) || !leaves(pin, next)) return [];
+  let shipped;
+  try {
+    shipped = JSON.parse(readFileSync(join(base, pin.versionFile), "utf8")).version;
+  } catch {}
+  if (typeof shipped !== "string" || bare(shipped) !== bare(pin.version)) return [`vendor/ holds ${JSON.stringify(shipped)}, not the pinned ${pin.version}.`];
+  return vendoredProblems(base, pin.version, contract);
+}
 
 // The pin a sync writes. The fetched fields replace the old ones, and a pin with a contract carries its list forward.
 // `contract` is a function, so a pin without one never reads tools/omc.json.
