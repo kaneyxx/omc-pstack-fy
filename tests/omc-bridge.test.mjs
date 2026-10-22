@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { describe, test } from "node:test";
@@ -31,9 +31,9 @@ function writeJson(path, value) {
 const enabled = (value) => ({ enabledPlugins: { [OMC]: value } });
 
 // The parent's Claude Code variables are dropped, so each test sets exactly the ones it means to.
-function bridge(box, { stdin = JSON.stringify({ hook_event_name: "SessionStart", source: "startup", cwd: box.project }), cwd = ROOT, env = {} } = {}) {
+function bridge(box, { stdin = JSON.stringify({ hook_event_name: "SessionStart", source: "startup", cwd: box.project }), cwd = ROOT, env = {}, script = SCRIPT } = {}) {
   const { CLAUDE_CONFIG_DIR, CLAUDE_PROJECT_DIR, ...inherited } = process.env;
-  const run = spawnSync(process.execPath, [SCRIPT], {
+  const run = spawnSync(process.execPath, [script], {
     cwd,
     encoding: "utf8",
     env: { ...inherited, HOME: box.home, USERPROFILE: box.home, ...env },
@@ -48,6 +48,14 @@ function context(stdout) {
   const output = JSON.parse(stdout);
   assert.equal(output.hookSpecificOutput.hookEventName, "SessionStart");
   return output.hookSpecificOutput.additionalContext;
+}
+
+// The built hook copied beside an omc-version.json the test writes, so each case sets what the build would have stamped.
+function stamped(stamp) {
+  const dir = mkdtempSync(join(tmpdir(), "omc-bridge-hooks-"));
+  for (const file of ["omc-bridge.mjs", "omc-bridge.md"]) copyFileSync(join(PLUGIN, "hooks", file), join(dir, file));
+  writeJson(join(dir, "omc-version.json"), stamp);
+  return join(dir, "omc-bridge.mjs");
 }
 
 const startup = (box, source = "startup") => JSON.stringify({ hook_event_name: "SessionStart", source, cwd: box.project });
@@ -185,5 +193,82 @@ describe("omc-bridge", () => {
     assert.ok(context(bridge(box, { stdin: null, cwd: box.project })).includes("omc-pstack-fy:poteto-agent"));
     writeJson(join(box.project, ".claude", "settings.local.json"), enabled(false));
     assert.equal(bridge(box, { stdin: null, cwd: box.project }), "");
+  });
+
+  describe("when the build stamps compatible releases", () => {
+    const script = stamped({ verified: "5.7.7", compatible: ["5.7.5", "v5.7.6"] });
+    const run = (version, options = {}) => {
+      const box = sandbox({ version });
+      return JSON.parse(bridge(box, { stdin: startup(box), script, ...options }));
+    };
+
+    test("a compatible release gets the bridge with no note and no message, with or without a leading v", () => {
+      for (const version of ["5.7.5", "v5.7.5", "5.7.6", "v5.7.6"]) {
+        const output = run(version);
+        assert.ok(output.hookSpecificOutput.additionalContext.includes("omc-pstack-fy:poteto-agent"), `${version} keeps the bridge`);
+        assert.ok(!output.hookSpecificOutput.additionalContext.includes("checked against"), `${version} gets no note`);
+        assert.equal(output.systemMessage, undefined, `${version} gets no message`);
+      }
+    });
+
+    test("the verified release still gets no note, and an older release outside the list still asks for an OMC update", () => {
+      assert.equal(run("5.7.7").systemMessage, undefined);
+      const output = run("5.7.4");
+      assert.match(output.hookSpecificOutput.additionalContext, /checked against oh-my-claudecode 5\.7\.7, and 5\.7\.4 is installed/);
+      assert.match(output.systemMessage, /Update oh-my-claudecode with \/plugin/);
+    });
+
+    test("a newer release still asks for an omc-pstack-fy update", () => {
+      const output = run("5.7.8");
+      assert.match(output.hookSpecificOutput.additionalContext, /checked against oh-my-claudecode 5\.7\.7, and 5\.7\.8 is installed/);
+      assert.match(output.systemMessage, /Update omc-pstack-fy once a release checked against 5\.7\.8 is out/);
+    });
+
+    test("a prerelease of a compatible release is not that release", () => {
+      assert.match(run("5.7.5-rc.1").systemMessage, /but 5\.7\.5-rc\.1 is installed/);
+    });
+
+    test("an installed version that is not a string never matches a listed release", () => {
+      for (const version of [["5.7.5"], ["5.7.7"], {}]) {
+        const output = run(version);
+        assert.ok(output.hookSpecificOutput.additionalContext.includes("omc-pstack-fy:poteto-agent"));
+        assert.match(output.systemMessage, /Check both plugins with \/plugin/);
+      }
+    });
+
+    test("a malformed compatible list counts as empty and never breaks the bridge", () => {
+      const malformed = ["5.7.5", { version: "5.7.5" }, [5, null, { version: "5.7.5" }, ["5.7.5"]], { 0: "5.7.5" }, 575, null, true];
+      for (const compatible of malformed) {
+        const box = sandbox({ version: "5.7.5" });
+        const output = JSON.parse(bridge(box, { stdin: startup(box), script: stamped({ verified: "5.7.7", compatible }) }));
+        assert.ok(output.hookSpecificOutput.additionalContext.includes("omc-pstack-fy:poteto-agent"), JSON.stringify(compatible));
+        assert.match(output.systemMessage, /Update oh-my-claudecode with \/plugin/, JSON.stringify(compatible));
+      }
+    });
+
+    test("a stamp with no compatible list, as older builds wrote, behaves as it did before", () => {
+      const only = stamped({ verified: "5.7.7" });
+      const box = sandbox({ version: "5.7.5" });
+      assert.match(JSON.parse(bridge(box, { stdin: startup(box), script: only })).systemMessage, /Update oh-my-claudecode with \/plugin/);
+      const same = sandbox({ version: "5.7.7" });
+      assert.equal(JSON.parse(bridge(same, { stdin: startup(same), script: only })).systemMessage, undefined);
+    });
+
+    test("an unreadable stamp keeps the bridge and says nothing about versions", () => {
+      const box = sandbox({ version: "5.7.5" });
+      const output = JSON.parse(bridge(box, { stdin: startup(box), script: stamped("{ not json") }));
+      assert.ok(output.hookSpecificOutput.additionalContext.includes("omc-pstack-fy:poteto-agent"));
+      assert.equal(output.systemMessage, undefined);
+    });
+  });
+
+  test("the built stamp lists each compatible release once, as a bare version that is not the verified one", () => {
+    const { verified, compatible } = JSON.parse(readFileSync(join(PLUGIN, "hooks", "omc-version.json"), "utf8"));
+    assert.ok(Array.isArray(compatible));
+    assert.equal(new Set(compatible).size, compatible.length);
+    for (const version of compatible) {
+      assert.match(version, /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/);
+      assert.notEqual(version, verified);
+    }
   });
 });

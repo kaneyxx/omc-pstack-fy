@@ -77,7 +77,7 @@ plugin/                   generated output that Claude Code installs. Never edit
 5. Apply `substitutions`, prefix every `/skill` command with `omc-pstack-fy:`, and link each command to its `SKILL.md`, so the model reads a hidden skill instead of calling a Skill tool that refuses it.
 6. Add a routing note to each skill that names another skill.
 7. Point links to left-out upstream files at GitHub, pinned to the vendored commit.
-8. Check `tools/omc.json` against the vendored OMC release. An OMC agent or skill the file does not list, one it lists that OMC dropped, or an anchored passage OMC rewrote fails the build and names the bridge text to re-check. The build writes that OMC version into the plugin, and the hook tells you when your installed OMC differs.
+8. Check `tools/omc.json` against the vendored OMC release. An OMC agent or skill the file does not list, one it lists that OMC dropped, or an anchored passage OMC rewrote fails the build and names the bridge text to re-check. The build writes that OMC version into the plugin, together with the other releases that passed the same `tools/omc.json`. The hook tells you when your installed OMC is none of those.
 9. Count the Cursor names left, which must be 0 now that the runtime adapter is off. `node tools/build.mjs --report` lists them per file.
 10. Check the version. Plugin content must match the last release recorded in `tools/version-lock.json`.
 
@@ -109,6 +109,8 @@ node tools/build.mjs           # rebuild; a FAIL line names each edit, fork, or 
 git diff --stat vendor/ plugin/
 node tools/release.mjs minor
 ```
+
+`node tools/sync.mjs omc` also records the release it replaces under `compatible` in `upstream.json`, with the hash of `tools/omc.json`. A pin that main's CI built passed the contract, so a user who still runs that release keeps a quiet hook. Editing `tools/omc.json` changes the hash, so the next build drops every other release and the hook warns for them again. Run the sync before you edit `tools/omc.json`. If a sync lands on a release that fails the build, restore `upstream.json` and `vendor/` from git instead of syncing back.
 
 ## Roadmap
 

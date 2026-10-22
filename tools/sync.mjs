@@ -6,6 +6,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from "node:os";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { bare, contractHash } from "./omc.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const VENDOR = join(ROOT, "vendor");
@@ -138,12 +139,34 @@ function verify(pins, dir) {
   console.log(`vendor/ matches ${Object.entries(pins).map(([name, pin]) => `${name} ${pin.ref.slice(0, 7)}`).join(" and ")}.`);
 }
 
+// Only a pin with a compatible list has a contract (tools/omc.json, today the OMC pin) that releases other than the pinned one can
+// satisfy.
+export const hasContract = (pin) => Array.isArray(pin.compatible);
+
+// The release a sync leaves behind joins the list under the contract's hash. A pin that main's CI built passed the contract,
+// because CI runs build --check. A pin from a local sync that failed the build did not, so undo such a sync by restoring
+// upstream.json and vendor/ from git, not with another sync. Run the sync before editing the contract, or the hash names a
+// contract the release never passed. A release that is already listed keeps one entry, with the newest hash.
+export function carryForward(pin, next, contract) {
+  if (!pin.version || bare(pin.version) === bare(next)) return pin.compatible;
+  return [...pin.compatible.filter(({ version }) => bare(version) !== bare(pin.version)), { version: bare(pin.version), contract }];
+}
+
+// The pin a sync writes. The fetched fields replace the old ones, and a pin with a contract carries its list forward.
+// `contract` is a function, so a pin without one never reads tools/omc.json.
+export function repin(pin, found, contract) {
+  const compatible = hasContract(pin) ? carryForward(pin, found.version, contract()) : undefined;
+  return { ...pin, ...found, ...(compatible ? { compatible } : {}) };
+}
+
 // Copy beside vendor/ and rename, so a failed copy never leaves vendor/ replaced while upstream.json still pins the old commit.
 function sync(pins, name, ref, dir) {
   const pin = pins[name];
   const target = ref ?? tracked(pin);
   const { sha, committedAt, version } = fetchUpstream(pin, target, dir);
   const rea = pin.rea ? Object.fromEntries(pin.paths.map((path) => [path, reaFingerprint(join(dir, path))])) : undefined;
+  const tag = pin.track === "release" ? { tag: RELEASE.test(target) ? target : undefined } : {};
+  const moved = repin(pin, { ref: sha, ...tag, committedAt, version, ...(rea ? { rea } : {}) }, contractHash);
   const staged = join(VENDOR, `.${name}.staged`);
   rmSync(staged, { recursive: true, force: true });
   for (const file of fetched(dir, pin).keys()) cpSync(join(dir, file), join(staged, pin.into ?? "", file));
@@ -152,8 +175,7 @@ function sync(pins, name, ref, dir) {
     if (existsSync(join(staged, entry))) renameSync(join(staged, entry), join(VENDOR, entry));
   }
   rmSync(staged, { recursive: true, force: true });
-  const tag = pin.track === "release" ? { tag: RELEASE.test(target) ? target : undefined } : {};
-  pins[name] = { ...pin, ref: sha, ...tag, committedAt, version, ...(rea ? { rea } : {}) };
+  pins[name] = moved;
   writeFileSync(PIN, `${JSON.stringify(pins, null, 2)}\n`);
   const from = pin.ref ? `${pin.ref.slice(0, 7)} (v${pin.version})` : "nothing";
   console.log(`vendor/ ${name}: ${from} -> ${sha.slice(0, 7)} (v${version})`);

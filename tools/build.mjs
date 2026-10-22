@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, posix, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { omcProblems } from "./omc.mjs";
+import { compatibleVersions, CONTRACT, contractHash, omcProblems } from "./omc.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const VENDOR_ROOT = join(ROOT, "vendor");
@@ -327,14 +327,15 @@ function checkSkillNames(files) {
 }
 
 // tools/omc.json records what omc-pstack-fy relies on in the oh-my-claudecode release pinned in upstream.json. The build checks it
-// against vendor/, and writes that release's version for the hook, which compares it with the installed OMC.
+// against vendor/, and writes that release's version for the hook, which compares it with the installed OMC. Other releases that
+// passed this same contract go in beside it, so the hook stays quiet for them.
 function checkOmc(files) {
   const base = join(VENDOR_ROOT, omc.into);
   const read = (path) => (existsSync(join(base, path)) ? readFileSync(join(base, path), "utf8") : undefined);
   const list = (dir) => (existsSync(join(base, dir)) ? readdirSync(join(base, dir)) : []);
   problems.push(
     ...omcProblems({
-      contract: JSON.parse(readFileSync(join(ROOT, "tools", "omc.json"), "utf8")),
+      contract: JSON.parse(readFileSync(CONTRACT, "utf8")),
       version: omc.version,
       omcFile: read,
       omcAgents: list("agents").filter((name) => name.endsWith(".md")).map((name) => name.slice(0, -3)),
@@ -345,7 +346,8 @@ function checkOmc(files) {
   // The version comes from the vendored release itself, and must match the pin, so the hook never names a release that is not in vendor/.
   const verified = JSON.parse(read(omc.versionFile) ?? "{}").version;
   if (verified !== omc.version) problems.push(`vendor/${omc.into}/${omc.versionFile} says ${verified}, but upstream.json pins oh-my-claudecode ${omc.version}. Run \`node tools/sync.mjs omc\`.`);
-  files.set(OMC_VERSION, { bytes: Buffer.from(`${JSON.stringify({ verified }, null, 2)}\n`), executable: false });
+  const compatible = compatibleVersions(omc.compatible ?? [], contractHash(), verified);
+  files.set(OMC_VERSION, { bytes: Buffer.from(`${JSON.stringify({ verified, compatible }, null, 2)}\n`), executable: false });
 }
 
 function checkMarketplace() {

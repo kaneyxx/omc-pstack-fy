@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { omcProblems } from "../tools/omc.mjs";
+import { compatibleVersions, omcProblems } from "../tools/omc.mjs";
 
 const contract = {
   agents: ["executor", "verifier"],
@@ -40,5 +40,30 @@ describe("omc contract", () => {
   test("fails when our file stops using an anchor, so the list stays current", () => {
     const [found] = problems({ bridge: "deslop runs at the end" });
     assert.match(found, /hooks\/omc-bridge\.md no longer says "ralph step 7\.5"/);
+  });
+});
+
+describe("compatible releases", () => {
+  const entries = [
+    { version: "5.7.4", contract: "old" },
+    { version: "5.7.5", contract: "now" },
+    { version: "5.7.6", contract: "now" },
+    { version: "5.7.7", contract: "now" },
+  ];
+
+  test("keeps the releases that passed the current contract, in order, without the verified one", () => {
+    assert.deepEqual(compatibleVersions(entries, "now", "5.7.7"), ["5.7.5", "5.7.6"]);
+  });
+
+  test("drops every release when the contract changed", () => {
+    assert.deepEqual(compatibleVersions(entries, "edited", "5.7.8"), []);
+  });
+
+  test("returns an empty list for an empty one", () => {
+    assert.deepEqual(compatibleVersions([], "now", "5.7.7"), []);
+  });
+
+  test("ignores a leading v and writes bare versions", () => {
+    assert.deepEqual(compatibleVersions([{ version: "v5.7.5", contract: "now" }, { version: "v5.7.7", contract: "now" }], "now", "5.7.7"), ["5.7.5"]);
   });
 });

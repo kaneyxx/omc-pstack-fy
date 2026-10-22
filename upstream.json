@@ -40,6 +40,12 @@
     "ref": "057ac169f1c1c405aa2022878a187b762b6af1d4",
     "tag": "v5.7.7",
     "committedAt": "2026-10-22T05:15:58+09:00",
-    "version": "5.7.7"
+    "version": "5.7.7",
+    "compatible": [
+      {
+        "version": "5.7.5",
+        "contract": "50ea4796d34f85e5ba75d26625fc88c74c467b61dd3b155ef76d758e9aa2fc85"
+      }
+    ]
   }
 }

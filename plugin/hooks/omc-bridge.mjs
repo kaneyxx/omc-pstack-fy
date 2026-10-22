@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 // SessionStart hook. While oh-my-claudecode (OMC) is installed and enabled, it injects omc-bridge.md, which makes OMC's
-// workflows hand code units, deslop, and the final code review to omc-pstack-fy. When the installed OMC is not the version
-// the bridge was checked against (omc-version.json, written by the build), it says so to the model and, at startup, to the
-// user. A hook must never block a session, so any error, missing file, or unparsable JSON ends the script with exit 0 and no output.
+// workflows hand code units, deslop, and the final code review to omc-pstack-fy. When the installed OMC is neither the version
+// the bridge was checked against nor another one that passed the same contract (omc-version.json, written by the build), it says
+// so to the model and, at startup, to the user. A hook must never block a session, so any error, missing file, or unparsable JSON
+// ends the script with exit 0 and no output.
 
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
@@ -63,14 +64,18 @@ const parse = (version) => {
   return match ? match.slice(1).map(Number) : undefined;
 };
 
-// A note for the model whenever the versions differ, and advice for the user, which depends on which side is behind.
-// A version it cannot read gets the note but no advice, rather than the wrong advice.
-function mismatch(installed, verified) {
-  if (installed === undefined || !verified || installed === verified) return {};
+const bare = (version) => String(version).replace(/^v/, "");
+
+// A note for the model whenever the installed version is neither the verified one nor in the compatible list, and advice for the
+// user, which depends on which side is behind. A version it cannot read gets the note but no advice, rather than the wrong advice.
+// A compatible list that is not an array counts as empty, and an entry that is not a string is ignored. An installed version that
+// is not a string matches nothing.
+function mismatch(installed, verified, compatible) {
+  if (installed === undefined || !verified) return {};
+  const checked = [verified, ...(Array.isArray(compatible) ? compatible.filter((version) => typeof version === "string") : [])];
+  if (typeof installed === "string" && checked.some((version) => bare(version) === bare(installed))) return {};
   const [x, y] = [parse(installed), parse(verified)];
   const order = x && y ? x.map((n, i) => n - y[i]).find((n) => n !== 0) ?? 0 : undefined;
-  const bare = (version) => String(version).replace(/^v/, "");
-  if (order === 0 && bare(installed) === bare(verified)) return {};
   const advice =
     order === undefined || order === 0
       ? "Check both plugins with /plugin."
@@ -93,7 +98,8 @@ try {
     let note = "";
     let user;
     try {
-      ({ note = "", user } = mismatch(install.version, readJson(join(HERE, "omc-version.json"))?.verified));
+      const stamp = readJson(join(HERE, "omc-version.json"));
+      ({ note = "", user } = mismatch(install.version, stamp?.verified, stamp?.compatible));
     } catch {
       // No note.
     }
