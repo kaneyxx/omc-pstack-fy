@@ -2,6 +2,7 @@
 name: update
 description: Update omc-pstack-fy to its newest version. Refreshes the marketplace, updates the plugin, and tells you to restart Claude Code.
 disable-model-invocation: true
+shell: bash
 allowed-tools: Bash(node "${CLAUDE_SKILL_DIR}/scripts/omc-pstack-fy.mjs" update)
 ---
 

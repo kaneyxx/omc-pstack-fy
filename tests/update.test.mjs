@@ -156,7 +156,8 @@ describe("the npm package", () => {
     assert.deepEqual(PACKAGE.bin, { "omc-pstack-fy": "plugin/skills/update/scripts/omc-pstack-fy.mjs" });
     assert.ok(readFileSync(SCRIPT, "utf8").startsWith("#!/usr/bin/env node\n"));
     if (process.platform !== "win32") assert.ok((statSync(SCRIPT).mode & 0o111) !== 0, "the script is executable");
-    const packed = spawnSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: ROOT, encoding: "utf8", env: { ...process.env, npm_config_update_notifier: "false" } });
+    const cache = tempDir("omc-pstack-fy-npm-");
+    const packed = spawnSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts", "--cache", cache], { cwd: ROOT, encoding: "utf8", env: { ...process.env, npm_config_update_notifier: "false" } });
     assert.equal(packed.status, 0, packed.stderr);
     const paths = JSON.parse(packed.stdout)[0].files.map(({ path }) => path).sort();
     assert.deepEqual(paths, ["LICENSE", "README.md", "package.json", "plugin/skills/update/scripts/omc-pstack-fy.mjs"]);

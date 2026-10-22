@@ -33,7 +33,7 @@ Every pstack command takes the `omc-pstack-fy:` prefix. The plugin's own [README
 
 ### Update
 
-Claude Code does not auto-update a third-party marketplace unless you turn it on. There are three ways to update, and this is the order to prefer. Each one loads the new version the next time Claude Code starts. In a session that is already open, run `/reload-plugins` once the update has finished.
+Claude Code does not auto-update a third-party marketplace unless you turn it on. There are three ways to update, plus a manual fallback. Prefer them in this order. Each one loads the new version the next time Claude Code starts. In a session that is already open, run `/reload-plugins` once the update has finished.
 
 **Turn on auto-update once.** Open `/plugin`, go to **Marketplaces**, pick `omc-pstack-fy`, and choose **Enable auto-update**. Or merge this into `~/.claude/settings.json`:
 
@@ -52,19 +52,19 @@ In an interactive session, Claude Code waits a random delay of up to ten minutes
 
 **Run the update skill.** Type `/omc-pstack-fy:update` in Claude Code. It runs the two commands under "Update by hand" below and tells you to restart Claude Code. Versions of the plugin from before this skill do not have it, so update once another way first.
 
-**Run the terminal command.** Install it once from GitHub. It needs Node 18 or later and git, and no npm registry.
+**Run the terminal command.** Run it with npx, straight from GitHub. It needs Node 18 or later and git, and it installs nothing globally.
 
 ```bash
-npm install -g github:kaneyxx/omc-pstack-fy
+npx -y github:kaneyxx/omc-pstack-fy update
 ```
 
-Then run this whenever you want to update.
+To type `omc-pstack-fy update` instead, add this alias to `~/.zshrc` or `~/.bashrc`.
 
 ```bash
-omc-pstack-fy update
+alias omc-pstack-fy='npx -y github:kaneyxx/omc-pstack-fy'
 ```
 
-It runs the same two commands in order and streams their output. It stops at the first one that fails and exits with that command's exit code. When both succeed, it tells you to restart Claude Code. `omc-pstack-fy help` prints the usage.
+It runs the same two commands in order and streams their output. It stops at the first one that fails and exits with that command's exit code. When both succeed, it tells you to restart Claude Code. `omc-pstack-fy help` prints the usage. Do not install `omc-pstack-fy` from the npm registry, because that name does not belong to this project.
 
 **Update by hand.** This is the fallback. The skill and the command both run these two commands. Enter each on its own, then restart Claude Code.
 
@@ -179,9 +179,9 @@ These are the owner's choices, not translations of Lauren's pstack.
 
 更新 omc-pstack-fy 有三種方式，建議照這個順序。第一種是開一次自動更新，之後不用再管。在 `/plugin` 的 Marketplaces 選 `omc-pstack-fy`，按 Enable auto-update，或把上面 Update 段落的 `extraKnownMarketplaces` 設定合併進 `~/.claude/settings.json`。開啟後，你在 session 送出第一則訊息，Claude Code 最多等十分鐘，就會在背景更新。正在執行的 session 仍用已載入的版本，下次啟動才載入新版。
 
-第二種是在 Claude Code 裡輸入 `/omc-pstack-fy:update`。它會依序執行下面的兩個指令，再提醒你重開 Claude Code。這個 skill 在加入它的版本才有，舊版要先用別的方式更新一次。第三種是在終端機輸入 `omc-pstack-fy update`。先用 `npm install -g github:kaneyxx/omc-pstack-fy` 從 GitHub 安裝一次，需要 Node 18 以上和 git，不需要 npm registry。它同樣依序執行那兩個指令並顯示輸出，第一個失敗就停下來，回傳該指令的 exit code。
+第二種是在 Claude Code 裡輸入 `/omc-pstack-fy:update`。它會依序執行下面的兩個指令，再提醒你重開 Claude Code。這個 skill 在加入它的版本才有，舊版要先用別的方式更新一次。第三種是在終端機輸入 `npx -y github:kaneyxx/omc-pstack-fy update`，直接從 GitHub 執行，不會裝到全域，需要 Node 18 以上和 git。想打 `omc-pstack-fy update` 的話，在 `~/.zshrc` 或 `~/.bashrc` 加上 `alias omc-pstack-fy='npx -y github:kaneyxx/omc-pstack-fy'`。它同樣依序執行那兩個指令並顯示輸出，第一個失敗就停下來，回傳該指令的 exit code。不要從 npm registry 安裝 `omc-pstack-fy`，那個名稱不屬於這個專案。
 
-手動更新就在終端機先跑 `claude plugin marketplace update omc-pstack-fy`，再跑 `claude plugin update omc-pstack-fy@omc-pstack-fy`。三種方式更新完，都要重開 Claude Code，或在已開啟的 session 裡輸入 `/reload-plugins`。
+手動更新就在終端機先跑 `claude plugin marketplace update omc-pstack-fy`，再跑 `claude plugin update omc-pstack-fy@omc-pstack-fy`。不論用哪種方式更新，更新完都要重開 Claude Code，或在已開啟的 session 裡輸入 `/reload-plugins`。
 
 想讓簡單問題得到簡短回答，又不想觸發 playbook，可以選 `omc-pstack-fy:fy` output style，做法見上面 Personal choices。
 
