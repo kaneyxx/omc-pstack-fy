@@ -1,5 +1,7 @@
 # omc-pstack-fy
 
+English | [繁體中文](README.zh-TW.md)
+
 pstack's engineering rigor for people who live in [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC). OMC stays your main harness, and every keyword and workflow works as before. omc-pstack-fy adds [pstack](https://github.com/cursor/plugins/tree/main/pstack), the Cursor plugin by Lauren Tan ([poteto](https://x.com/poteto)), rebuilt natively for Claude Code, as the engine OMC hands code to.
 
 pstack is Lauren's work, and oh-my-claudecode is Yeachan Heo's. This is an unofficial companion, not part of either project. It translates pstack faithfully and adds the OMC bridge and a few personal changes. Report pstack ideas to pstack, and OMC ideas to OMC.
@@ -111,9 +113,9 @@ package.json              the npm package for the omc-pstack-fy command. Its bin
 7. Point links to left-out upstream files at GitHub, pinned to the vendored commit.
 8. Check `tools/omc.json` against the vendored OMC release. An OMC agent or skill the file does not list, one it lists that OMC dropped, or an anchored passage OMC rewrote fails the build and names the bridge text to re-check. The build writes that OMC version into the plugin, together with the other releases that passed the same `tools/omc.json`. The hook tells you when your installed OMC is none of those.
 9. Count the Cursor names left, which must be 0 now that the runtime adapter is off. `node tools/build.mjs --report` lists them per file.
-10. Check the version. Plugin content must match the last release recorded in `tools/version-lock.json`.
+10. Compare the plugin content with the last release recorded in `tools/version-lock.json`.
 
-CI runs `node tools/sync.mjs --verify`, `node tools/build.mjs --check`, and the tests.
+CI runs `node tools/sync.mjs --verify`, a build check, and the tests. On a pull request, the build check is `node tools/build.mjs --check --skip-release-lock`, which fails when `plugin/` differs from what the build writes. On a push to `main`, it is `node tools/build.mjs --check`, which also fails when plugin content differs from the last release.
 
 ## Versions and releases
 
@@ -125,7 +127,7 @@ omc-pstack-fy has its own semantic version, separate from both upstreams. Each C
 
 A release moves `tools/rules.json`, the marketplace entry, and `package.json` to the same version, and the build fails when they differ.
 
-Every push that changes `plugin/` is a release, because Claude Code updates an installed plugin only when its version changes. CI fails when plugin content differs from the last release. A local build only warns, so work in progress builds fine.
+A push to `main` that changes `plugin/` needs a release, because Claude Code updates an installed plugin only when its version changes. Until `node tools/release.mjs` pushes that release, CI fails on every push to `main`. A pull request needs no release, because its CI run does not compare plugin content with the last release. That run still fails when the version differs from the one in `tools/version-lock.json`. A local build only warns, so work in progress builds fine.
 
 ```bash
 node tools/release.mjs patch --dry-run   # preview the next version and its notes
@@ -171,21 +173,9 @@ These are the owner's choices, not translations of Lauren's pstack.
 - The `omc-pstack-fy:fy` output style puts fy-mode's reply rules in every reply without running a playbook, so a quick question gets a short answer. It keeps Claude Code's coding instructions wherever the system prompt includes them. Pick it for one project with `/output-style omc-pstack-fy:fy` (Claude Code v2.1.269 or later; otherwise `/config` > Output style), or for every project with `"outputStyle": "omc-pstack-fy:fy"` in `~/.claude/settings.json`.
 - They live in `tools/rules/80-personal.json`, `overlays/hooks/`, `overlays/output-styles/`, `overlays/skills/unslop-zh/`, and `overlays/skills/fy-mode/`, apart from the translation rules.
 
-## 中文快速說明
+## Contributing
 
-給重度 oh-my-claudecode（OMC）使用者的 pstack。OMC 仍是主要工具，所有關鍵字和流程照常運作。omc-pstack-fy 把 Lauren Tan 的 pstack 原生移植到 Claude Code，當作 OMC 寫程式和審查程式的引擎：OMC 流程裡的每個程式工作交給 poteto-mode 的 playbook，最後的程式審查交給 `interrogate` 多模型審查，ai-slop-cleaner 步驟交給 `deslop`。這個分工由 plugin 內建的 SessionStart hook 告訴 OMC，不會改你的設定，停用 omc-pstack-fy 就會移除。
-
-安裝時先裝 OMC，再裝 omc-pstack-fy，指令照上面 Install 一行一行輸入，最後重開 Claude Code 並執行 `/omc-pstack-fy:setup-pstack`，它會先問設定過程要用英文、簡體中文還是繁體中文。只想用 pstack 就跳過 OMC。OMC 要從它自己的 marketplace 安裝，因為 SessionStart hook 只認 `oh-my-claudecode@omc` 這個 plugin 項目；用其他 marketplace 或 plugin 名稱註冊的 OMC（有些 fork 會這樣），hook 就不會把分工告訴它。順序反了也沒關係，hook 每次開 session 都會重新檢查，之後補裝 OMC 再重開就好。
-
-更新 omc-pstack-fy 有三種方式，建議照這個順序。第一種是開一次自動更新，之後不用再管。在 `/plugin` 的 Marketplaces 選 `omc-pstack-fy`，按 Enable auto-update，或把上面 Update 段落的 `extraKnownMarketplaces` 設定合併進 `~/.claude/settings.json`。開啟後，你在 session 送出第一則訊息，Claude Code 最多等十分鐘，就會在背景更新。正在執行的 session 仍用已載入的版本，下次啟動才載入新版。
-
-第二種是在 Claude Code 裡輸入 `/omc-pstack-fy:update`。它會依序執行下面的兩個指令，再提醒你重開 Claude Code。這個 skill 在加入它的版本才有，舊版要先用別的方式更新一次。第三種是在終端機輸入 `npx -y github:kaneyxx/omc-pstack-fy update`，直接從 GitHub 執行，不會裝到全域，需要 Node 18 以上和 git。想打 `omc-pstack-fy update` 的話，在 `~/.zshrc` 或 `~/.bashrc` 加上 `alias omc-pstack-fy='npx -y github:kaneyxx/omc-pstack-fy'`。它同樣依序執行那兩個指令並顯示輸出，第一個失敗就停下來，回傳該指令的 exit code。不要從 npm registry 安裝 `omc-pstack-fy`，那個名稱不屬於這個專案。
-
-手動更新就在終端機先跑 `claude plugin marketplace update omc-pstack-fy`，再跑 `claude plugin update omc-pstack-fy@omc-pstack-fy`。不論用哪種方式更新，更新完都要重開 Claude Code，或在已開啟的 session 裡輸入 `/reload-plugins`。
-
-想讓簡單問題得到簡短回答，又不想觸發 playbook，可以選 `omc-pstack-fy:fy` output style，做法見上面 Personal choices。
-
-上游原檔放在 `vendor/`，所有修改寫在 `tools/rules/*.json` 和 `overlays/`，每個 Cursor 名稱怎麼改、為什麼這樣改，都記在 `docs/claude-code-mapping.md`。`plugin/` 由 `node tools/build.mjs` 產生。pstack 和 OMC 兩個上游都會追。GitHub Action 每天檢查，任一邊有新版就先試跑 sync、build 和測試，再開 issue 寫明結論：只差版本號、plugin 檔案有變要審查，或哪一步失敗。更新時跑 `node tools/sync.mjs pstack` 或 `node tools/sync.mjs omc`，再跑 build；OMC 改了 bridge 依賴的名稱或步驟時，build 會失敗並指出要重新檢查哪一段。
+Contributions are welcome. Read [CONTRIBUTING.md](./CONTRIBUTING.md) before you open a pull request. It says which files you can change, how to verify a change, and how a change reaches a release. Report bugs and propose skills in the [issue tracker](https://github.com/kaneyxx/omc-pstack-fy/issues). A problem in a pstack skill's own wording belongs in [cursor/plugins](https://github.com/cursor/plugins), and a problem in OMC belongs in [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode), because this repo changes only how they are translated and bridged.
 
 ## License
 
