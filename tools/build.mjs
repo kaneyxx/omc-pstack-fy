@@ -48,9 +48,12 @@ function loadRules() {
   return merged;
 }
 const rules = loadRules();
+// Flags: --check, --skip-release-lock (only with --check), --release, --report, --update-baseline.
 const args = new Set(process.argv.slice(2));
 const checking = args.has("--check");
+const skippingLock = checking && args.has("--skip-release-lock");
 const problems = [];
+if (args.has("--skip-release-lock") && !checking) problems.push("--skip-release-lock only applies to --check. A plain build never fails on the release lock.");
 
 // Cursor names that Claude Code does not understand. The adapter translates them at runtime until a native rewrite removes them.
 // Counted terms ratchet: a build that adds a hit fails. The agent names only decide whether a skill needs the adapter.
@@ -362,6 +365,10 @@ function checkPackage(files) {
 // omc-pstack-fy has its own semantic version in tools/rules.json, moved only by tools/release.mjs, which records the released
 // content here with --release. Claude Code refreshes an installed plugin only when its version changes, so plugin content
 // that differs from the released content must not reach main without a release. A local build only warns, so work can go on.
+// A contributor's pull request changes plugin/ through a rule or an overlay but cannot release, so the pull request run of
+// --check adds --skip-release-lock. That skips only the content comparison. A version that differs from the lock still fails,
+// because release.mjs moves the version and the lock in one commit, so no pull request moves the version. plugin/ must still
+// equal what the build generates.
 function resolveVersion(files) {
   const { version } = rules.plugin;
   if (!/^\d+\.\d+\.\d+$/.test(version ?? "")) problems.push(`tools/rules.json plugin.version must be MAJOR.MINOR.PATCH, not ${JSON.stringify(version)}`);
@@ -376,13 +383,19 @@ function resolveVersion(files) {
     const upstreamVersion = JSON.parse(readFileSync(join(VENDOR, "plugin.json"), "utf8")).version;
     const released = { version, contentSha256, upstream: { ref: upstream.ref, version: upstreamVersion }, omc: { ref: omc.ref, version: omc.version } };
     if (!checking) writeFileSync(LOCK, `${JSON.stringify(released, null, 2)}\n`);
-  } else if (lock.version !== version || lock.contentSha256 !== contentSha256) {
-    const message =
-      lock.version === version
-        ? `plugin content changed since the v${version} release. Run \`node tools/release.mjs patch|minor|major\` before pushing.`
-        : `tools/rules.json says v${version}, but the last release is v${lock.version ?? "none"}. Let \`node tools/release.mjs\` move the version.`;
-    if (checking) problems.push(message);
-    else console.log(`NOTE ${message}`);
+  } else {
+    let message;
+    let note;
+    if (lock.version !== version) {
+      message = `tools/rules.json says v${version}, but the last release is v${lock.version ?? "none"}. Let \`node tools/release.mjs\` move the version.`;
+    } else if (lock.contentSha256 !== contentSha256 && !skippingLock) {
+      message = `plugin content changed since the v${version} release. Run \`node tools/release.mjs patch|minor|major\` before pushing.`;
+      note = `plugin content changed since the v${version} release. The maintainer releases with \`node tools/release.mjs patch|minor|major\`. Contributors do not need to.`;
+    }
+    if (message) {
+      if (checking) problems.push(message);
+      else console.log(`NOTE ${note ?? message}`);
+    }
   }
   return version;
 }

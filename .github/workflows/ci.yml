@@ -19,6 +19,10 @@ jobs:
       - name: vendor/ matches the pinned pstack and oh-my-claudecode commits
         run: node tools/sync.mjs --verify
       - name: plugin/ matches what the build generates
+        if: github.event_name == 'pull_request'
+        run: node tools/build.mjs --check --skip-release-lock
+      - name: plugin/ matches what the build generates and the last release
+        if: github.event_name != 'pull_request'
         run: node tools/build.mjs --check
       - name: Tests
         run: node --test tests/*.test.mjs
