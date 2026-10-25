@@ -1,5 +1,50 @@
 # Changelog
 
+## [1.3.0] - 2026-10-25
+
+Built from upstream pstack v0.15.32 (https://github.com/cursor/plugins/tree/99b609a), checked against oh-my-claudecode v5.7.14 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/5632614).
+
+### Added
+
+- `/omc-pstack-fy:ketchup-video` catches you up like `/omc-pstack-fy:ketchup`. It shows what happened in a short silent video of slides, with the calls waiting on you as text under it.
+- Unlike upstream pstack, `/omc-pstack-fy:ketchup-video` links the video file by its absolute path instead of embedding it. It renders with a tool that is already installed, such as ffmpeg, never installs one, and gives only the calls when none is installed.
+- `/omc-pstack-fy:statechart` has a `render CHART.mmd` command. It draws one Mermaid chart as a PNG without running TLC, so the chart can come from `from-spec`, from `from-chart`, or from a person.
+- `from-spec --cover` trims an overview that is too large to read. It keeps the shortest path to each settled state plus every bug path, and prints what it leaves out.
+- `from-spec` takes `--config`, `--fixed-config`, and `--against-config` to name the config of each model.
+- `from-spec` checks each PROPERTY in the config in its own TLC run, and `--expect-broken` accepts a PROPERTY too. The charts do not draw a PROPERTY, so `stories.md` names its TLC counterexample.
+- `--theme light`, `dark`, or `classic` sets the colors of each PNG that `--png` or `render` draws.
+
+### Changed
+
+- `/omc-pstack-fy:statechart` charts any system that moves between states, such as a product flow, a protocol, or a service. Before, it charted only what an app's user sees.
+- The `from-spec` overview draws every state unless you pass `--cover`. Before, a mapping with `readerActions` trimmed it on its own.
+- `--against` checks the agreed spec only with its own config, `AGREED.cfg` or the file you pass to `--against-config`. It no longer falls back to the config of the code model, and it stops with exit code 2 when that config is missing.
+- `/omc-pstack-fy:statechart` now uses `--expect-broken` to check a goal that the system must be able to reach. It writes a rule that says the goal never happens, and the path that breaks that rule is a way to the goal.
+- With `mise` installed and `TLA2TOOLS` unset, the first `from-spec` or `from-chart` run installs TLC 1.7.4 through mise, plus a Temurin 25 JDK unless `JAVA` is set. With the JDK the download is a few hundred MB. Before, the command stopped until you set `TLA2TOOLS`, and setting it still uses your own TLC.
+- `--png` draws with Pele and resvg instead of `npx @mermaid-js/mermaid-cli`. The first `--png` or `render` run installs `pele@1.8.0` and `@resvg/resvg-js@2.6.2` from npm into `~/.cache/statechart/`, or `$XDG_CACHE_HOME/statechart/` when that is set, with exact versions and install scripts off.
+- The sample model in `scripts/model/OutputFolder.*` is gone from `/omc-pstack-fy:statechart`.
+- When the check is a TLA+ model, `/omc-pstack-fy:create-formal-verification-skill` now writes a skill that reads every result with `/omc-pstack-fy:statechart`. The generated skill sits in your project, outside the plugin, so it tells the agent to search the plugin cache, `~/.claude/plugins/cache/omc-pstack-fy/` by default, for `skills/statechart/SKILL.md`, to take the copy with the highest `version` when several match, and to skip the chart when omc-pstack-fy is not installed.
+- `/omc-pstack-fy:reflect` never edits a skill under `plugins/cache/`. It names a copy in `.claude/skills/<skill>/` or `~/.claude/skills/<skill>/` before you approve, edits that copy after, and never opens a PR or pushes.
+- `/omc-pstack-fy:swarm` numbers its Phase A steps 1 to 4. Picking the worker model moves from step 4 to step 3, and giving each worker its own output moves from step 5 to step 4.
+- The bridge needed no change for oh-my-claudecode v5.7.14. The startup notice stays quiet on 5.7.5, 5.7.7, and 5.7.14, and any other release still gets the notice.
+
+### Fixed
+
+- The `watch-pr` script that the Babysit and Shipping playbooks run no longer puts a fork's pull request in your stack as a parent when the fork's branch has the same name as your base branch. A fork that opens `main` against `main` no longer sends the stack walk into a loop that crashes.
+- `watch-pr` no longer waits past `--timeout`. Each wait between polls ends at the deadline.
+- `orch frontier set` in the Orchestrate playbook uses the one open pull request of a branch that also has closed or merged ones. Before, it stopped with "multiple pull requests".
+- `check-plan.mjs` in the multi-phase plan playbook no longer fails a plan for a colon, a curly quote, or a long dash inside a code span that uses two or more backticks.
+- `worktree-audit.sh` in the worktree cleanup playbook reads the date of each worktree's last chat with GNU `stat` and `date`, as on Linux or with Homebrew's gnubin. Before, it missed that date there, so a worktree with a chat in the last four days could be listed as safe to prune.
+
+### Docs
+
+- The plugin README says how to turn on auto-update, in `/plugin` > Marketplaces > `omc-pstack-fy` > Enable auto-update. It also says to run `/omc-pstack-fy:update` to update once by hand.
+- The plugin README lists what `/omc-pstack-fy:statechart` downloads on first use, and warns that the skill runs the `<Spec>.map.mjs` beside a spec as JavaScript. Run it only on specs you trust.
+
+### Update
+
+From this release on, `/omc-pstack-fy:update` is enough. Run it in Claude Code, then restart Claude Code or run `/reload-plugins`. If you are on 1.1.1 or older, which has no update skill, run `npx -y github:kaneyxx/omc-pstack-fy update` in a terminal instead.
+
 ## [1.2.0] - 2026-10-22
 
 Built from upstream pstack v0.15.30 (https://github.com/cursor/plugins/tree/eb4db2b), checked against oh-my-claudecode v5.7.7 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/057ac16).
