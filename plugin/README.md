@@ -21,6 +21,8 @@ fork it. improve it. make it yours. PRs are welcome!
 /plugin install omc-pstack-fy@omc-pstack-fy
 ```
 
+claude code leaves auto-update off for third-party marketplaces, so omc-pstack-fy stays on the version you installed. to turn it on, run `/plugin`, open the **marketplaces** tab, select `omc-pstack-fy`, and choose **enable auto-update**. to update once by hand, run [`/omc-pstack-fy:update`](skills/update/SKILL.md), which refreshes the marketplace and then updates the plugin.
+
 claude code prefixes plugin commands and agents with the plugin name. every command here already carries it, such as [`/omc-pstack-fy:poteto-mode`](skills/poteto-mode/SKILL.md), and the delegate agent is `omc-pstack-fy:poteto-agent`. [`/omc-pstack-fy:setup-pstack`](skills/setup-pstack/SKILL.md) writes your model choices to `~/.claude/rules/omc-pstack-fy-models.md`. a few upstream steps need a cursor-only service, such as starting bugbot or a cursor automation. omc-pstack-fy skips those with a one-line note.
 
 omc-pstack-fy is generated from a pinned upstream commit by `node tools/build.mjs` in [kaneyxx/omc-pstack-fy](https://github.com/kaneyxx/omc-pstack-fy). edit the rules or overlays there, never this folder.
@@ -126,6 +128,7 @@ the full rules and playbooks live in [`skills/poteto-mode/SKILL.md`](./skills/po
 | [`/omc-pstack-fy:why`](./skills/why/SKILL.md) | you want to know why something was built this way. discovers available MCPs at run time and queries each evidence category in parallel (source control, issue tracker, long-form docs, real-time chat, infra observability, error tracking, analytics warehouse). |
 | [`/omc-pstack-fy:recall`](./skills/recall/SKILL.md) | you're starting or resuming work and want your recent context on a topic rebuilt from your own chat history and the shared record, handed back as a tight current-state brief. |
 | [`/omc-pstack-fy:ketchup`](./skills/ketchup/SKILL.md) | you want what changed in this chat since your last message, in plain words and small visuals, with every item waiting on you listed and decidable from the reply alone, even when that makes the reply long. |
+| [`/omc-pstack-fy:ketchup-video`](./skills/ketchup-video/SKILL.md) | you want the [`/omc-pstack-fy:ketchup`](skills/ketchup/SKILL.md) catch-up as a short silent video of slides, with the calls waiting on you as text under it. |
 | [`/omc-pstack-fy:blast-radius`](./skills/blast-radius/SKILL.md) | you have a small-looking change and want to know what else it could break, with the one fact it's safe because of proven by running code, not asserted. |
 | [`/omc-pstack-fy:architect`](./skills/architect/SKILL.md) | you're about to write code that crosses a function boundary and want the caller's usage, types, and module shape settled first. |
 | [`/omc-pstack-fy:arena`](./skills/arena/SKILL.md) | you want N parallel attempts at the same thing, then to grab the best parts of each. |
@@ -152,6 +155,8 @@ the full rules and playbooks live in [`skills/poteto-mode/SKILL.md`](./skills/po
 | [`/omc-pstack-fy:technical-writing`](./skills/technical-writing/SKILL.md) | layered doc standard (Diátaxis + Google developer style + STE + Global English) for docs, RFCs, readmes, PR descriptions, commit messages. |
 
 </details>
+
+**[`/omc-pstack-fy:statechart`](skills/statechart/SKILL.md) downloads tools the first time you use it.** with `mise` installed and `TLA2TOOLS` unset, the first model check installs tlc through mise, plus a temurin jdk unless `JAVA` is set, a few hundred mb with the jdk. the first png or `render` run installs two packages from npm into a cache folder. set `TLA2TOOLS`, and `JAVA` if `java` is not on your path, to skip the model-check download. it also runs a `<Spec>.map.mjs` beside a spec as javascript, so run it only on specs you trust. the skill's `SKILL.md` and `--help` describe what it installs.
 
 
 
@@ -276,7 +281,7 @@ when a default changes, a rule written before the change still pins the old defa
 
 ## automations
 
-upstream pstack also ships a dormant [benny automation pack](https://github.com/cursor/plugins/tree/eb4db2b55b2b7dec3d9282754cddf0a56bf4ff10/pstack/automations/benny). benny triages slack issue reports, then reproduces and fixes confirmed bugs with real ui evidence. it runs on cursor's automation service, so omc-pstack-fy leaves it out. claude code's `/schedule` runs cloud routines on a cron if you want to build a pipeline like it.
+upstream pstack also ships a dormant [benny automation pack](https://github.com/cursor/plugins/tree/99b609a72323b70204eab407c622f436e858e112/pstack/automations/benny). benny triages slack issue reports, then reproduces and fixes confirmed bugs with real ui evidence. it runs on cursor's automation service, so omc-pstack-fy leaves it out. claude code's `/schedule` runs cloud routines on a cron if you want to build a pipeline like it.
 
 ## license
 

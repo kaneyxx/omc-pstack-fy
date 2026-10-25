@@ -75,7 +75,7 @@ for (let i = start; i < raw.length; i++) {
 	if (code) continue;
 	if (text.includes(REPO_PSTACK)) fail(n, "reads pstack from the repo, not the installed omc-pstack-fy copy");
 	const prose = text
-		.replace(/`[^`]*`/g, "`")
+		.replace(/(?<!`)(`+)(?!`)(.*?)(?<!`)\1(?!`)/g, "`")
 		.replace(/!\[[^\]]*\]\([^)]*\)/g, "")
 		.replace(/\]\([^)]*\)/g, "]");
 	if (/[\u2013\u2014]/.test(prose)) fail(n, "long dash");

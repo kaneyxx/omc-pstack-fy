@@ -412,8 +412,8 @@
     },
     {
       "file": "skills/swarm/SKILL.md",
-      "find": "Spawn all N workers in one message with `subagent_type: generalPurpose`, `environment: \"cloud\"`, `run_in_background: true`, and the step 4 model, left unset for `auto` or `inherit-parent`. Use `environment: \"local\"` only when the worker needs access to something on the user's computer.\n\nWhen a worker must start from a non-default pushed branch, pass `cloud_base_branch`.",
-      "replace": "Spawn all N workers in one message with `subagent_type: \"general-purpose\"`, `isolation: \"worktree\"`, `run_in_background: true`, and the step 4 model and effort, with `model` left unset for `inherit`. The worktree gives each worker its own checkout on this machine, so workers never write over each other. Omit `isolation` only when a worker needs your own checkout, such as its uncommitted changes.\n\nName the branch or commit each worker checks out first, so each worker runs the code you mean.",
+      "find": "Spawn all N workers in one message with `subagent_type: generalPurpose`, `environment: \"cloud\"`, `run_in_background: true`, and the step 3 model, left unset for `auto` or `inherit-parent`. Use `environment: \"local\"` only when the worker needs access to something on the user's computer.\n\nWhen a worker must start from a non-default pushed branch, pass `cloud_base_branch`.",
+      "replace": "Spawn all N workers in one message with `subagent_type: \"general-purpose\"`, `isolation: \"worktree\"`, `run_in_background: true`, and the step 3 model and effort, with `model` left unset for `inherit`. The worktree gives each worker its own checkout on this machine, so workers never write over each other. Omit `isolation` only when a worker needs your own checkout, such as its uncommitted changes.\n\nName the branch or commit each worker checks out first, so each worker runs the code you mean.",
       "why": "Claude Code has no cloud workers. A worktree on this machine is the isolation, subagents run in the background by default, and the brief replaces cloud_base_branch."
     },
     {
@@ -499,6 +499,30 @@
       "find": "Alias and rejected entries follow the runner rules",
       "replace": "`inherit` and rejected entries follow the runner rules",
       "why": "inherit is the only alias left."
+    },
+    {
+      "file": "skills/ketchup-video/SKILL.md",
+      "find": "ketchup's opening sentence, the embedded video, one line",
+      "replace": "ketchup's opening sentence, a link to the video file by its absolute path, one line",
+      "why": "A Claude Code reply cannot play an embedded video. A path the user can open works."
+    },
+    {
+      "file": "skills/ketchup-video/SKILL.md",
+      "find": "Before you embed the video,",
+      "replace": "Before you link the video,",
+      "why": "The reply links the file instead of embedding it."
+    },
+    {
+      "file": "skills/ketchup-video/SKILL.md",
+      "find": "Render one silent landscape video, such as an mp4, with motion between slides.",
+      "replace": "Render one silent landscape video, such as an mp4, with motion between slides. Use only tools already on this machine to draw and encode the slides, such as ffmpeg. Never install or download one, including through npx, pip, or brew. When none is installed, say so in one line and give only the calls.",
+      "why": "The skill names no renderer, and ketchup is otherwise read-only. Without this line an agent may install software to draw the slides or finish the render."
+    },
+    {
+      "file": "skills/create-formal-verification-skill/SKILL.md",
+      "find": "Refer to `/statechart` by name. Its commands, options, and file paths change between releases and machines, so copy none of them into the generated skill or its scripts.",
+      "replace": "Refer to `/statechart` by name. Its commands, options, and file paths change between releases and machines, so copy none of them into the generated skill or its scripts. The Skill tool refuses `/statechart` and the generated skill sits outside this plugin, so tell the next agent to search the Claude Code plugin cache (`~/.claude/plugins/cache/omc-pstack-fy/` by default) for a file whose path ends in `skills/statechart/SKILL.md`, to use the copy whose `.claude-plugin/plugin.json` has the highest `version` when more than one matches, and to read that file and follow it. If none exists, tell the next agent to say that omc-pstack-fy is not installed and skip the chart.",
+      "why": "A skill generated into the user's project cannot link to the plugin, and the Skill tool refuses statechart, so a bare name leaves the next agent with no way in. The top folder of the plugin cache is stable across releases, but the version folders under it are not and old ones stay, so the instruction names the rule for picking one and says what to do when none exists, as the poteto-agent lookup does."
     }
   ],
   "allow": [

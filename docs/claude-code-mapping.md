@@ -20,6 +20,7 @@ Facts below were checked in Claude Code 2.1.304 on 2026-10-20 unless marked othe
 | `AskQuestion` | `AskUserQuestion`. Subagents and `claude -p` sessions do not have it, so they ask in plain text or, under poteto-mode's autonomy rules, decide and report. A question takes 2 to 4 options, so a longer list splits across questions. `allow_multiple` is `multiSelect: true`. |
 | open a todolist | open a todo list with the session's todo tool (`TodoWrite` or `TaskCreate`) when it has one. Otherwise keep the checklist in the reply and update it at each phase. Subagents have no todo tool. |
 | run another pstack skill | Read its `SKILL.md`. The Skill tool refuses skills that set `disable-model-invocation: true` and tells the model not to reproduce them, so a model must never meet a bare command it is meant to run. The build links every "the **name** skill" mention and every `` `/omc-pstack-fy:<name>` `` command outside code blocks to the skill's `SKILL.md`, and adds a routing note to each skill that names another. The user types `/omc-pstack-fy:<name>`. |
+| a generated project skill that tells the next agent to run `/statechart` | the build cannot link from a user's project into the plugin. The `create-formal-verification-skill` rule tells the next agent to search `~/.claude/plugins/cache/omc-pstack-fy/` for `skills/statechart/SKILL.md`, take the highest `version` in `.claude-plugin/plugin.json` when several match, and skip the chart when none exists. |
 | `/loop` | unchanged. Claude Code has its own `/loop` (fixed interval such as `/loop 1h`, or self-paced with no interval). |
 
 ## Subagents
@@ -123,6 +124,7 @@ Transcript lines are JSON objects with a `type`. A human message is `type: "user
 | Custom Mode, option+enter to keep a skill on | nothing to do. A loaded skill stays in context for the rest of the session. Compaction re-attaches only the start of each loaded skill, within a shared budget, so a long skill can lose its tail (per code.claude.com/docs/en/skills). Run the skill again after a compaction or in a new session. |
 | Plan Mode | Claude Code's plan mode (shift+tab). |
 | `/visualize`, the image generation tool | a Mermaid or text diagram |
+| an embedded video in the reply (`ketchup-video`) | a link to the file by its absolute path, because a Claude Code reply cannot play a video. The render uses tools already on the machine, such as ffmpeg, and never installs one. `ketchup`'s inline screenshots and videos stay as upstream wrote them, unverified here. |
 | Cursor's built-in babysit skill | does not exist in Claude Code. Drop the disambiguation. |
 | `/add-plugin pstack` | `/plugin marketplace add kaneyxx/omc-pstack-fy`, then `/plugin install omc-pstack-fy@omc-pstack-fy` |
 

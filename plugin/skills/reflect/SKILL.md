@@ -52,6 +52,8 @@ Present the synthesizer's full Accepted / Rejected / Backlog output and wait for
 
 File each Backlog item to your team's devex or backlog tracker without waiting. Only the Accepted list waits for approval.
 
+Never edit a skill under `plugins/cache/`. Before approval, show its destination, `.claude/skills/<skill>/` or `~/.claude/skills/<skill>/`. After approval, copy the skill folder there and edit the copy. Never open a PR or push.
+
 Follow each approved row's Routing exactly. The rows below hand work to the `skill-creator` skill when the session lists it, because it runs the test loop a skill change needs. Without it, the parent makes the edit directly, and a new skill is a `SKILL.md` with `name` and `description` frontmatter under `.claude/skills/<kebab-name>/`, or `~/.claude/skills/<kebab-name>/` for a personal skill.
 
 - Trivial existing-skill edit (a one-line bullet, a tightened sentence, a stale fact corrected): the parent does it directly.

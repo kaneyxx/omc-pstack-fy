@@ -158,6 +158,8 @@ That's the whole prompt. [`/omc-pstack-fy:bro`](../../skills/bro/SKILL.md) resta
 
 [`/omc-pstack-fy:ketchup`](../../skills/ketchup/SKILL.md) tells you in plain words what changed since your last message, then lists each call waiting on you with its pick, evidence, and risk. It changes nothing while it reports.
 
+To watch the catch-up instead, run [`/omc-pstack-fy:ketchup-video`](../../skills/ketchup-video/SKILL.md). It shows what happened in a short silent video of slides, and lists the calls waiting on you as text under it.
+
 ## The pitfalls
 
 - **Enumerating skills in the prompt.** "use /omc-pstack-fy:how then /omc-pstack-fy:architect then /omc-pstack-fy:arena" reorders steps the playbook already sequences. State the goal and constraints. Name a skill only to override a default.

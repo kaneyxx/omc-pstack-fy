@@ -115,7 +115,7 @@ Every loop above still waits for you to start it. A scheduled routine removes th
 - Every stage can stop the line. Triage can decide the report is expected behavior, repro can fail to reproduce it, and the fixer can judge the change too risky. Each of those outcomes is useful, because it keeps bad work from reaching the next stage, where it costs more to undo.
 - Every stage hands over evidence. Repro attaches screenshots and video of the broken state, and the fix attaches before-and-after proof. A human can then check that the agent fixed the right thing before reading a line of code.
 
-Upstream pstack ships this as a dormant [automation pack](https://github.com/cursor/plugins/blob/eb4db2b55b2b7dec3d9282754cddf0a56bf4ff10/pstack/automations/benny/README.md) for Slack issue reports. One automation triages each report. The other reproduces confirmed bugs and may prepare a small draft fix. It runs on Cursor's automation service, so omc-pstack-fy leaves it out, but its files show both rules in practice.
+Upstream pstack ships this as a dormant [automation pack](https://github.com/cursor/plugins/blob/99b609a72323b70204eab407c622f436e858e112/pstack/automations/benny/README.md) for Slack issue reports. One automation triages each report. The other reproduces confirmed bugs and may prepare a small draft fix. It runs on Cursor's automation service, so omc-pstack-fy leaves it out, but its files show both rules in practice.
 
 **Pitfall:** a duration is not a finish condition. "work on this for 4 hours" gives the agent nothing to check, and you'll wake up to four hours of motion instead of a result. Give `/loop` a predicate that can pass or fail.
 
