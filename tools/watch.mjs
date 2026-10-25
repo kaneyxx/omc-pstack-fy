@@ -144,9 +144,10 @@ const ACTIONS = {
   close: ({ number }) => gh(["issue", "close", String(number), "--comment", CLOSED]),
 };
 
-function publish({ newer, body, summary }) {
-  // The repo is public, so anyone can open an issue with this title. Only the workflow's own issues count.
-  const listed = JSON.parse(gh(["issue", "list", "--state", "open", "--app", "github-actions", "--limit", "200", "--json", "number,title,body"]));
+export function publish({ newer, body, summary }) {
+  // The repo is public, so anyone can open an issue with this title. Only the workflow's own issues count. `--app` matches
+  // nothing here, because the bot's login is `github-actions[bot]`.
+  const listed = JSON.parse(gh(["issue", "list", "--state", "open", "--author", "github-actions[bot]", "--limit", "200", "--json", "number,title,body"]));
   const open = listed.filter(({ title }) => title === TITLE);
   for (const action of issuePlan({ open, body, newer, summary })) ACTIONS[action.act](action, body);
 }

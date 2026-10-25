@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { delimiter, dirname, join } from "node:path";
 import { describe, test } from "node:test";
-import { cappedStat, failLines, issuePlan, testFailures, tidy, verdict } from "../tools/watch.mjs";
+import { cappedStat, failLines, issuePlan, publish, testFailures, tidy, verdict } from "../tools/watch.mjs";
 
 const STAMP = "plugin/hooks/omc-version.json";
 const COMMANDS = ["node tools/sync.mjs omc", "node tools/build.mjs", "node --test tests/*.test.mjs"];
@@ -159,5 +159,75 @@ describe("issue plan", () => {
     const open = [{ number: 9, body }, { number: 4, body }];
     assert.deepEqual(issuePlan({ open, body, newer: false, summary }), [{ act: "close", number: 9 }, { act: "close", number: 4 }]);
     assert.deepEqual(issuePlan({ open: [], body, newer: false, summary }), []);
+  });
+});
+
+describe("publish", { skip: process.platform === "win32" && "the stub gh is a POSIX script" }, () => {
+  const TITLE = "Upstream update available";
+  const body = "## omc\n\nPinned v5.7.5.";
+  const summary = "The contract holds. Only a bookkeeping minor release is left.";
+  const ours = [
+    { number: 2, title: TITLE, body },
+    { number: 1, title: TITLE, body: "older report" },
+  ];
+
+  // Only `--author github-actions[bot]` finds the workflow's issues. A list without any author filter also returns an issue a
+  // stranger opened with the same title. The token and repo are invalid so that a gh which escapes the stub can only fail.
+  function stubGh(t) {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), "watch-gh-")));
+    const log = join(dir, "calls.log");
+    mkdirSync(join(dir, "bin"));
+    writeFileSync(
+      join(dir, "bin", "gh"),
+      `#!/usr/bin/env node
+const { appendFileSync, readFileSync } = require("node:fs");
+const args = process.argv.slice(2);
+const listing = args[0] === "issue" && args[1] === "list";
+if (!listing) readFileSync(0);
+appendFileSync(process.env.STUB_LOG, JSON.stringify(args) + "\\n");
+if (listing) {
+  const own = args[args.indexOf("--author") + 1] === "github-actions[bot]";
+  const filtered = ["--app", "--search", "--author"].some((flag) => args.includes(flag));
+  const stranger = { number: 7, title: ${JSON.stringify(TITLE)}, body: "opened by someone else" };
+  console.log(JSON.stringify(own ? ${JSON.stringify(ours)} : filtered ? [] : [stranger, ...${JSON.stringify(ours)}]));
+}
+`,
+    );
+    chmodSync(join(dir, "bin", "gh"), 0o755);
+    const saved = { PATH: process.env.PATH, STUB_LOG: process.env.STUB_LOG, GH_TOKEN: process.env.GH_TOKEN, GH_REPO: process.env.GH_REPO };
+    process.env.PATH = [join(dir, "bin"), dirname(process.execPath), saved.PATH].join(delimiter);
+    process.env.STUB_LOG = log;
+    process.env.GH_TOKEN = "invalid";
+    process.env.GH_REPO = "invalid/invalid";
+    t.after(() => {
+      for (const [name, value] of Object.entries(saved)) {
+        if (value === undefined) delete process.env[name];
+        else process.env[name] = value;
+      }
+      rmSync(dir, { recursive: true, force: true });
+    });
+    return () => {
+      const calls = (existsSync(log) ? readFileSync(log, "utf8").trim().split("\n") : []).map((line) => JSON.parse(line));
+      assert.ok(calls.some(([noun, verb]) => noun === "issue" && verb === "list"), "the stub gh ran");
+      return calls.filter(([, verb]) => verb !== "list").map((args) => args.slice(0, 3).join(" "));
+    };
+  }
+
+  test("finds the issue the workflow opened, so an unchanged report opens no second one", (t) => {
+    const changes = stubGh(t);
+    publish({ newer: true, body, summary });
+    assert.deepEqual(changes(), []);
+  });
+
+  test("edits the issue the workflow opened, and comments, when the report changed", (t) => {
+    const changes = stubGh(t);
+    publish({ newer: true, body: `${body}\n\nMore.`, summary });
+    assert.deepEqual(changes(), ["issue edit 2", "issue comment 2"]);
+  });
+
+  test("closes the issues the workflow opened once the pins are current", (t) => {
+    const changes = stubGh(t);
+    publish({ newer: false, body, summary });
+    assert.deepEqual(changes(), ["issue close 2", "issue close 1"]);
   });
 });
