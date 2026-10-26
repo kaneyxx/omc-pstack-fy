@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0] - 2026-10-26
+
+Built from upstream pstack v0.15.32 (https://github.com/cursor/plugins/tree/99b609a), checked against oh-my-claudecode v5.7.16 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/9e2dda5).
+
+### Changed
+
+- The bridge is checked against oh-my-claudecode v5.7.16. With OMC 5.7.14, 5.7.15, or 5.7.16 installed, a session starts with no update reminder. The bridge routes work the same way as before.
+
 ## [1.3.1] - 2026-10-26
 
 Built from upstream pstack v0.15.32 (https://github.com/cursor/plugins/tree/99b609a), checked against oh-my-claudecode v5.7.14 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/5632614).
