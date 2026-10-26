@@ -71,7 +71,7 @@
       "file": "skills/poteto-mode/SKILL.md",
       "find": "**Defaults for every `Task` call.** `run_in_background: true`, agent mode (readonly strips MCP), file pointers not inlined context, explicit model per role (configurable via `/setup-pstack`. Defaults `grok-4.7-xhigh-fast` for code, `claude-opus-5-5-xhigh` for prose and judgment).",
       "replace": "**Defaults for every `Agent` call.** Pass `run_in_background: true` and keep working until it notifies you. Use a type with full tools, not `Explore`, because a delegate needs edits and the session's MCP servers. Pass file pointers, not inlined context. Set an explicit `model` and `effort` per role (configurable via `/setup-pstack`. Defaults `sonnet xhigh` for code, `opus xhigh` for prose and judgment).",
-      "why": "Claude Code subagents run in the background by default, Explore has no edit tools, and the Agent tool takes a model alias plus an effort level."
+      "why": "A subagent that Claude spawns from the main conversation starts in the background by default. The docs do not describe a `run_in_background` parameter. Claude Code with fork mode on accepts it although the Agent tool's schema lists no such parameter (observed), so passing it is harmless. Explore has no edit tools, and the Agent tool takes a model alias plus an effort level."
     },
     {
       "file": "skills/poteto-mode/SKILL.md",
@@ -378,7 +378,7 @@
       "file": "skills/arena/SKILL.md",
       "find": "Spawn all N subagents in one message with `run_in_background: true`, each with",
       "replace": "Spawn all N subagents in one message with `run_in_background: true`, each with",
-      "why": "Claude Code runs subagents in the background by default."
+      "why": "A subagent that Claude spawns from the main conversation starts in the background by default. The docs do not describe a `run_in_background` parameter. Claude Code with fork mode on accepts it although the Agent tool's schema lists no such parameter (observed), so passing it is harmless."
     },
     {
       "file": "skills/arena/SKILL.md",
