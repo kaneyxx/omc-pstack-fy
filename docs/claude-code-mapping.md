@@ -36,7 +36,7 @@ Subagents can spawn their own subagents (verified: a nested `Agent` call from a 
 | `environment: "cloud"` | `isolation: "worktree"`, and the brief names the branch or commit to check out. The worker runs on this machine. |
 | `environment: "local"` | omit |
 | `cloud_base_branch: <b>` | the brief tells the worker to check out `<b>` first |
-| `run_in_background: true` | unchanged. The `Agent` tool takes the same parameter. Pass it explicitly, because background is the default only for spawns from the main conversation. |
+| `run_in_background: true` | unchanged. A subagent that Claude spawns from the main conversation starts in the background by default. The docs do not describe this parameter. Claude Code with fork mode on accepts it although the `Agent` tool's schema lists no such parameter (observed), so passing it is harmless. Keep it, because it states the intent. |
 | `resume` | `SendMessage` to the agent's id when its state must survive. Otherwise a fresh agent with the earlier result pasted into the brief. |
 | `file_attachments` | list the paths in the brief |
 
