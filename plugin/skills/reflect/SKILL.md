@@ -44,7 +44,7 @@ One `Agent` call, `subagent_type: "general-purpose"`, `model` and `effort` from 
 
 ## 4. Structural enforcement check
 
-Move any Accepted item that a lint rule, script, metadata flag, or runtime check would enforce more reliably to Backlog. See the **encode-lessons-in-structure** principle skill.
+Move any Accepted item that a lint rule, script, metadata flag, or runtime check would enforce more reliably to Backlog. See the **encode-lessons-in-structure** principle skill. A plugin skill runs as `/<plugin>:<skill>`, where `<plugin>` is the `name` in its plugin's `.claude-plugin/plugin.json`, and its files usually sit under `~/.claude/plugins/cache/`. Move each `tune description` row for a plugin skill to Backlog too, because the Apply step below cannot change a plugin skill's description.
 
 ## 5. Apply
 
@@ -52,9 +52,9 @@ Present the synthesizer's full Accepted / Rejected / Backlog output and wait for
 
 File each Backlog item to your team's devex or backlog tracker without waiting. Only the Accepted list waits for approval.
 
-Never edit a skill under `plugins/cache/`. Before approval, show its destination, `.claude/skills/<skill>/` or `~/.claude/skills/<skill>/`. After approval, copy the skill folder there and edit the copy. Never open a PR or push.
+Never edit a skill under `plugins/cache/`, and never copy a plugin skill to `.claude/skills/` or `~/.claude/skills/` to edit it. The copy only adds its own `/<skill>` command. `/<plugin>:<skill>` and every skill that reads the plugin skill by path still run the plugin's text. Put each approved edit to a plugin skill in a rule file instead, `.claude/rules/<plugin>-<skill>.md` for this project or `~/.claude/rules/<plugin>-<skill>.md` for every project, such as `~/.claude/rules/omc-pstack-fy-reflect.md` for [`/omc-pstack-fy:reflect`](SKILL.md). Open the rule with its condition, such as "When you run the omc-pstack-fy `reflect` skill,", so it does nothing otherwise. A rule cannot delete the plugin's text, so when an edit changes or removes a step, quote that step in the rule and say the rule replaces it. Write the plugin's version beside each edit, from the `version` in its `.claude-plugin/plugin.json` or the version folder in its cache path, or the date when it has neither, because a later release can make the edit stale. Add to the file when it exists. Before approval, show each edit's rule file path. Never open a PR or push.
 
-Follow each approved row's Routing exactly. The rows below hand work to the `skill-creator` skill when the session lists it, because it runs the test loop a skill change needs. Without it, the parent makes the edit directly, and a new skill is a `SKILL.md` with `name` and `description` frontmatter under `.claude/skills/<kebab-name>/`, or `~/.claude/skills/<kebab-name>/` for a personal skill.
+Follow each approved row's Routing exactly. For a plugin skill, the parent writes its rule file directly, whatever the size of the edit. The rows below cover every other skill. They hand work to the `skill-creator` skill when the session lists it, because it runs the test loop a skill change needs. Without it, the parent makes the edit directly, and a new skill is a `SKILL.md` with `name` and `description` frontmatter under `.claude/skills/<kebab-name>/`, or `~/.claude/skills/<kebab-name>/` for a personal skill.
 
 - Trivial existing-skill edit (a one-line bullet, a tightened sentence, a stale fact corrected): the parent does it directly.
 - Substantive existing-skill edit (a new section, a new pattern table, more than ~10 lines): hand to `skill-creator` and run its draft / test / iterate loop.
@@ -67,7 +67,7 @@ If your environment ships a SKILL.md validator, run it on every touched skill be
 
 Short list, no preamble:
 
-- Edits applied: `<skill path>`. What changed, one line each.
+- Edits applied: `<skill path>`, or the rule file for a plugin skill. What changed, one line each. Say that a new or changed rule file takes effect in the next session.
 - New skills created: `<skill path>`. One line each (rare).
 - Backlog filed to the devex tracker: `<issue title>` (`<tags>`). One line each.
 - Dropped: one line per rejected finding + reason from the synthesizer.
