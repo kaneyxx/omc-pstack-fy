@@ -13,9 +13,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # On a pull_request event, GitHub builds a merge commit and checkout checks it out, so HEAD^1 is the base branch tip and depth 2 holds it.
+      - name: tools/version-lock.json and CHANGELOG.md match the base branch
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git diff --exit-code HEAD^1 -- tools/version-lock.json CHANGELOG.md; then
+            echo "Only node tools/release.mjs changes tools/version-lock.json and CHANGELOG.md."
+            exit 1
+          fi
       - name: vendor/ matches the pinned pstack and oh-my-claudecode commits
         run: node tools/sync.mjs --verify
       - name: plugin/ matches what the build generates

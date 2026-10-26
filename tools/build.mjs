@@ -382,8 +382,7 @@ function checkPackage(files) {
 // that differs from the released content must not reach main without a release. A local build only warns, so work can go on.
 // A contributor's pull request changes plugin/ through a rule or an overlay but cannot release, so the pull request run of
 // --check adds --skip-release-lock. That skips only the content comparison. A version that differs from the lock still fails,
-// because release.mjs moves the version and the lock in one commit, so no pull request moves the version. plugin/ must still
-// equal what the build generates.
+// because release.mjs moves the version and the lock in one commit. plugin/ must still equal what the build generates.
 function resolveVersion(files) {
   const { version } = rules.plugin;
   if (!/^\d+\.\d+\.\d+$/.test(version ?? "")) problems.push(`tools/rules.json plugin.version must be MAJOR.MINOR.PATCH, not ${JSON.stringify(version)}`);
