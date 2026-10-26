@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { appendFileSync, cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, cpSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { after, describe, test } from "node:test";
@@ -181,6 +181,46 @@ describe("build --check --skip-release-lock", () => {
       assert.equal(result.status, 1, `${flags.join(" ")}\n${result.output}`);
       assert.match(result.stdout, /^FAIL tools\/rules\.json says v9\.9\.9, but the last release is v\d+\.\d+\.\d+\. Let `node tools\/release\.mjs` move the version\.$/m);
     }
+  });
+
+  test("anything under plugin/ the build did not write fails, whatever its name or kind", () => {
+    const dir = released();
+    const junk = ["plugin/.DS_Store", "plugin/.gitkeep", "plugin/skills/update/scripts/node_modules/pkg/index.js"];
+    for (const path of junk) {
+      mkdirSync(dirname(join(dir, path)), { recursive: true });
+      writeFileSync(join(dir, path), "planted\n");
+    }
+    // A checkout without submodules leaves a gitlink as an empty folder, and an install fetches its content.
+    const submodule = "plugin/skills/sub";
+    mkdirSync(join(dir, submodule));
+    // The link reads the same bytes as the file it replaces.
+    const link = "plugin/hooks/hooks.json";
+    const overlay = join(dir, "overlays", "hooks", "hooks.json");
+    assert.deepEqual(readFileSync(join(dir, link)), readFileSync(overlay));
+    rmSync(join(dir, link));
+    symlinkSync("../../overlays/hooks/hooks.json", join(dir, link));
+    // Following this link finds the same files, so only its kind gives it away.
+    const folder = "plugin/skills/arena";
+    cpSync(join(dir, folder), join(dir, "arena-copy"), { recursive: true });
+    rmSync(join(dir, folder), { recursive: true });
+    symlinkSync("../../arena-copy", join(dir, folder));
+    const planted = [...junk, submodule, link, folder];
+
+    for (const flags of [["--check"], ["--check", SKIP]]) {
+      const result = build(dir, ...flags);
+      const lines = result.stdout.split("\n");
+      assert.equal(result.status, 1, `${flags.join(" ")}\n${result.output}`);
+      for (const path of planted) assert(lines.includes(path), `${flags.join(" ")} lists ${path}\n${result.output}`);
+      assert(lines.some((line) => line.startsWith("plugin/ is out of date.")), `${flags.join(" ")}\n${result.output}`);
+    }
+
+    const rebuilt = build(dir);
+    assert.equal(rebuilt.status, 0, rebuilt.output);
+    for (const path of [...junk, submodule]) assert.equal(lstatSync(join(dir, path), { throwIfNoEntry: false }), undefined, path);
+    assert(lstatSync(join(dir, link)).isFile(), link);
+    assert(lstatSync(join(dir, folder)).isDirectory(), folder);
+    const checked = build(dir, "--check");
+    assert.equal(checked.status, 0, checked.output);
   });
 
   test(`${SKIP} without --check exits non-zero, says why, and leaves plugin/ alone`, () => {
