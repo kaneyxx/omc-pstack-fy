@@ -6,6 +6,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { once } from "node:events";
 import { dirname, join, resolve } from "node:path";
+import { isatty } from "node:tty";
 
 const args = process.argv.slice(2);
 if (args.includes("--version")) {
@@ -13,7 +14,8 @@ if (args.includes("--version")) {
   process.exit(0);
 }
 const mode = process.env.FAKE_MODE ?? "ok";
-const stdin = process.stdin.isTTY ? "" : readFileSync(0, "utf8");
+// Touching process.stdin makes fd 0 non-blocking, so readFileSync(0) would throw EAGAIN before pstack-ask writes the prompt.
+const stdin = isatty(0) ? "" : readFileSync(0, "utf8");
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 // orphan's child leaves the process group; sleeptree's stays in it. Both keep stdout open.
 const child =
