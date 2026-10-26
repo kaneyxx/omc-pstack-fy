@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.1] - 2026-10-26
+
+Built from upstream pstack v0.15.32 (https://github.com/cursor/plugins/tree/99b609a), checked against oh-my-claudecode v5.7.14 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/5632614).
+
+### Changed
+
+- `/omc-pstack-fy:fy-mode` keeps every commit green. A bug fix still runs its new test before the fix and sees it fail. Then it commits the test and the fix together, and it quotes the failing command and assertion.
+- `/omc-pstack-fy:fy-mode` has a **For delegates** section. It lists the fy-mode rules a delegate follows, such as the integrity and research code rules, and the lead names it in the brief of every agent that writes code or commits.
+- A pull request fails CI when it changes `tools/version-lock.json` or `CHANGELOG.md`.
+
+### Fixed
+
+- `node tools/build.mjs --check` fails on anything under `plugin/` that the build did not write. That includes a symlink with matching bytes, a stray `.DS_Store`, and the empty folder a git submodule leaves in a checkout.
+- `node tools/sync.mjs --verify` fails on a `.gitignore` in `vendor/` that no sync wrote. Before, the build copied such a file into `plugin/` and the check passed.
+- The test stand-in for a vendor CLI no longer fails with `EAGAIN` when the machine is busy.
+
 ## [1.3.0] - 2026-10-25
 
 Built from upstream pstack v0.15.32 (https://github.com/cursor/plugins/tree/99b609a), checked against oh-my-claudecode v5.7.14 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/5632614).
