@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { after, describe, test } from "node:test";
+import { fileURLToPath } from "node:url";
 import { carryForward, hasContract, matcher, newest, outgoingProblems, repin } from "../tools/sync.mjs";
 
 describe("sync", () => {
@@ -168,5 +170,64 @@ describe("sync", () => {
     test("keeps the list when the sync stays on the release, even though the vendored release fails", () => {
       assert.deepEqual(moved("7.5 **Deslop**", { ...found, version: "5.7.7" }).compatible, omc.compatible);
     });
+  });
+});
+
+describe("sync --verify", () => {
+  const TOOLS = join(dirname(fileURLToPath(import.meta.url)), "..", "tools");
+  const made = [];
+  after(() => made.forEach((dir) => rmSync(dir, { recursive: true, force: true })));
+
+  const put = (root, files) => {
+    for (const [path, text] of Object.entries(files)) {
+      mkdirSync(dirname(join(root, path)), { recursive: true });
+      writeFileSync(join(root, path), text);
+    }
+  };
+  // A run from a git hook inherits GIT_DIR, which would send these git calls to this repo.
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_")));
+  const git = (cwd, ...args) => {
+    const config = ["user.name=t", "user.email=t@example.com", "commit.gpgsign=false", "core.hooksPath=/dev/null"].flatMap((pair) => ["-c", pair]);
+    const result = spawnSync("git", [...config, ...args], { cwd, encoding: "utf8", env });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trim();
+  };
+
+  function project() {
+    const root = mkdtempSync(join(tmpdir(), "omc-sync-verify-"));
+    made.push(root);
+    const repository = join(root, "upstream");
+    const upstream = `${repository}.git`;
+    const files = { "pstack/plugin.json": '{"version":"1.2.3"}\n', "pstack/skills/arena/SKILL.md": "arena\n" };
+    put(upstream, { ...files, "pstack/skills/arena/.gitignore": "upstream\n" });
+    git(upstream, "init", "-q");
+    git(upstream, "add", ".");
+    git(upstream, "commit", "-q", "-m", "upstream");
+    const pin = { repository, versionFile: "pstack/plugin.json", ref: git(upstream, "rev-parse", "HEAD"), paths: ["pstack"] };
+    put(root, { "upstream.json": JSON.stringify({ pstack: pin }), ...Object.fromEntries(Object.entries(files).map(([path, text]) => [`vendor/${path}`, text])) });
+    cpSync(TOOLS, join(root, "tools"), { recursive: true });
+    return root;
+  }
+
+  const verify = (root) => {
+    const result = spawnSync(process.execPath, ["tools/sync.mjs", "--verify"], { cwd: root, encoding: "utf8", env });
+    return { status: result.status, lines: result.stdout.split("\n"), output: result.stdout + result.stderr };
+  };
+
+  test("accepts a vendor/ that matches upstream, though Finder wrote .DS_Store and upstream holds a .gitignore", () => {
+    const root = project();
+    put(root, { "vendor/.DS_Store": "", "vendor/pstack/.DS_Store": "", "vendor/pstack/skills/arena/.DS_Store": "" });
+    const result = verify(root);
+    assert.equal(result.status, 0, result.output);
+    assert.match(result.output, /^vendor\/ matches pstack [0-9a-f]{7}\.$/m);
+  });
+
+  test("fails on a .gitignore in vendor/ or in a folder upstream owns, and lists both", () => {
+    const root = project();
+    put(root, { "vendor/.gitignore": "*\n", "vendor/pstack/skills/arena/.gitignore": "*\n" });
+    const result = verify(root);
+    assert.equal(result.status, 1, result.output);
+    assert(result.lines.includes("vendor/pstack/skills/arena/.gitignore"), result.output);
+    assert(result.lines.some((line) => line.startsWith("vendor/.gitignore")), result.output);
   });
 });

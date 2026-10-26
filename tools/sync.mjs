@@ -15,8 +15,10 @@ const USAGE = `node tools/sync.mjs [pstack|omc] [--ref <sha|tag|branch>]   vendo
                                                          pstack follows main, omc its newest release tag)
 node tools/sync.mjs --verify                             check vendor/ still matches every pinned commit
 node tools/sync.mjs --latest                             report, as Markdown, which upstream has newer vendored files (exit 3 when one has)`;
-// vendor/ is data, not a working tree. Upstream's .gitignore would hide files from this repo, and Finder litters .DS_Store.
-const SKIP = new Set([".DS_Store", ".gitignore"]);
+// Finder writes .DS_Store. --verify never reads a name in SKIP, which is safe only because the build skips it too.
+const SKIP = new Set([".DS_Store"]);
+// A .gitignore copied into vendor/ would hide vendored files from git.
+const UPSTREAM_SKIP = new Set([...SKIP, ".gitignore"]);
 export const NEWER = 3;
 
 function parseArgs(argv) {
@@ -53,12 +55,12 @@ const home = (pin) => join(VENDOR, pin.into ?? "");
 // The vendor/ entries an upstream owns, which a sync replaces whole.
 const owned = (pin) => (pin.into ? [pin.into] : [...new Set(pin.paths.map((path) => path.split("/")[0]))]);
 
-function walk(path) {
+function walk(path, skip) {
   if (!existsSync(path)) return [];
   return readdirSync(path).flatMap((name) => {
-    if (SKIP.has(name) || name === ".git") return [];
+    if (skip.has(name) || name === ".git") return [];
     const child = join(path, name);
-    return statSync(child).isDirectory() ? walk(child) : [child];
+    return statSync(child).isDirectory() ? walk(child, skip) : [child];
   });
 }
 
@@ -68,11 +70,11 @@ const hashes = (base, files) =>
 // The files a checkout holds for an upstream's paths.
 function fetched(dir, pin) {
   const wanted = matcher(pin.paths);
-  return new Map([...hashes(dir, walk(dir))].filter(([file]) => wanted(file)));
+  return new Map([...hashes(dir, walk(dir, UPSTREAM_SKIP))].filter(([file]) => wanted(file)));
 }
 
 // Every file in the vendor/ entries an upstream owns, unfiltered, so a stray file or a hand edit there still counts as drift.
-const vendored = (pin) => hashes(home(pin), owned(pin).flatMap((entry) => walk(join(VENDOR, entry))));
+const vendored = (pin) => hashes(home(pin), owned(pin).flatMap((entry) => walk(join(VENDOR, entry), SKIP)));
 
 function fetchUpstream(pin, ref, dir) {
   mkdirSync(dir, { recursive: true });
