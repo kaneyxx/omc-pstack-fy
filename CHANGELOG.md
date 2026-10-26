@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.1] - 2026-10-26
+
+Built from upstream pstack v0.15.32 (https://github.com/cursor/plugins/tree/99b609a), checked against oh-my-claudecode v5.7.16 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/9e2dda5).
+
+### Changed
+
+- `/omc-pstack-fy:reflect` puts an approved edit to a plugin skill in a rule file, `.claude/rules/<plugin>-<skill>.md` for one project or `~/.claude/rules/<plugin>-<skill>.md` for every project. Before, it copied the skill to `.claude/skills/` and edited the copy. Claude Code loads that copy beside the plugin skill, so `/<plugin>:<skill>` and every skill that reads it by path kept the old text.
+- Each rule opens with a condition, so it does nothing outside that skill. A rule that changes or removes a step quotes the step it replaces, and each edit records the plugin version it was written against.
+- A `tune description` row for a plugin skill now goes to Backlog, because a rule cannot change a skill's description.
+
 ## [1.4.0] - 2026-10-26
 
 Built from upstream pstack v0.15.32 (https://github.com/cursor/plugins/tree/99b609a), checked against oh-my-claudecode v5.7.16 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/9e2dda5).
