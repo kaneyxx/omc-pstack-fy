@@ -106,6 +106,21 @@ function load(path) {
   return { bytes: readFileSync(path), executable: (statSync(path).mode & 0o111) !== 0 };
 }
 
+// Lists plugin/ as a checkout holds it, counting every name. The build writes only regular files, so a link, another
+// non-regular file, or an empty folder (what a submodule leaves in a checkout without submodules) maps to null and counts as drift.
+function installed(dir, base = dir) {
+  if (!existsSync(dir)) return new Map();
+  const entries = readdirSync(dir, { withFileTypes: true });
+  if (entries.length === 0 && dir !== base) return new Map([[toPosix(relative(base, dir)), null]]);
+  return new Map(
+    entries.flatMap((entry) => {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) return [...installed(path, base)];
+      return [[toPosix(relative(base, path)), entry.isFile() ? load(path) : null]];
+    }),
+  );
+}
+
 // Maps each plugin path to the vendored file it comes from. Imports bring skills from other upstream folders, such as cursor-team-kit.
 const sources = new Map();
 
@@ -474,7 +489,7 @@ writeManifest(files, version);
 fail();
 
 if (checking) {
-  const onDisk = new Map(walk(OUT).map((path) => [toPosix(relative(OUT, path)), load(path)]));
+  const onDisk = installed(OUT);
   const drifted = [...new Set([...files.keys(), ...onDisk.keys()])].sort().filter((path) => {
     const [want, have] = [files.get(path), onDisk.get(path)];
     return !want || !have || !want.bytes.equals(have.bytes) || want.executable !== have.executable;
@@ -482,9 +497,8 @@ if (checking) {
   for (const path of drifted.slice(0, 20)) console.log(`plugin/${path}`);
   if (drifted.length > 0) {
     console.log(`plugin/ is out of date. Run \`${COMMAND}\` and commit the result.`);
-    process.exit(1);
-  }
-  console.log(`plugin/ is up to date (${rules.plugin.name} ${version}).`);
+    process.exitCode = 1;
+  } else console.log(`plugin/ is up to date (${rules.plugin.name} ${version}).`);
 } else {
   rmSync(OUT, { recursive: true, force: true });
   for (const [path, { bytes, executable }] of files) {
