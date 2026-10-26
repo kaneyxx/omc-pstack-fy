@@ -115,7 +115,7 @@ package.json              the npm package for the omc-pstack-fy command. Its bin
 9. Count the Cursor names left, which must be 0 now that the runtime adapter is off. `node tools/build.mjs --report` lists them per file.
 10. Compare the plugin content with the last release recorded in `tools/version-lock.json`.
 
-CI runs `node tools/sync.mjs --verify`, a build check, and the tests. On a pull request, the build check is `node tools/build.mjs --check --skip-release-lock`, which fails when `plugin/` differs from what the build writes. On a push to `main`, it is `node tools/build.mjs --check`, which also fails when plugin content differs from the last release.
+CI runs `node tools/sync.mjs --verify`, a build check, and the tests. On a pull request, the build check is `node tools/build.mjs --check --skip-release-lock`, which fails when `plugin/` differs from what the build writes. A pull request also fails when it changes `tools/version-lock.json` or `CHANGELOG.md`, because only `node tools/release.mjs` changes them. On a push to `main`, the build check is `node tools/build.mjs --check`, which also fails when plugin content differs from the last release.
 
 ## Versions and releases
 
@@ -127,7 +127,7 @@ omc-pstack-fy has its own semantic version, separate from both upstreams. Each C
 
 A release moves `tools/rules.json`, the marketplace entry, and `package.json` to the same version, and the build fails when they differ.
 
-A push to `main` that changes `plugin/` needs a release, because Claude Code updates an installed plugin only when its version changes. Until `node tools/release.mjs` pushes that release, CI fails on every push to `main`. A pull request needs no release, because its CI run does not compare plugin content with the last release. That run still fails when the version differs from the one in `tools/version-lock.json`. A local build only warns, so work in progress builds fine.
+A push to `main` that changes `plugin/` needs a release, because Claude Code updates an installed plugin only when its version changes. Until `node tools/release.mjs` pushes that release, CI fails on every push to `main`. A pull request needs no release, because its CI run does not compare plugin content with the last release. That run still fails when the version differs from the one in `tools/version-lock.json`, and when the pull request changes that file or `CHANGELOG.md`. A pull request can edit `.github/workflows/ci.yml` to drop that check, and the maintainer sees such an edit in review. A local build only warns, so work in progress builds fine.
 
 ```bash
 node tools/release.mjs patch --dry-run   # preview the next version and its notes
