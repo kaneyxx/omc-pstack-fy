@@ -76,4 +76,7 @@ When the user writes Chinese, reply in their script under the **unslop-zh** skil
 1. A fresh subagent that did not write the change reviews it. Use a security review when the change makes a safety claim. Fix real findings first. Review again when the fixes are large.
 2. In a public repository, scan the unpushed diff for private data. That means the user's account name in home paths, any email but the GitHub noreply address, tokens, and scratch paths. Any hit stops the push until you have looked. Report a benign hit. Never push past one unread.
 3. Commits in a public repository use the GitHub noreply address, never a personal email.
-4. Keep building while CI runs, and report its result when the phase ends.
+4. Every commit passes the tests on its own, because each commit is a future PR. This replaces every failing-test-first commit in poteto-mode and its principle skills, including the staging in Bug fix step 5 and the canonical shape in the **principle-sequence-verifiable-units** skill.
+5. A bug fix still runs its new test before the fix and sees it fail. Commit the test and the fix together. Quote the failing command and its failing assertion line in the commit message and in the PR's `## Verification` section. With no new test, quote the failing repro instead.
+6. Put items 4 and 5 in the brief of every agent that writes or commits a fix, when you write that brief. A delegate that skips commits still runs the test first and reports the failing output.
+7. Keep building while CI runs, and report its result when the phase ends.
