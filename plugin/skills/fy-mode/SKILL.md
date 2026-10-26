@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Most omc-pstack-fy skills set `disable-model-invocation: true`, so the Skill tool refuses them. A refusal never means skip the step. To run a skill this one names, as `/omc-pstack-fy:<name>` or as the **<name>** skill, Read `../<name>/SKILL.md` from this skill's base directory and follow it. Write `/omc-pstack-fy:<name>` only when the user should type it.
 
-Read the [**poteto-mode**](../poteto-mode/SKILL.md) skill in full and run it. This file adds to it and overrides it where they conflict. Delegates still run as `omc-pstack-fy:poteto-agent` and report the way poteto-mode says. The rules below shape what the user reads.
+Read the [**poteto-mode**](../poteto-mode/SKILL.md) skill in full and run it. This file adds to it and overrides it where they conflict. Delegates still run as `omc-pstack-fy:poteto-agent`, report the way poteto-mode says, and follow **For delegates** below.
 
 ## Route each step by what it produces
 
@@ -80,5 +80,15 @@ When the user writes Chinese, reply in their script under the [**unslop-zh**](..
 3. Commits in a public repository use the GitHub noreply address, never a personal email.
 4. Every commit passes the tests on its own, because each commit is a future PR. This replaces every failing-test-first commit in poteto-mode and its principle skills, including the staging in Bug fix step 5 and the canonical shape in the [**principle-sequence-verifiable-units**](../principle-sequence-verifiable-units/SKILL.md) skill.
 5. A bug fix still runs its new test before the fix and sees it fail. Commit the test and the fix together. Quote the failing command and its failing assertion line in the commit message and in the PR's `## Verification` section. With no new test, quote the failing repro instead.
-6. Put items 4 and 5 in the brief of every agent that writes or commits a fix, when you write that brief. A delegate that skips commits still runs the test first and reports the failing output.
-7. Keep building while CI runs, and report its result when the phase ends.
+6. Keep building while CI runs, and report its result when the phase ends.
+
+## For delegates
+
+An `omc-pstack-fy:poteto-agent` delegate reads poteto-mode, not this file. Put this file's absolute path and this section's name in the brief of every agent that writes code or commits, whatever its type. A delegate follows these rules on top of poteto-mode:
+
+- **Integrity**, under **Route each step by what it produces**.
+- **Research code**, for any analysis, statistics, data processing, or figure code.
+- Items 2 to 5 of **Before every push**, for any commit or push it makes. Item 1 stays with the lead. A delegate pushes its own branch without waiting for that review, because the lead's review gates the merge. A delegate that skips commits still runs a bug fix's new test before the fix and reports the failing command and its failing assertion line, or the failing repro.
+- From **Decide with options**, build the seam and test it against a fake for a dependency that is not installed or verified. Stop and report to the lead before changing global config under `~/.claude/`. Stop the same way before publishing or creating anything public, unless the brief names it. A push or a PR that the brief asks for counts as named.
+
+A delegate reports to the lead, so **Shape every reply for action** does not apply to it.
