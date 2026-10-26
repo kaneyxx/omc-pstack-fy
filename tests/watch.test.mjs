@@ -167,12 +167,16 @@ describe("publish", { skip: process.platform === "win32" && "the stub gh is a PO
   const body = "## omc\n\nPinned v5.7.5.";
   const summary = "The contract holds. Only a bookkeeping minor release is left.";
   const ours = [
-    { number: 2, title: TITLE, body },
-    { number: 1, title: TITLE, body: "older report" },
+    { number: 4, title: "Something else", body: "unrelated", state: "open" },
+    { number: 3, title: TITLE, body: "closed report", state: "closed" },
+    { number: 2, title: TITLE, body, state: "open" },
+    { number: 1, title: TITLE, body: "older report", state: "open" },
   ];
 
   // Only `--author github-actions[bot]` finds the workflow's issues. A list without any author filter also returns an issue a
-  // stranger opened with the same title. The token and repo are invalid so that a gh which escapes the stub can only fail.
+  // stranger opened with the same title. Real gh lists open issues when `--state` is missing, but the stub lists every state, so
+  // publish has to ask for open ones. Like gh, the stub lists the newest issue first, and publish edits the first one it keeps.
+  // The token and repo are invalid so that a gh which escapes the stub can only fail.
   function stubGh(t) {
     const dir = realpathSync(mkdtempSync(join(tmpdir(), "watch-gh-")));
     const log = join(dir, "calls.log");
@@ -188,8 +192,10 @@ appendFileSync(process.env.STUB_LOG, JSON.stringify(args) + "\\n");
 if (listing) {
   const own = args[args.indexOf("--author") + 1] === "github-actions[bot]";
   const filtered = ["--app", "--search", "--author"].some((flag) => args.includes(flag));
-  const stranger = { number: 7, title: ${JSON.stringify(TITLE)}, body: "opened by someone else" };
-  console.log(JSON.stringify(own ? ${JSON.stringify(ours)} : filtered ? [] : [stranger, ...${JSON.stringify(ours)}]));
+  const stranger = { number: 7, title: ${JSON.stringify(TITLE)}, body: "opened by someone else", state: "open" };
+  const wantsOpen = args[args.indexOf("--state") + 1] === "open";
+  const shown = (issues) => issues.filter(({ state }) => !wantsOpen || state === "open").map(({ number, title, body }) => ({ number, title, body }));
+  console.log(JSON.stringify(shown(own ? ${JSON.stringify(ours)} : filtered ? [] : [stranger, ...${JSON.stringify(ours)}])));
 }
 `,
     );
