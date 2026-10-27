@@ -90,7 +90,7 @@ The default answer is [`/omc-pstack-fy:poteto-mode`](../poteto-mode/SKILL.md), w
 | Bring a verification skill and its feature map back in line with the app | [`/omc-pstack-fy:maintain-verification-skill`](../maintain-verification-skill/SKILL.md) |
 | Formally verify a race, invariant, or other property that tests rarely reach | [`/omc-pstack-fy:create-formal-verification-skill`](../create-formal-verification-skill/SKILL.md) |
 | Bring a formal verification back in line after the code it covers changed, and learn whether a failure is drift or a bug | [`/omc-pstack-fy:maintain-formal-verification-skill`](../maintain-formal-verification-skill/SKILL.md) |
-| Show a PM or designer what the user sees as a chart checked by a model, with each bug drawn as a numbered path, turn an agreed chart into a TLA+ skeleton, or audit the code against its TLA+ spec | [`/omc-pstack-fy:statechart`](../statechart/SKILL.md) |
+| Show a PM or designer what the user sees as a chart checked by a TLA+ model, with the shortest path to each state that breaks a rule | [`/omc-pstack-fy:statechart`](../statechart/SKILL.md) |
 | Vet a performance number before reporting or acting on it | [`/omc-pstack-fy:benchmark-checklist`](../benchmark-checklist/SKILL.md) |
 | Run a large or cross-cutting change, or one to review after stepping away | [`/omc-pstack-fy:figure-it-out`](../figure-it-out/SKILL.md) |
 | Keep a decision log during a run, and review it afterward | [`/omc-pstack-fy:show-me-your-work`](../show-me-your-work/SKILL.md) |

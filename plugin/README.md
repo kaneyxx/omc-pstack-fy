@@ -149,14 +149,14 @@ the full rules and playbooks live in [`skills/poteto-mode/SKILL.md`](./skills/po
 | [`/omc-pstack-fy:maintain-verification-skill`](./skills/maintain-verification-skill/SKILL.md) | your verify skill's feature map has drifted from the app. source wave + one live pass, at most one PR of proven corrections. |
 | [`/omc-pstack-fy:create-formal-verification-skill`](./skills/create-formal-verification-skill/SKILL.md) | tests can't reach the case that breaks a race, retry, state machine, parser, or unsafe code. verifies one property with the tool that fits and generates a project-local skill to recheck it on every change. |
 | [`/omc-pstack-fy:maintain-formal-verification-skill`](./skills/maintain-formal-verification-skill/SKILL.md) | code your formal verification covers has changed since it was last checked. updates the model, harness, or properties to match the code, reruns, and says whether each failure is drift in the verification or a bug in the code. |
-| [`/omc-pstack-fy:statechart`](./skills/statechart/SKILL.md) | someone who owns the behavior needs to see it, not read a spec. draws what the user sees as a mermaid statechart generated from a tla+ model, marks each state works, still wrong, or fixed by your open pr, and draws each bug tlc finds as a numbered path. also turns an agreed chart into a tla+ skeleton, or audits the code against an existing spec. |
+| [`/omc-pstack-fy:statechart`](./skills/statechart/SKILL.md) | someone who owns the behavior needs to see it, not read a spec. checks a tla+ model, draws what the user sees as a mermaid statechart, marks each state that breaks a rule, and gives the shortest path to each one. |
 | [`/omc-pstack-fy:unslop`](./skills/unslop/SKILL.md) | you're cleaning up writing. removes AI tells. |
 | [`/omc-pstack-fy:bro`](./skills/bro/SKILL.md) | you want the last message restated in plain human language, no jargon. |
 | [`/omc-pstack-fy:technical-writing`](./skills/technical-writing/SKILL.md) | layered doc standard (Diátaxis + Google developer style + STE + Global English) for docs, RFCs, readmes, PR descriptions, commit messages. |
 
 </details>
 
-**[`/omc-pstack-fy:statechart`](skills/statechart/SKILL.md) downloads tools the first time you use it.** with `mise` installed and `TLA2TOOLS` unset, the first model check installs tlc through mise, plus a temurin jdk unless `JAVA` is set, a few hundred mb with the jdk. the first png or `render` run installs two packages from npm into a cache folder. set `TLA2TOOLS`, and `JAVA` if `java` is not on your path, to skip the model-check download. it also runs a `<Spec>.map.mjs` beside a spec as javascript, so run it only on specs you trust. the skill's `SKILL.md` and `--help` describe what it installs.
+**[`/omc-pstack-fy:statechart`](skills/statechart/SKILL.md) downloads tools the first time you use it.** its command is typescript, so it needs a recent node, bun, or deno, and it names the versions when yours is too old. with `mise` installed and `TLA2TOOLS` unset, the first model check installs tlc and a temurin jdk through mise, a few hundred mb, even when `JAVA` is set. set `TLA2TOOLS`, and `JAVA` if `java` is not on your path, to skip that download. when you ask for an image of a chart, or a chart is too large to read as text, the agent installs the `pele` package from npm outside your repo. the command runs the module you pass with `--view` as code, and tlc runs java `.class` files it finds beside the spec, so run it only on a spec folder and a view you trust. the skill's `SKILL.md` and `references/render.md` describe what it installs.
 
 
 
@@ -281,7 +281,7 @@ when a default changes, a rule written before the change still pins the old defa
 
 ## automations
 
-upstream pstack also ships a dormant [benny automation pack](https://github.com/cursor/plugins/tree/99b609a72323b70204eab407c622f436e858e112/pstack/automations/benny). benny triages slack issue reports, then reproduces and fixes confirmed bugs with real ui evidence. it runs on cursor's automation service, so omc-pstack-fy leaves it out. claude code's `/schedule` runs cloud routines on a cron if you want to build a pipeline like it.
+upstream pstack also ships a dormant [benny automation pack](https://github.com/cursor/plugins/tree/519d36aa98955bf680db01bcde5fdfba686dc901/pstack/automations/benny). benny triages slack issue reports, then reproduces and fixes confirmed bugs with real ui evidence. it runs on cursor's automation service, so omc-pstack-fy leaves it out. claude code's `/schedule` runs cloud routines on a cron if you want to build a pipeline like it.
 
 ## license
 
