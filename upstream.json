@@ -37,10 +37,10 @@
       "src/features/delegation-routing/types.ts",
       "src/ultragoal/artifacts.ts"
     ],
-    "ref": "9e2dda5c5fd1b4eefa0c84b2eec04eec7ee268ef",
-    "tag": "v5.7.16",
-    "committedAt": "2026-10-26T13:40:12+09:00",
-    "version": "5.7.16",
+    "ref": "726fa45e081a65f8e971ef291dbf0d9cecf24897",
+    "tag": "v5.7.17",
+    "committedAt": "2026-10-26T22:52:20+09:00",
+    "version": "5.7.17",
     "compatible": [
       {
         "version": "5.7.5",
@@ -56,6 +56,10 @@
       },
       {
         "version": "5.7.15",
+        "contract": "50ea4796d34f85e5ba75d26625fc88c74c467b61dd3b155ef76d758e9aa2fc85"
+      },
+      {
+        "version": "5.7.16",
         "contract": "50ea4796d34f85e5ba75d26625fc88c74c467b61dd3b155ef76d758e9aa2fc85"
       }
     ]
