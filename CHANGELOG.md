@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.5.0] - 2026-10-28
+
+Built from upstream pstack v0.15.34 (https://github.com/cursor/plugins/tree/519d36a), checked against oh-my-claudecode v5.7.19 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/e10206d).
+
+### Changed
+
+- `/omc-pstack-fy:statechart` is upstream pstack's new TypeScript compiler. Write a TLA+ spec and its config, then run `scripts/statechart SPEC.tla [--config FILE] [--view FILE] [--out DIR]`. It checks every rule with TLC, writes `report.md` and `chart.mmd`, and gives the shortest path to each state that breaks a rule. A view module passed with `--view` labels the states and steps in the reader's words.
+- The command needs Node 22.18 or later in the 22 line, Node 23.6 or later, Bun 1.1.5 or later, or Deno 2.0 or later. With none of them, it names these versions and exits 127.
+- When you ask for an image of a chart, or a chart is too large to read as text, the agent installs `pele@1.9.0` from npm outside your repo and writes an SVG, as the skill's `references/render.md` says.
+- With `mise` installed and `TLA2TOOLS` unset, the first model check installs TLC and a Temurin JDK through mise even when `JAVA` is set. Before, setting `JAVA` skipped the JDK.
+- The plugin README's note on what `/omc-pstack-fy:statechart` downloads now names the runtime, the JDK, and the `pele` install. It warns that the command runs the `--view` module as code, and that TLC runs Java `.class` files it finds beside the spec, so run it only on a spec folder and a view you trust.
+- The bridge is checked against oh-my-claudecode v5.7.19. With OMC 5.7.14 through 5.7.19 installed, a session starts with no update reminder. The bridge routes work the same way as before.
+
+### Removed
+
+- `/omc-pstack-fy:statechart` no longer has `from-spec`, `from-chart`, `render`, `--png`, `--cover`, `--against`, `--against-config`, `--fixed`, `--expect-broken`, the `<Spec>.map.mjs` mapping file, `stories.md`, or `summary.json`. Upstream pstack v0.15.33 replaced them with the single command above.
+
 ## [1.4.2] - 2026-10-27
 
 Built from upstream pstack v0.15.32 (https://github.com/cursor/plugins/tree/99b609a), checked against oh-my-claudecode v5.7.17 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/726fa45).
