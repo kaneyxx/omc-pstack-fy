@@ -1,5 +1,5 @@
 {
-  "about": "What omc-pstack-fy relies on in oh-my-claudecode. node tools/build.mjs checks it against vendor/oh-my-claudecode, the OMC release pinned in upstream.json. An OMC release that adds or removes an agent or skill, or rewrites a passage below, fails the build until someone re-checks what omc-pstack-fy says about it. Each anchor names the OMC text (find) and the text in our plugin file that depends on it (uses, or find when absent). An anchor whose uses text is gone from our file fails too, so the list stays current.",
+  "about": "What omc-pstack-fy relies on in oh-my-claudecode. node tools/build.mjs checks it against vendor/oh-my-claudecode, the OMC release pinned in upstream.json. An OMC release that adds or removes an agent or skill, or rewrites a passage below, fails the build until someone re-checks what omc-pstack-fy says about it. Each anchor names the OMC text (find) and the text in our plugin file that depends on it (uses, or find when absent). An anchor whose uses text is gone from our file fails too, so the list stays current. The hash that pins the recorded compatible releases skips this text and each anchor's why, ours, and uses. Editing them leaves those releases recorded. Changing any other field drops them. When our text starts relying on OMC text in a new way, change find or add an anchor. That drops the recorded releases, and the hook warns for them again.",
   "agents": [
     "analyst",
     "architect",
@@ -104,7 +104,7 @@
       "find": "for Phase 4 quality review",
       "ours": "hooks/omc-bridge.md",
       "uses": "autopilot Phase 4",
-      "why": "autopilot's Phase 4 code-reviewer is a final review gate that interrogate replaces."
+      "why": "autopilot's Phase 4 code-reviewer is a final review gate, where interrogate runs beside OMC's own review."
     },
     {
       "omc": "skills/team/SKILL.md",
@@ -132,7 +132,7 @@
       "find": "`codeReview`",
       "ours": "hooks/omc-bridge.md",
       "uses": "ultragoal's final `codeReview`",
-      "why": "ultragoal's final codeReview evidence comes from interrogate."
+      "why": "ultragoal's final codeReview evidence comes from interrogate beside OMC's own review, and the stricter verdict wins."
     },
     {
       "omc": "src/ultragoal/artifacts.ts",
@@ -146,7 +146,7 @@
       "find": "REQUEST CHANGES",
       "ours": "hooks/omc-bridge.md",
       "uses": "counts as `REQUEST CHANGES`",
-      "why": "The bridge maps an open Act On finding onto code-reviewer's verdict."
+      "why": "The bridge maps an open verified finding onto code-reviewer's verdict."
     },
     {
       "omc": "src/ultragoal/artifacts.ts",
