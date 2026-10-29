@@ -1,6 +1,6 @@
 {
   "name": "omc-pstack-fy",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "The omc-pstack-fy command. It updates the omc-pstack-fy plugin for Claude Code in one step.",
   "license": "MIT",
   "homepage": "https://github.com/kaneyxx/omc-pstack-fy",

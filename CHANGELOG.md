@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.6.0] - 2026-10-29
+
+Built from upstream pstack v0.15.36 (https://github.com/cursor/plugins/tree/1ba91fc), checked against oh-my-claudecode v5.7.19 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/e10206d).
+
+### Changed
+
+- `/omc-pstack-fy:interrogate` is upstream pstack's new adversarial review. Each `interrogate reviewers` entry runs one adversary that tries to break the change with a run against the real code. The lead reruns each finding's command, and only findings the rerun proves survive. The report lists the verified findings, what each adversary dropped and why, and whether the panel was same-vendor or cross-vendor. It applies no fixes.
+- An `interrogate reviewers` entry from another vendor still runs read-only through `pstack-ask`. Its repros must write no files, a command it cannot run comes back marked not run, and the lead reruns every command in a worktree, never in your checkout. When the scope is not the current checkout, a Claude reviewer takes each external seat.
+- In oh-my-claudecode workflows, the final review gate now runs OMC's own review (`code-reviewer` or its review skill) and `/omc-pstack-fy:interrogate` side by side, and the stricter verdict wins. Before, interrogate replaced OMC's review there. The new interrogate skips structure and maintainability, so OMC's review still covers them. Earlier review passes run `code-reviewer` alone, as before.
+- The Orchestrate playbook is upstream's new agentic version. The coordinator spawns workers with the `Agent` tool, keeps the program's state in `~/.claude/projects/<slug>/omc-pstack-fy/orchestrate/<project-slug>/` with `notes.md` as its tracker, and calls no scripts and runs no polling loops. A worker's completion notification wakes it, and `gh pr view` and `gh pr checks` give live PR state, because Claude Code ships no PR or CI event subscription. Workers run as worktree subagents on this machine.
+- `/omc-pstack-fy:arena`'s judge never runs on the parent's model. It tries entries from another vendor first, then Claude entries on another model. With no judge available, the coordinator picks the base alone and says so. `/omc-pstack-fy:setup-pstack` describes the same order.
+- poteto-mode asks for a restatement of your goal in its first message on a task, and in each subagent brief and final report, through the `in-your-own-words` skill.
+
+### Removed
+
+- The `orch` scripts under poteto-mode's `scripts/orch/` and interrogate's four `references/` files. Upstream pstack v0.15.36 deleted them.
+
 ## [1.5.0] - 2026-10-28
 
 Built from upstream pstack v0.15.34 (https://github.com/cursor/plugins/tree/519d36a), checked against oh-my-claudecode v5.7.19 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/e10206d).
