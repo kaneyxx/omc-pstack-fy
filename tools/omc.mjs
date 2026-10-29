@@ -3,20 +3,26 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// The contract file, and the hash that pins it. An `upstream.json` compatible entry holds the hash of these bytes, so sync and build
-// agree on what a release passed.
+// The contract file, and the hash that pins it. An `upstream.json` compatible entry holds this hash, so sync and build agree on what
+// a release passed. The hash skips the fields that never decide whether an OMC release passes, which are `about` and each anchor's
+// `why`, `ours`, and `uses`. `about` and `why` are prose for people. `ours` and `uses` describe this plugin's own files, which the
+// build checks against the current plugin and never against an older OMC release. Only the skipped fields are listed, so a field
+// added later counts as checked until someone lists it.
 export const CONTRACT = join(dirname(fileURLToPath(import.meta.url)), "omc.json");
-export const contractHash = () => createHash("sha256").update(readFileSync(CONTRACT)).digest("hex");
+export const readContract = () => JSON.parse(readFileSync(CONTRACT, "utf8"));
+const without = (object, keys) => Object.fromEntries(Object.entries(object).filter(([key]) => !keys.includes(key)));
+export const contractHash = (contract = readContract()) => {
+  const checked = { ...without(contract, ["about"]), anchors: contract.anchors.map((anchor) => without(anchor, ["why", "ours", "uses"])) };
+  return createHash("sha256").update(JSON.stringify(checked)).digest("hex");
+};
 export const bare = (version) => String(version).replace(/^v/, "");
 
 // The other releases the plugin can name as checked. They come from a pin's compatible list, and only the entries that passed the
-// contract with this hash count. A release that passed an earlier contract says nothing about this one, so editing tools/omc.json
-// drops every entry.
+// contract with this hash count. A release that passed an earlier contract says nothing about this one, so changing what the checks
+// read in tools/omc.json drops every entry.
 export function compatibleVersions(entries, contract, verified) {
   return entries.filter((entry) => entry.contract === contract && bare(entry.version) !== bare(verified)).map((entry) => bare(entry.version));
 }
-
-export const readContract = () => JSON.parse(readFileSync(CONTRACT, "utf8"));
 
 // The build checks a pin's compatible list with this before it reads it, because a list that is not [{ version, contract }, ...]
 // would crash it with a TypeError instead of failing with a message.

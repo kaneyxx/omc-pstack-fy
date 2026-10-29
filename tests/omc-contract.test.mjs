@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { after, describe, test } from "node:test";
-import { compatibleVersions, isCompatibleList, omcProblems, omcSideProblems, vendoredOmc, vendoredProblems } from "../tools/omc.mjs";
+import { compatibleVersions, contractHash, isCompatibleList, omcProblems, omcSideProblems, readContract, vendoredOmc, vendoredProblems } from "../tools/omc.mjs";
 
 const contract = {
   agents: ["executor", "verifier"],
@@ -140,5 +140,91 @@ describe("compatible releases", () => {
 
   test("ignores a leading v and writes bare versions", () => {
     assert.deepEqual(compatibleVersions([{ version: "v5.7.5", contract: "now" }, { version: "v5.7.7", contract: "now" }], "now", "5.7.7"), ["5.7.5"]);
+  });
+});
+
+describe("contract hash", () => {
+  const fixture = () => ({
+    about: "What omc-pstack-fy relies on.",
+    agents: ["executor", "verifier"],
+    skills: ["ralph"],
+    anchors: [
+      { omc: "skills/ralph/SKILL.md", find: "7.5 **Mandatory Deslop Pass**", ours: "hooks/omc-bridge.md", uses: "ralph step 7.5", why: "ralph's step 7.5 runs deslop." },
+      { omc: "docs/CLAUDE.md", find: "Route code to `executor`", ours: "hooks/omc-bridge.md", why: "The bridge quotes this line." },
+    ],
+  });
+  const edited = (edit) => {
+    const changed = fixture();
+    edit(changed);
+    return contractHash(changed);
+  };
+
+  test("is a sha256 digest, and the default is the contract file", () => {
+    assert.match(contractHash(fixture()), /^[0-9a-f]{64}$/);
+    assert.equal(contractHash(), contractHash(readContract()));
+  });
+
+  test("stays the same when only prose or this plugin's own text changes", () => {
+    const edits = {
+      "the about text changes": (contract) => (contract.about = "A fixed typo."),
+      "an anchor's why is corrected": (contract) => (contract.anchors[0].why = "A corrected reason."),
+      "every anchor's why is rewritten": (contract) => contract.anchors.forEach((anchor) => (anchor.why = "Rewritten.")),
+      "an anchor's ours file moves": (contract) => (contract.anchors[0].ours = "hooks/other.md"),
+      "an anchor's uses text changes": (contract) => (contract.anchors[0].uses = "ralph step 8"),
+      "an anchor gains a uses text": (contract) => (contract.anchors[1].uses = "the quoted line"),
+    };
+    const base = contractHash(fixture());
+    for (const [change, edit] of Object.entries(edits)) assert.equal(edited(edit), base, change);
+  });
+
+  test("changes when a check reads something different", () => {
+    const edits = {
+      "an agent is added": (contract) => contract.agents.push("critic"),
+      "an agent is dropped": (contract) => contract.agents.pop(),
+      "an agent is renamed": (contract) => (contract.agents[0] = "builder"),
+      "a skill is added": (contract) => contract.skills.push("plan"),
+      "a skill is dropped": (contract) => contract.skills.pop(),
+      "an anchor's omc file moves": (contract) => (contract.anchors[0].omc = "skills/ralph/OTHER.md"),
+      "an anchor's find text changes": (contract) => (contract.anchors[0].find = "7.5 **Deslop Pass**"),
+      "an anchor is added": (contract) => contract.anchors.push({ omc: "a.md", find: "x", ours: "b.md" }),
+      "an anchor is dropped": (contract) => contract.anchors.pop(),
+    };
+    const base = contractHash(fixture());
+    for (const [change, edit] of Object.entries(edits)) assert.notEqual(edited(edit), base, change);
+  });
+
+  test("changes when a field is added, so a new field is checked until someone calls it prose", () => {
+    const base = contractHash(fixture());
+    assert.notEqual(edited((contract) => (contract.requires = ["5.7"])), base, "top-level field");
+    assert.notEqual(edited((contract) => (contract.anchors[0].since = "5.7.5")), base, "anchor field");
+    assert.notEqual(edited((contract) => (contract.anchors[0].note = "Read by a later check.")), base, "anchor field with a prose-sounding name");
+  });
+
+  test("skips only fields that never change whether a release passes", () => {
+    const release = ({ ralph = "7.5 **Mandatory Deslop Pass**", agents = ["executor", "verifier"] }) => ({
+      omcFile: (path) => ({ "skills/ralph/SKILL.md": ralph, "docs/CLAUDE.md": "Route code to `executor`" })[path],
+      omcAgents: agents,
+      omcSkills: ["ralph"],
+    });
+    const releases = { "passes": {}, "lost an anchored passage": { ralph: "rewritten" }, "dropped an agent": { agents: ["executor"] } };
+    const problemCount = (contract, name) => omcSideProblems({ contract, version: "9.9.9", ...release(releases[name]) }).length;
+    assert.equal(problemCount(fixture(), "passes"), 0);
+    assert.ok(problemCount(fixture(), "lost an anchored passage") > 0);
+    assert.ok(problemCount(fixture(), "dropped an agent") > 0);
+
+    const reworded = (value) => (typeof value === "string" ? `${value} (reworded)` : [...value, "reworded"]);
+    const fields = [];
+    for (const key of Object.keys(fixture()).filter((key) => key !== "anchors")) fields.push([key, (contract) => (contract[key] = reworded(contract[key]))]);
+    fixture().anchors.forEach((anchor, index) => {
+      for (const key of Object.keys(anchor)) fields.push([`anchors[${index}].${key}`, (contract) => (contract.anchors[index][key] = reworded(contract.anchors[index][key]))]);
+    });
+    const base = contractHash(fixture());
+    const skipped = fields.filter(([, edit]) => edited(edit) === base);
+    assert.ok(skipped.length > 0, "the hash skips something");
+    for (const [field, edit] of skipped) {
+      const changed = fixture();
+      edit(changed);
+      for (const name of Object.keys(releases)) assert.equal(problemCount(changed, name), problemCount(fixture(), name), `${field} on a release that ${name}`);
+    }
   });
 });

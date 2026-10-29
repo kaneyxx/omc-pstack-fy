@@ -111,7 +111,7 @@ package.json              the npm package for the omc-pstack-fy command. Its bin
 5. Apply `substitutions`, prefix every `/skill` command with `omc-pstack-fy:`, and link each command to its `SKILL.md`, so the model reads a hidden skill instead of calling a Skill tool that refuses it.
 6. Add a routing note to each skill that names another skill.
 7. Point links to left-out upstream files at GitHub, pinned to the vendored commit.
-8. Check `tools/omc.json` against the vendored OMC release. An OMC agent or skill the file does not list, one it lists that OMC dropped, or an anchored passage OMC rewrote fails the build and names the bridge text to re-check. The build writes that OMC version into the plugin, together with the other releases that passed the same `tools/omc.json`. The hook tells you when your installed OMC is none of those.
+8. Check `tools/omc.json` against the vendored OMC release. An OMC agent or skill the file does not list, one it lists that OMC dropped, or an anchored passage OMC rewrote fails the build and names the bridge text to re-check. The build writes that OMC version into the plugin, together with the other releases that passed the same checks in `tools/omc.json`. The hook tells you when your installed OMC is none of those.
 9. Count the Cursor names left, which must be 0 now that the runtime adapter is off. `node tools/build.mjs --report` lists them per file.
 10. Compare the plugin content with the last release recorded in `tools/version-lock.json`.
 
@@ -146,7 +146,7 @@ git diff --stat vendor/ plugin/
 node tools/release.mjs minor
 ```
 
-`node tools/sync.mjs omc` also records the release it replaces under `compatible` in `upstream.json`, with the hash of `tools/omc.json`, when that release passes the OMC side of the contract. That means it ships every agent and skill the file lists and no others, and each anchor's `find` text is still in its `omc` file. A user who still runs a recorded release keeps a quiet hook. A release that fails is left out, and the sync prints one line saying how many checks it failed, so syncing back from a broken release never vouches for it. Editing `tools/omc.json` changes the hash, so the next build drops every other release and the hook warns for them again.
+`node tools/sync.mjs omc` also records the release it replaces under `compatible` in `upstream.json`, with the hash of `tools/omc.json`, when that release passes the OMC side of the contract. That means it ships every agent and skill the file lists and no others, and each anchor's `find` text is still in its `omc` file. A user who still runs a recorded release keeps a quiet hook. A release that fails is left out, and the sync prints one line saying how many checks it failed, so syncing back from a broken release never vouches for it. The hash covers what decides whether an OMC release passes. That is the agent and skill lists, and each anchor's `omc` file and `find` text. It skips `about` and each anchor's `why`, `ours`, and `uses`. Those are prose for people, or they describe this plugin's own files. Fixing them leaves the hook quiet. Changing any other field changes the hash. The next build then drops every other release, and the hook warns for them again.
 
 ## Roadmap
 
