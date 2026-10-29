@@ -44,31 +44,31 @@
     "compatible": [
       {
         "version": "5.7.5",
-        "contract": "50ea4796d34f85e5ba75d26625fc88c74c467b61dd3b155ef76d758e9aa2fc85"
+        "contract": "e56e55dfc1b5004c5082288305143c11b672bdc9157d09ae4a4077ce8246ae88"
       },
       {
         "version": "5.7.7",
-        "contract": "50ea4796d34f85e5ba75d26625fc88c74c467b61dd3b155ef76d758e9aa2fc85"
+        "contract": "e56e55dfc1b5004c5082288305143c11b672bdc9157d09ae4a4077ce8246ae88"
       },
       {
         "version": "5.7.14",
-        "contract": "50ea4796d34f85e5ba75d26625fc88c74c467b61dd3b155ef76d758e9aa2fc85"
+        "contract": "e56e55dfc1b5004c5082288305143c11b672bdc9157d09ae4a4077ce8246ae88"
       },
       {
         "version": "5.7.15",
-        "contract": "50ea4796d34f85e5ba75d26625fc88c74c467b61dd3b155ef76d758e9aa2fc85"
+        "contract": "e56e55dfc1b5004c5082288305143c11b672bdc9157d09ae4a4077ce8246ae88"
       },
       {
         "version": "5.7.16",
-        "contract": "50ea4796d34f85e5ba75d26625fc88c74c467b61dd3b155ef76d758e9aa2fc85"
+        "contract": "e56e55dfc1b5004c5082288305143c11b672bdc9157d09ae4a4077ce8246ae88"
       },
       {
         "version": "5.7.17",
-        "contract": "50ea4796d34f85e5ba75d26625fc88c74c467b61dd3b155ef76d758e9aa2fc85"
+        "contract": "e56e55dfc1b5004c5082288305143c11b672bdc9157d09ae4a4077ce8246ae88"
       },
       {
         "version": "5.7.18",
-        "contract": "50ea4796d34f85e5ba75d26625fc88c74c467b61dd3b155ef76d758e9aa2fc85"
+        "contract": "e56e55dfc1b5004c5082288305143c11b672bdc9157d09ae4a4077ce8246ae88"
       }
     ]
   }
