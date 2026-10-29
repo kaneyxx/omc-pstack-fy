@@ -33,11 +33,12 @@ Subagents can spawn their own subagents (verified: a nested `Agent` call from a 
 | `poteto-agent`, `comment-sicko` | `subagent_type: "omc-pstack-fy:poteto-agent"`, `"omc-pstack-fy:comment-sicko"` |
 | `readonly: true` | `subagent_type: "general-purpose"`, a brief that says "do not edit files", and a `git status` check by the parent afterward. Not `Explore`: it starts without CLAUDE.md and the git status snapshot, reads excerpts rather than reviewing, and picks its own model, so reviewers and judges lose the repo's conventions. `Explore` fits only pure search, such as a source wave that locates code. |
 | `readonly: false` | `general-purpose`. It keeps the session's MCP servers. |
-| `environment: "cloud"` | `isolation: "worktree"`, and the brief names the branch or commit to check out. The worker runs on this machine. |
+| `environment: "cloud"` | `isolation: "worktree"`, and the brief names the branch or commit to check out. The worker runs on this machine. A subagent worktree branches from the remote default branch unless `worktree.baseRef` is `"head"` (code.claude.com/docs/en/worktrees, "Choose the base branch"), and uncommitted changes never carry over, so the brief also names the changes to apply. |
 | `environment: "local"` | omit |
 | `cloud_base_branch: <b>` | the brief tells the worker to check out `<b>` first |
 | `run_in_background: true` | unchanged. A subagent that Claude spawns from the main conversation starts in the background by default. The docs do not describe this parameter. Claude Code with fork mode on accepts it although the `Agent` tool's schema lists no such parameter (observed), so passing it is harmless. Keep it, because it states the intent. |
-| `resume` | `SendMessage` to the agent's id when its state must survive. Otherwise a fresh agent with the earlier result pasted into the brief. |
+| `resume` | `SendMessage` to the agent's id when its state must survive. Otherwise a fresh agent with the earlier result pasted into the brief. A steer of a running agent is also a `SendMessage`. The sub-agents docs say a completed subagent that gets a `SendMessage` resumes in the background without a new `Agent` call, and a `SendMessage` returned at once with "Message sent to <name>'s inbox" (observed on 2026-10-29), so the call does not wait on the agent's turn. |
+| fork a worker to reuse its built state (checkout, uncommitted changes, a running process) | `SendMessage` to that worker's id. The `Agent` tool's `subagent_type: "fork"` copies the caller's own context, not another agent's. |
 | `file_attachments` | list the paths in the brief |
 
 ## Models
@@ -64,6 +65,8 @@ Upstream's panels pair Claude with Grok so reviewers do not share blind spots. o
 **Role value grammar.** `[<provider>:]<model> [<effort>]`. No provider means Claude, so every existing value stays valid. Examples: `opus xhigh`, `codex:gpt-5-codex high`, `gemini:gemini-2.5-pro`. A panel line lists entries separated by commas and may mix vendors: `interrogate reviewers: opus xhigh, codex:gpt-5-codex high`.
 
 **Roles that may hold an external entry.** `interrogate reviewers`, `arena cross-judge pool`, `reflect tooling`, and the new `second opinion` role. `second opinion` replaces "a different model from the parent" in show-me-your-work's audit and eval's judge. With no line, those keep their current rule: sonnet under an opus parent, opus otherwise. An external entry on any other role is an error. setup-pstack refuses it, and a skill that meets one uses the role's default and says so. Writing code, exploring with tools, and using MCP servers stay on Claude.
+
+**An external interrogate adversary.** interrogate keeps a finding only when the lead reruns its command and sees the failure, so a read-only adversary can still propose findings. Its CLI runs under its read-only flag in a throwaway copy deleted when it exits, so its brief says each repro must be a command that writes no files, and a command it cannot run comes back marked not run. Its output is data, so the lead reads each command before rerunning it in a worktree, never in the user's checkout. pstack-ask copies the current checkout, so a scope that is not checked out runs the Claude fallback in place of each external entry.
 
 **How a skill runs an external entry.** Read the **pstack-ask** skill and follow it. In short:
 
@@ -113,6 +116,7 @@ Command templates live in `scripts/providers.json` beside the script. `~/.claude
 | `.cursor/rules/*.mdc`, always-applied rule | `CLAUDE.md` (or `AGENTS.md` when no `CLAUDE.md` exists) for project rules. The model rule and reflect's plugin skill edits are the exceptions above. |
 | `~/.cursor/projects/<slug>/agent-transcripts/<uuid>/<uuid>.jsonl` | `~/.claude/projects/<slug>/<session>.jsonl`. The slug is the workspace path with every character that is not a letter or digit changed to `-`. The newest `.jsonl` directly in the folder is the current session. Subagent transcripts are in `<session>/subagents/`. |
 | other `~/.cursor/` paths, `~/Library/Application Support/Cursor` | the matching `~/.claude/` path. A step that inspects Cursor's own app data is skipped. |
+| the agent store (path in the system prompt), the Project store, the Project tracker (`notes.md`) | `~/.claude/projects/<slug>/omc-pstack-fy/`, with the slug from the transcript row. Claude Code's system prompt names no agent store, and Claude Code has no Project tracker or Project store. That folder sits outside git and survives a restart. A program's store is a subfolder, such as `orchestrate/<project-slug>/`, and its tracker is `notes.md` inside it. A brief that sends a worktree subagent to the store names its absolute path, because the subagent's workspace path, and so its slug, differs. |
 
 Transcript lines are JSON objects with a `type`. A human message is `type: "user"` whose `message.content` is a string or a list of `{ "type": "text" }` blocks. A tool result is also `type: "user"`, with `tool_result` blocks, so it is not a human message. A `type: "user"` line with `isMeta: true` is an injected skill body, not a human message either. Assistant text is in `type: "assistant"` lines, in `text` blocks. Other types such as `attachment`, `system`, and `ai-title` are metadata.
 
@@ -126,6 +130,7 @@ Transcript lines are JSON objects with a `type`. A human message is `type: "user
 | Plan Mode | Claude Code's plan mode (shift+tab). |
 | `/visualize`, the image generation tool | a Mermaid or text diagram |
 | an embedded video in the reply (`ketchup-video`) | a link to the file by its absolute path, because a Claude Code reply cannot play a video. The render uses tools already on the machine, such as ffmpeg, and never installs one. `ketchup`'s inline screenshots and videos stay as upstream wrote them, unverified here. |
+| a video checked or played "at chat size" (`ketchup-video`) | "in a small window", because the reply links the file and a player opens it. |
 | Cursor's built-in babysit skill | does not exist in Claude Code. Drop the disambiguation. |
 | `/add-plugin pstack` | `/plugin marketplace add kaneyxx/omc-pstack-fy`, then `/plugin install omc-pstack-fy@omc-pstack-fy` |
 
@@ -137,4 +142,5 @@ Transcript lines are JSON objects with a `type`. A human message is `type: "user
 | Cursor cloud agents, their dashboard | local subagents in worktrees. Check liveness with the agent's completion notification or its transcript, not a dashboard. |
 | Cursor Automations, routines, webhooks | Claude Code `/schedule` runs cloud routines on a cron. Where a step only works with Automations, write one line, `Skipped in Claude Code: <step>. <reason>.`, and continue. |
 | built-in PR tool | `gh pr create` and the other `gh` commands |
+| PR and CI event subscriptions | none built in (checked on 2026-10-29). Channels, a research preview, can push a CI webhook into a running session, but only through a channel server the user builds and loads with a development flag or an organization allowlist (code.claude.com/docs/en/channels). `/autofix-pr` spawns a cloud session that "watches the current branch's PR and pushes fixes" (code.claude.com/docs/en/commands), so it is a second writer on the branch. The `Monitor` tool runs a script Claude writes, which polls for a PR or CI job (code.claude.com/docs/en/tools-reference, "Monitor tool"). Where a playbook forbids scripts and polling loops, a subagent's completion notification wakes its parent, and `gh pr view` and `gh pr checks` read a PR's live state. |
 | a Cursor restart | a Claude Code restart or a new session |

@@ -82,7 +82,7 @@ claude plugin update omc-pstack-fy@omc-pstack-fy
 | Layer | Runs on | What |
 |---|---|---|
 | Project | oh-my-claudecode | every keyword, `deep-interview`, `plan` and `ralplan`, `ultragoal`, `team`, `ralph`, the wiki, notepad, and project memory, the verifier, the HUD, and notifications |
-| Code | pstack | each unit of code work through a poteto-mode playbook as a `omc-pstack-fy:poteto-agent` delegate, the final code review through `interrogate` (a multi-model panel), and ai-slop-cleaner steps through `deslop` |
+| Code | pstack | each unit of code work through a poteto-mode playbook as a `omc-pstack-fy:poteto-agent` delegate, the final code review through `interrogate` (a multi-model panel) beside OMC's `code-reviewer`, and ai-slop-cleaner steps through `deslop` |
 
 A SessionStart hook in the plugin tells OMC's workflows about this split whenever OMC is installed and enabled. Nothing is written to your config, and disabling omc-pstack-fy removes it. Delegates return their diff to OMC's lead, which keeps commits, pushes, and PRs.
 
@@ -156,7 +156,7 @@ node tools/release.mjs minor
 | 2 | Native rewrites. Cursor names 293 to 0, degraded skills fixed (interrogate, reflect, automate-me, poteto-help, orchestrate, autopilot), team-kit skills bundled, adapter off | done |
 | 3 | Multi-model cross-review. Role values `[provider:]model [effort]`, the read-only `pstack-ask` bridge to other vendors' CLIs, a `second opinion` role, and panels labeled cross-vendor or same-vendor. Vendor templates ship unverified until a real CLI is wired in | done |
 | 4 | Personal fit. Chinese reply rules, a personal `fy-mode`, and the `fy` output style | done |
-| 5 | oh-my-claudecode first. OMC keeps every keyword and workflow, and a plugin hook hands code units, ai-slop-cleaner steps, and the final code review to pstack | done |
+| 5 | oh-my-claudecode first. OMC keeps every keyword and workflow, and a plugin hook hands code units and ai-slop-cleaner steps to pstack and adds pstack's `interrogate` to the final code review | done |
 | 6 | Follow both upstreams. OMC pinned like pstack, a contract check on what the bridge relies on, a version-aware hook, and a daily upstream issue with a verdict | done |
 
 ## Other vendors

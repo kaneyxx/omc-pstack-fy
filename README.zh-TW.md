@@ -82,7 +82,7 @@ claude plugin update omc-pstack-fy@omc-pstack-fy
 | 層 | 交給 | 負責什麼 |
 |---|---|---|
 | 專案 | oh-my-claudecode | 所有關鍵字、`deep-interview`、`plan` 和 `ralplan`、`ultragoal`、`team`、`ralph`、wiki、notepad、project memory、verifier、HUD，以及通知 |
-| 程式 | pstack | 每個程式工作單元由 `omc-pstack-fy:poteto-agent` 子代理照 poteto-mode 的 playbook 執行。最後的程式審查交給 `interrogate`（多模型審查小組），ai-slop-cleaner 步驟交給 `deslop` |
+| 程式 | pstack | 每個程式工作單元由 `omc-pstack-fy:poteto-agent` 子代理照 poteto-mode 的 playbook 執行。最後的程式審查加跑 `interrogate`（多模型審查小組），並保留 OMC 的 `code-reviewer`。ai-slop-cleaner 步驟交給 `deslop` |
 
 只要 OMC 已安裝並啟用，plugin 內建的 SessionStart hook 就會把這個分工告訴 OMC 的流程。這個 hook 不會寫入你的設定，停用 omc-pstack-fy 就會移除這個分工。子代理把 diff 交回 OMC 的主代理，commit、push 和 PR 仍由主代理負責。
 

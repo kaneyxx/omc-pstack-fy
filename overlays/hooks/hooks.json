@@ -1,5 +1,5 @@
 {
-  "description": "omc-pstack-fy's bridge into oh-my-claudecode: while OMC is installed and enabled, its workflows hand code units, deslop, and the final code review to omc-pstack-fy.",
+  "description": "omc-pstack-fy's bridge into oh-my-claudecode: while OMC is installed and enabled, its workflows hand code units and deslop to omc-pstack-fy and add interrogate to the final code review.",
   "hooks": {
     "SessionStart": [
       {

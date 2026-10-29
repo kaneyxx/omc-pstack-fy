@@ -74,7 +74,7 @@ The default answer is [`/omc-pstack-fy:poteto-mode`](../poteto-mode/SKILL.md), w
 | Understand a change or subsystem, explained plainly | [`/omc-pstack-fy:teach`](../teach/SKILL.md) |
 | Catch up on their own recent work on a topic | [`/omc-pstack-fy:recall`](../recall/SKILL.md) |
 | Catch up on what changed in this chat since their last message, in plain words and small visuals, with every item waiting on them listed and decidable from the reply alone | [`/omc-pstack-fy:ketchup`](../ketchup/SKILL.md) |
-| Catch up like [`/omc-pstack-fy:ketchup`](../ketchup/SKILL.md), in a short silent video of slides, with the waiting calls as text under it | [`/omc-pstack-fy:ketchup-video`](../ketchup-video/SKILL.md) |
+| Catch up like [`/omc-pstack-fy:ketchup`](../ketchup/SKILL.md), in a short subtitled video of slides, with the waiting calls as text under it | [`/omc-pstack-fy:ketchup-video`](../ketchup-video/SKILL.md) |
 | Know what a small diff could break outside itself | [`/omc-pstack-fy:blast-radius`](../blast-radius/SKILL.md) |
 | Settle types and module shape before code that crosses a function boundary | [`/omc-pstack-fy:architect`](../architect/SKILL.md) |
 | Get several attempts at one brief, merged into the best one | [`/omc-pstack-fy:arena`](../arena/SKILL.md) |
@@ -128,7 +128,7 @@ Playbooks are step lists inside [`/omc-pstack-fy:poteto-mode`](../poteto-mode/SK
 - "land the stack" runs Shipping.
 - "take over this branch" runs Session pickup.
 - "pause safely" runs Pause safely.
-- "full autopilot on this queue" runs Autopilot-full. "stack them, don't ship" runs Autopilot-stack.
+- "full autopilot on this queue" runs Autopilot-full. "autopilot, don't merge" runs Autopilot-stack.
 - "run the eval playbook" runs Eval.
 
 The Playbooks section of [`poteto-mode`](../poteto-mode/SKILL.md) lists every playbook and when it applies. [Guide page 6](../../docs/guide/06-verify-and-ship.md) covers opening, babysitting, and landing a PR.

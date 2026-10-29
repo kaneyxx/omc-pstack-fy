@@ -149,7 +149,7 @@
       "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
       "find": "Each live lane runs on its own cloud VM at the PR head. Drive through `control-ui` or `control-cli` from `cursor-team-kit`.",
       "replace": "Each live lane is a worktree subagent at the PR head on this machine. Give each lane its own ports and data directory, because all ten lanes share the machine. Drive through `control-ui` or `control-cli`.",
-      "why": "Claude Code has no cloud VMs. A worktree subagent stands in for one, and lanes that share one machine collide on ports and data unless each gets its own."
+      "why": "Claude Code's docs give subagents only `isolation: \"worktree\"`, and the Agent tool's `remote` value is gated and undocumented. So a worktree subagent on this machine stands in for a cloud VM, and lanes that share one machine collide on ports and data unless each gets its own."
     },
     {
       "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
@@ -171,81 +171,51 @@
     },
     {
       "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "Agents are spawned, resumed, and drained only through the Task tool.",
-      "replace": "Agents are spawned only through the `Agent` tool, resumed only through `SendMessage`, and drained from their completion notifications.",
-      "why": "Claude Code resumes a subagent with SendMessage, and a finished subagent notifies its parent."
+      "find": "Keep the program's state in the Project tracker (`notes.md`) and the Project store.",
+      "replace": "Keep the program's state in a store folder at `~/.claude/projects/<slug>/omc-pstack-fy/orchestrate/<project-slug>/`, and track the program in `notes.md` there. `<slug>` is this workspace's path with every character that is not a letter or digit changed to `-`. That folder sits outside git and survives a restart.",
+      "why": "Claude Code has no Project tracker or Project store, and its system prompt names no agent store. Its per-workspace folder under ~/.claude/projects/ sits outside git and survives a restart. The path keeps the store this playbook used before v0.15.36 and matches the one multi-phase-plan and autopilot-full use."
     },
     {
       "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "**Sub-coordinator.** Always local, durable,",
-      "replace": "**Sub-coordinator.** Always in this checkout with no `isolation`, durable,",
-      "why": "Every Claude Code agent runs on this machine, so the contrast with a worker is the worktree, not the location."
+      "find": "Watch each PR with PR and CI event subscriptions when your harness has them.",
+      "replace": "Each worker's completion notification wakes you, and `gh pr view` and `gh pr checks` give a PR's live state when you act on it.",
+      "why": "Claude Code ships no PR or CI event subscription. Channels, a research preview, deliver a CI webhook only through a channel server the user builds. /autofix-pr hands the PR to a cloud session that pushes its own fixes, a second writer on the owner's branch, and the Monitor tool watches by running a script that usually polls, which this playbook forbids. A background subagent notifies its parent when it finishes, so that notification is the event, and gh reads the live state. Checked against code.claude.com/docs/en/commands and tools-reference on 2026-10-29."
     },
     {
       "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "a nested spawn has the full Task schema including `environment`)",
-      "replace": "a nested spawn has the full `Agent` schema including `isolation`)",
-      "why": "A Claude Code subagent's Agent tool takes isolation, the field that stands in for Cursor's environment."
+      "find": "Call no scripts, run no polling loops, and never relay messages or status between agents.",
+      "replace": "Call no scripts, run no polling loops, and never relay messages or status between agents. When the session compacts, re-read poteto-mode's `SKILL.md` and this playbook before your next step, because compaction keeps only part of them.",
+      "why": "A multi-day coordinator compacts, and compaction re-attaches only the start of each loaded skill, which cuts poteto-mode short and drops this playbook."
     },
     {
       "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "- **Worker / verifier.** Always `environment: \"cloud\"` unless the task needs this machine: `control-ui` or `control-cli` runtime verification (from `cursor-team-kit`). Reading local transcripts under `agent-transcripts/`. Simulators and local IDE state. Auth that exists only here. Cloud agents cannot read the local store, so their briefs inline what they need or point at repo paths. Prefer fewer, broader workers. One writer per worktree or branch (principle-separate-before-serializing-shared-state). Run a unit's verifier on a different model family from its worker.",
-      "replace": "- **Worker / verifier.** Always `isolation: \"worktree\"`, with the branch or commit to check out named in the brief. A worktree worker runs on this machine, so it can still drive `control-ui` or `control-cli`, read local transcripts under `~/.claude/projects/`, and use simulators, local IDE state, and auth that exists only here. Its brief inlines what it needs or points at repo paths, because the brief is its whole contract. Every worker shares this machine's CPU, memory, and ports, so give each one that boots a surface its own port. Prefer fewer, broader workers. One writer per worktree or branch (principle-separate-before-serializing-shared-state). Run a unit's verifier on a different model from its worker, such as opus against sonnet.",
-      "why": "Claude Code has no cloud agents. A worktree subagent stands in for one but shares this machine, and one vendor offers a different model, not a different family."
+      "find": "Run workers on a new cloud VM (`environment: \"cloud\"`) unless the work needs this machine: a `control-ui` or `control-cli` runtime check (from `cursor-team-kit`), local transcripts, a simulator, or auth that exists only here.",
+      "replace": "Run each worker with `isolation: \"worktree\"`, and name the branch or commit to check out in its kickoff. Every worker runs on this machine, so one that needs a `control-ui` or `control-cli` runtime check, local transcripts, a simulator, or auth that exists only here runs the same way. Workers share this machine's CPU, memory, and ports, so give each one that boots a surface its own ports and data directory.",
+      "why": "Claude Code's docs give subagents only `isolation: \"worktree\"`, and the Agent tool's `remote` value is gated and undocumented. So a worktree subagent on this machine stands in for a cloud VM, and the mapping's environment row has its brief name the branch or commit. It runs on this machine, so the exception for work that needs this machine is gone, and workers that share one machine collide on ports and data unless each gets its own. omc-pstack-fy bundles control-ui and control-cli."
     },
     {
       "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "Create `orchestrate/<project-slug>/` in the current agent's store (path in the system prompt). Every file has exactly one writer. Owners publish facts, readers aggregate at read time. Use `bun scripts/orch/orch.ts` for bookkeeping, written below as `orch`, while its canonical plain TSV and JSON stay readable without the CLI.",
-      "replace": "Create the store at `~/.claude/projects/<slug>/omc-pstack-fy/orchestrate/<project-slug>/`, where `<slug>` is this workspace's path with every character that is not a letter or digit changed to `-`. Claude Code keeps that folder for this workspace, so the store sits outside git and survives a restart. Every file has exactly one writer. Owners publish facts, readers aggregate at read time. Use `bun scripts/orch/orch.ts --store <store>` for bookkeeping, written below as `orch`, while its canonical plain TSV and JSON stay readable without the CLI. Pass `--store` on every call, because `orch` has no default store and Claude Code's shell keeps no exported variable between commands.",
-      "why": "Claude Code names no agent store in the system prompt. orch takes its store only from --store or ORCH_STORE, and an exported ORCH_STORE is gone by the next Bash call."
+      "find": "- **Fork when new work needs a worker's built state,** such as its checkout, uncommitted changes, or a running process. Message a worker only for a follow-up on the same work.",
+      "replace": "- **Continue a worker with `SendMessage` to its id only when new work needs its built state,** such as its checkout, uncommitted changes, or a running process, or when the work is a follow-up on its own task.",
+      "why": "Claude Code's fork, `subagent_type: \"fork\"`, copies the caller's context, not another agent's. SendMessage to a worker's id is the only way to reuse its state, so both cases go through it, as poteto-mode's Subagents section already says for checkouts, uncommitted changes, and running processes."
     },
     {
       "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "Local spawns may reference the standing-orders file by store path. Verbatim paste is for cloud spawns and every resume.",
-      "replace": "A sub-coordinator spawn may reference the standing-orders file by store path. Verbatim paste is for worker spawns and every resume.",
-      "why": "Worktree workers take the place of cloud workers, so they keep the verbatim paste. Sub-coordinators stay in this checkout and read the store."
+      "find": "- **Each PR gets a verifier that isn't its author,** on a different model family.",
+      "replace": "- **Each PR gets a verifier that isn't its author,** on a different model from its author's, such as opus against sonnet.",
+      "why": "Every verifier that runs code is a Claude model, so the closest match to a different family is a different model."
     },
     {
       "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "its spawn budget with the cloud default and the local exception list,",
-      "replace": "its spawn budget with the worktree default, the store's absolute path,",
-      "why": "Every worker is a worktree subagent, so the exception list is gone. A sub-coordinator passes the store path to orch on every call."
+      "find": "Read a sample of each sub-coordinator's kickoffs while its workers run, and fix its instructions when one fails.",
+      "replace": "Read a sample of each sub-coordinator's kickoffs in its transcript while its workers run, and fix its instructions when one fails. `find ~/.claude/projects/<slug> -name 'agent-<id>.jsonl'` locates the transcript, and each kickoff is the prompt of one of its `Agent` calls.",
+      "why": "A Claude Code coordinator sees a sub-coordinator's spawns only in that agent's transcript, and this playbook forbids messaging an agent to check on it. Nested subagent transcripts sit in the session's subagents/ folder beside their parent's (observed on 2026-10-29)."
     },
     {
       "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "Chain rebases run in cloud. A local rebase at this scale takes the laptop down.",
-      "replace": "Chain rebases run in the stacker's own worktree, one at a time across the program, because every agent shares this machine and a rebase at this scale can take the laptop down.",
-      "why": "Claude Code has no cloud to move a rebase to, so the load limit becomes a cap on concurrent rebases."
-    },
-    {
-      "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "A dedicated verifier agent (on a different model family than the worker)",
-      "replace": "A dedicated verifier agent (on a different model than the worker)",
-      "why": "Within one vendor, the closest match to a different family is a different model."
-    },
-    {
-      "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "Work that exists only on one VM when that VM dies was never done.",
-      "replace": "Work that exists only in one worktree when its agent dies was never done.",
-      "why": "A worker lives in a worktree on this machine, not on a VM."
-    },
-    {
-      "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "Probe read-only: the ledger, `units.tsv`, `gh`, pushed branches, the cloud agent's status in the Cursor dashboard. Transcript mtime is not liveness.",
-      "replace": "Probe read-only through the ledger, `units.tsv`, `gh`, pushed branches, and the agent's transcript, which `find ~/.claude/projects/<slug> -name 'agent-<id>.jsonl'` locates. Read its last tool call and result. Transcript mtime is not liveness. An agent that stopped has sent its completion notification.",
-      "why": "Claude Code has no agent dashboard. A subagent's transcript and its completion notification are the read-only signals."
-    },
-    {
-      "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "- After a Cursor restart: local agents are dead, cloud work is not. Re-read the standing orders and `units.tsv`, recompute the frontier, reattach cloud work by PR and branch rather than agent id, respawn one sub-coordinator per track from its stored brief plus current state, drain, resume.",
-      "replace": "- After a Claude Code restart, every agent is dead, because subagents run inside the session that spawned them. Pushed branches, PRs, and the store survive. Re-read the standing orders and `units.tsv`, recompute the frontier, reattach work by PR and branch rather than agent id, respawn one sub-coordinator per track from its stored brief plus current state, drain, resume. A unit with no pushed head gets a fresh worker, because its work was never done.",
-      "why": "Claude Code has no cloud work that outlives the session, so a restart kills workers too."
-    },
-    {
-      "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "the frontier (PR list plus SHAs), verdicts summary,",
-      "replace": "the frontier (PR list plus SHAs), verdicts summary with a note that same-vendor verifiers are weaker evidence than cross-vendor ones,",
-      "why": "Every verifier is a Claude model, and the reply says so plainly."
+      "find": "each PR's live state and verdict with its link,",
+      "replace": "each PR's live state and verdict with its link, a note that same-vendor verifiers are weaker evidence than cross-vendor ones,",
+      "why": "Every verifier is a Claude model, and the mapping's Models table says a reply names that plainly."
     },
     {
       "file": "skills/poteto-mode/playbooks/opening-a-pr.md",
@@ -291,8 +261,8 @@
     },
     {
       "file": "skills/poteto-mode/playbooks/autopilot-full.md",
-      "find": "Assume the VM dies. Soon after starting, push and start a decision trail in the root agent's store (path in the system prompt) per the **show-me-your-work** skill, then push after every unit worth keeping.",
-      "replace": "Assume the owner dies, because a subagent ends with the session that runs it. Soon after starting, push and start a decision trail in the root's store per the **show-me-your-work** skill, then push after every unit worth keeping. The root's store is `~/.claude/projects/<slug>/omc-pstack-fy/`, where `<slug>` is the root's workspace path with every character that is not a letter or digit changed to `-`. Every brief names that absolute path.",
+      "find": "Assume the VM dies. Soon after starting, push and start a decision trail in the root agent's store (path in the system prompt) per the **show-me-your-work** skill, then push each finished unit before you start the next.",
+      "replace": "Assume the owner dies, because a subagent ends with the session that runs it. Soon after starting, push and start a decision trail in the root's store per the **show-me-your-work** skill, then push each finished unit before you start the next. The root's store is `~/.claude/projects/<slug>/omc-pstack-fy/`, where `<slug>` is the root's workspace path with every character that is not a letter or digit changed to `-`. Every brief names that absolute path.",
       "why": "Claude Code names no agent store in the system prompt, and an owner in a worktree has a different workspace path from the root."
     },
     {
@@ -386,22 +356,10 @@
       "why": "A plugin user's repository has no pstack/ folder, so trunk holds no playbook. A long loop compacts, and compaction re-attaches only the first ~5,000 tokens of a skill."
     },
     {
-      "file": "skills/poteto-mode/playbooks/autopilot-stack.md",
-      "find": "Each tick re-reads both playbooks from trunk, and this one wins where they differ.",
-      "replace": "Each tick re-reads both playbooks from the newest installed omc-pstack-fy copy, and this one wins where they differ.",
-      "why": "A plugin user's repository has no pstack/ folder, so trunk holds no playbook."
-    },
-    {
       "file": "skills/poteto-mode/playbooks/autonomous-run.md",
       "find": "No event gets a fixed-interval heartbeat sized to when the result is worth re-checking.",
       "replace": "No event gets a fixed-interval heartbeat sized to when the result is worth re-checking. Each wake first re-reads poteto-mode's `SKILL.md` and this playbook, because a mid-run compaction keeps only part of them.",
       "why": "A long loop compacts, and compaction re-attaches only the first ~5,000 tokens of a skill, which cuts poteto-mode short and drops this playbook."
-    },
-    {
-      "file": "skills/poteto-mode/playbooks/orchestrate.md",
-      "find": "and before a human report. Begin each batch with `orch inbox drain`.",
-      "replace": "and before a human report. A loop wake first re-reads poteto-mode's `SKILL.md` and this playbook, because a mid-run compaction keeps only part of them. Begin each batch with `orch inbox drain`.",
-      "why": "A multi-day coordinator compacts, and compaction re-attaches only the first ~5,000 tokens of a skill, which cuts poteto-mode short and drops this playbook."
     },
     {
       "file": "skills/poteto-mode/scripts/check-plan.mjs",

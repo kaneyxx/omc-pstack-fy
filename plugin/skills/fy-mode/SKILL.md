@@ -33,7 +33,7 @@ When oh-my-claudecode (OMC) is installed and enabled, route by need. Confirm eac
 - **Requirements.** `oh-my-claudecode:deep-interview`.
 - **Plans.** `oh-my-claudecode:plan` or `oh-my-claudecode:ralplan`.
 - **A multi-day, many-PR program.** `oh-my-claudecode:ultragoal`, `oh-my-claudecode:team`, or `oh-my-claudecode:ralph`, rather than poteto-mode's Orchestrate playbook, unless the user names Orchestrate. OMC commands the program and keeps its state. Each code unit is handed to poteto-mode as a `omc-pstack-fy:poteto-agent` delegate with the playbook that fits, never to OMC's `executor`. The delegate runs only the playbook's code steps, skips commit, push, and Opening a PR, and returns its diff and evidence to OMC's lead.
-- **OMC's mandatory steps** run with the pstack equivalents. Its ai-slop-cleaner step runs the [**deslop**](../deslop/SKILL.md) skill, and only its final code review gate runs the [**interrogate**](../interrogate/SKILL.md) skill. OMC's verifier stays.
+- **OMC's mandatory steps** run with the pstack equivalents. Its ai-slop-cleaner step runs the [**deslop**](../deslop/SKILL.md) skill, and only its final code review gate adds the [**interrogate**](../interrogate/SKILL.md) skill beside its `code-reviewer`. OMC's verifier stays.
 - **Knowledge.** `oh-my-claudecode:wiki`, the notepad, and project memory.
 - **Code units** run poteto-mode's playbooks. Scholarly prose keeps the routing above.
 - **The bridge.** omc-pstack-fy's SessionStart hook carries these rules into OMC's own workflows while OMC is installed and enabled. OMC keeps every keyword and workflow.

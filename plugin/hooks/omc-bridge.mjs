@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // SessionStart hook. While oh-my-claudecode (OMC) is installed and enabled, it injects omc-bridge.md, which makes OMC's
-// workflows hand code units, deslop, and the final code review to omc-pstack-fy. When the installed OMC is neither the version
+// workflows hand code units and deslop to omc-pstack-fy and add interrogate to the final code review. When the installed OMC is neither the version
 // the bridge was checked against nor another one that passed the same contract (omc-version.json, written by the build), it says
 // so to the model and, at startup, to the user. A hook must never block a session, so any error, missing file, or unparsable JSON
 // ends the script with exit 0 and no output.

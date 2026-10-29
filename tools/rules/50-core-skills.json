@@ -69,9 +69,9 @@
     },
     {
       "file": "skills/poteto-mode/SKILL.md",
-      "find": "**Defaults for every `Task` call.** `run_in_background: true`, agent mode (readonly strips MCP), file pointers not inlined context, explicit model per role (configurable via `/setup-pstack`. Defaults `grok-4.7-xhigh-fast` for code, `claude-opus-5-5-xhigh` for prose and judgment).",
-      "replace": "**Defaults for every `Agent` call.** Pass `run_in_background: true` and keep working until it notifies you. Use a type with full tools, not `Explore`, because a delegate needs edits and the session's MCP servers. Pass file pointers, not inlined context. Set an explicit `model` and `effort` per role (configurable via `/setup-pstack`. Defaults `sonnet xhigh` for code, `opus xhigh` for prose and judgment).",
-      "why": "A subagent that Claude spawns from the main conversation starts in the background by default. The docs do not describe a `run_in_background` parameter. Claude Code with fork mode on accepts it although the Agent tool's schema lists no such parameter (observed), so passing it is harmless. Explore has no edit tools, and the Agent tool takes a model alias plus an effort level."
+      "find": "**Defaults for every `Task` call.** `run_in_background: true` (a steer or resume of a running agent too, because a foreground call holds your turn while other reports wait), agent mode (readonly strips MCP), file pointers not inlined context, explicit model per role (configurable via `/setup-pstack`. Defaults `grok-4.7-xhigh-fast` for code, `claude-opus-5-5-xhigh` for prose and judgment).",
+      "replace": "**Defaults for every `Agent` call.** Pass `run_in_background: true` and keep working until it notifies you. A steer or resume of an agent is a `SendMessage` to its id, which queues the message and returns without waiting for the agent, so it never holds your turn while other reports wait. Use a type with full tools, not `Explore`, because a delegate needs edits and the session's MCP servers. Pass file pointers, not inlined context. Set an explicit `model` and `effort` per role (configurable via `/setup-pstack`. Defaults `sonnet xhigh` for code, `opus xhigh` for prose and judgment).",
+      "why": "A subagent that Claude spawns from the main conversation starts in the background by default. The docs do not describe a `run_in_background` parameter. Claude Code with fork mode on accepts it although the Agent tool's schema lists no such parameter (observed), so passing it is harmless. A steer or resume goes through `SendMessage`, which takes no `run_in_background`. The sub-agents docs say a completed subagent that gets a `SendMessage` resumes in the background without a new `Agent` call. A `SendMessage` to a subagent returned at once with \"Message sent to <name>'s inbox\" (observed on 2026-10-29). Explore has no edit tools, and the Agent tool takes a model alias plus an effort level."
     },
     {
       "file": "skills/poteto-mode/SKILL.md",
@@ -81,9 +81,9 @@
     },
     {
       "file": "skills/poteto-mode/SKILL.md",
-      "find": "**Match the model to the job.** Before each spawn, start from the role's line or default and pick the reasoning level and speed the job needs. The `/setup-pstack` budget sets each role's starting level, xhigh by default. Raise it one step, up to max, for the hardest or subtlest work. Lower it one step for judgment and two or more steps for routine work. Use fast mode only when the job is urgent, meaning CI or trunk is red or a person is blocked on the result right now. Otherwise use standard speed, the same slug without `-fast`. Verification is the exception and stays on the `swarm workers` model and speed (`grok-4.7-xhigh-fast` by default). Change only the effort level and whether the slug is fast, and keep the family the role names, so a diverse panel stays diverse. If the family has no slug at that level and speed, use its nearest slug. A role on `auto` or `inherit-parent` stays on the parent model. If the Task tool rejects the adjusted slug, do not try another adjusted slug. Use the role's line or default and say so.",
-      "replace": "**Match the model to the job.** Before each spawn, start from the role's line or default and pick the `effort` the job needs. The `/setup-pstack` budget sets each role's starting effort, xhigh by default. Raise it one step, up to max, for the hardest or subtlest work. Lower it one step for judgment and two or more steps for routine work. Verification is the exception and stays on the `swarm workers` line as written (`sonnet xhigh` by default). Change only `effort`, and keep the model the role names, so a diverse panel stays diverse. A role on `inherit` stays on the parent model, so omit `model` and set only `effort`. If the Agent tool rejects the adjusted effort, do not try another adjustment. Use the role's line or default and say so.",
-      "why": "The Agent tool has no fast mode and no per-model slugs. `effort` is the one knob per spawn."
+      "find": "**Match the model to the job.** Before each spawn, start from the role's line or default and pick the reasoning level and speed the job needs. The `/setup-pstack` budget sets each role's starting level, xhigh by default. Raise it one step, up to max, for the hardest or subtlest work. Lower it one step for judgment and two or more steps for routine work. Use fast mode only when the job is urgent, meaning CI or trunk is red or a person is blocked on the result right now. Otherwise use standard speed, the same slug without `-fast`. Verification is the exception and stays on the `swarm workers` model and speed (`grok-4.7-xhigh-fast` by default). Change only the effort level and whether the slug is fast, and keep the family the role names, so a diverse panel stays diverse. If the family has no slug at that level and speed, use its nearest slug. A role on `auto` or `inherit-parent` stays on the parent model. If the Task tool rejects the adjusted slug, do not try another adjusted slug. Use the role's line or default and say so. If the Task tool rejects that too, continue with the calling skill's fallback. A slug counts as rejected once a Task error says that the model is not valid, or leaves the slug out of its list of valid slugs. Never pass a rejected slug, and skip any fallback whose slug is already rejected. When the calling skill has no fallback, use the closest valid slug of the role's family from the error's list of valid slugs, or omit `model` so the subagent runs on the parent model when the list has none. When the calling skill's fallback runs out of slugs without saying what to do next, omit `model` too. Say so in both cases.",
+      "replace": "**Match the model to the job.** Before each spawn, start from the role's line or default and pick the `effort` the job needs. The `/setup-pstack` budget sets each role's starting effort, xhigh by default. Raise it one step, up to max, for the hardest or subtlest work. Lower it one step for judgment and two or more steps for routine work. Verification is the exception and stays on the `swarm workers` line as written (`sonnet xhigh` by default). Change only `effort`, and keep the model the role names, so a diverse panel stays diverse. A role on `inherit` stays on the parent model, so omit `model` and set only `effort`. If the Agent tool rejects the adjusted effort, do not try another adjustment. Use the role's line or default and say so. If the Agent tool rejects that too, continue with the calling skill's fallback. A model or effort counts as rejected once an Agent error says it is not valid, or leaves it out of its list of valid values. Never pass a rejected value again, and skip any fallback that would. When the calling skill has no fallback, use the closest model and effort the error lists, or omit `model` so the subagent runs on the parent model when it lists none. When the calling skill's fallback runs out without saying what to do next, omit `model` too. Say so in both cases.",
+      "why": "The Agent tool has no fast mode and no per-model slugs. `effort` is the one knob per spawn. It takes `model` and `effort` from fixed lists, so a rejection is about one of those two values, not a slug or a family."
     },
     {
       "file": "skills/poteto-mode/SKILL.md",
@@ -256,15 +256,15 @@
     },
     {
       "file": "docs/guide/04-design.md",
-      "find": "A read-only judge, on a different model family when your configuration allows one,",
-      "replace": "A read-only judge, on a different model from your chat's when your configuration allows one,",
-      "why": "omc-pstack-fy picks the judge by model, opus versus sonnet."
+      "find": "A read-only judge from a different model family scores every candidate against a rubric. When no model from another family can run, the coordinator skips the judge and picks the base itself.",
+      "replace": "A read-only judge on a model other than your chat's scores every candidate against a rubric. When no other model can run, the coordinator skips the judge and picks the base itself.",
+      "why": "omc-pstack-fy picks the judge by model, opus versus sonnet, or another vendor's model through pstack-ask. The judge never runs on the chat's model."
     },
     {
       "file": "docs/guide/04-design.md",
-      "find": "sends the same diff, intent, and rubric to reviewers on different model families. Model diversity is the point. Different models have different blind spots, so a finding two models raise independently is high-confidence signal.",
-      "replace": "sends the same diff, intent, and rubric to reviewers on different models. Model diversity is the point. Different models have different blind spots, so a finding two models raise independently is high-confidence signal. The default panel pairs opus with sonnet, two Claude models, and a same-vendor panel is weaker evidence than a cross-vendor one.",
-      "why": "omc-pstack-fy panels are same-vendor until Phase 3 adds other vendors."
+      "find": "Adversaries find different failures.",
+      "replace": "Adversaries find different failures. The default panel pairs opus with sonnet, two Claude models, which share more blind spots than models from two vendors.",
+      "why": "Upstream's default panel pairs two vendors. omc-pstack-fy's default panel is same-vendor until an `interrogate reviewers` line adds another vendor's model through pstack-ask."
     },
     {
       "file": "docs/guide/05-build-and-clean.md",
@@ -358,9 +358,9 @@
     },
     {
       "file": "skills/arena/SKILL.md",
-      "find": "If the rule or that line is missing, default to one each on `claude-opus-5-5-xhigh` and `grok-4.7-xhigh-fast`. An `auto` or `inherit-parent` entry in this line or the cross-judge line means the parent model, so omit `model` for it. If the Task tool rejects a configured entry, run that seat on its family's default and say so. Families go by prefix: `claude-*`, and `grok-*` with `cursor-grok-*` and `composer-*`. A refused `composer-*` entry runs on `grok-4.7-xhigh-fast`. With no family match, use `claude-opus-5-5-xhigh`. If it rejects a default, use the closest valid slug of the same family from its error message.",
-      "replace": "If the rule or that line is missing, default to one each on `opus xhigh` and `sonnet xhigh`. Each entry is `<model> <effort>`, passed to the Agent tool as `model` and `effort`. An `inherit` entry in this line or the cross-judge line means the parent model, so omit `model` for it. If the Agent tool rejects a configured entry, run that seat on the default with the same model, or on `opus xhigh` when no default shares it, and say so. If it rejects a default, use the closest model and effort its schema lists.",
-      "why": "The Agent tool takes a model alias plus an effort. There are no vendor families or Cursor slugs to fall back across."
+      "find": "If the rule or that line is missing, default to one each on `claude-opus-5-5-xhigh` and `grok-4.7-xhigh-fast`. An `auto` or `inherit-parent` entry in this line means the parent model, so omit `model` for it. If the Task tool rejects a configured entry, run that seat on its family's default and say so. Families go by prefix: `claude-*`, and `grok-*` with `cursor-grok-*` and `composer-*`. A refused `composer-*` entry runs on `grok-4.7-xhigh-fast`. If the family has no default, or the Task tool rejects that default, use the closest valid slug of the same family from its error message, or drop the seat and say so when there is none. If dropped seats leave fewer than two runners, add runners until there are two, or one when the line has one entry. Run each added runner on a remaining runner's model, or omit `model` so it runs on the parent model when none remain, and say so.",
+      "replace": "If the rule or that line is missing, default to one each on `opus xhigh` and `sonnet xhigh`. Each entry is `<model> <effort>`, passed to the Agent tool as `model` and `effort`. An `inherit` entry in this line means the parent model, so omit `model` for it. If the Agent tool rejects a configured entry, run that seat on the default with the same model, or on `opus xhigh` when no default shares it, and say so. If it rejects that default too, use the closest model and effort its schema lists, or drop the seat and say so when there is none. If dropped seats leave fewer than two runners, add runners until there are two, or one when the line has one entry. Run each added runner on a remaining runner's model, or omit `model` so it runs on the parent model when none remain, and say so.",
+      "why": "The Agent tool takes a model alias plus an effort. There are no vendor families or Cursor slugs to fall back across, so a rejected entry falls back by model."
     },
     {
       "file": "skills/arena/SKILL.md",
@@ -371,8 +371,8 @@
     {
       "file": "skills/arena/SKILL.md",
       "find": "(a git worktree where possible, otherwise",
-      "replace": "(a git worktree where possible, through the Agent tool's `isolation: \"worktree\"`, otherwise",
-      "why": "This is how Claude Code gives a subagent its own worktree."
+      "replace": "(a git worktree where possible, through the Agent tool's `isolation: \"worktree\"` and a brief that names the commit to check out first, otherwise",
+      "why": "This is how Claude Code gives a subagent its own worktree. An `isolation: \"worktree\"` worktree branches from the remote default branch unless `worktree.baseRef` is `\"head\"` (code.claude.com/docs/en/worktrees). So the brief names the commit, as the mapping's `environment: \"cloud\"` row says. interrogate runs this step, and its adversaries must test the code under review."
     },
     {
       "file": "skills/arena/SKILL.md",
@@ -382,9 +382,9 @@
     },
     {
       "file": "skills/arena/SKILL.md",
-      "find": "Prefer a different model family from the parent's. Spawn one readonly judge subagent on that model.",
-      "replace": "Prefer a different vendor from the parent's when the pool offers one, else a different model, such as sonnet under an opus parent. For a Claude entry, spawn one judge subagent with `subagent_type: \"general-purpose\"` on that model. Its brief says \"do not edit files\", and you check `git status` after it returns. For an external entry, such as `gemini:gemini-2.5-pro`, read the **pstack-ask** skill and run the judge through it, read-only. Its throwaway worktree may not reach the candidates' folders, so inline each candidate, or its diff, in its prompt under its path label.",
-      "why": "Explore is Claude Code's read-only type. It keeps Bash, so the brief and git status guard the tree. The pool may name another vendor's model per the Phase 3 contract, and a judge from another vendor shares fewer blind spots with the parent. pstack-ask's isolated worktree cannot see the candidates' folders."
+      "find": "Spawn one readonly judge subagent. The judge is never from the parent's family, as Phase A step 3 defines families. Try only the entries from another family, in pool order. An `auto` or `inherit-parent` entry is the parent model, so it never judges. With the default pool, a Claude parent gets `grok-4.7-xhigh-fast`. A parent from any other family gets `claude-opus-5-5-xhigh` first. If the Task tool rejects an entry, use a valid slug of the same model at the closest level or speed from the error message, or move to the next entry when there is none. If no entry from another family runs, try the default pool's entries from another family the same way. If none of those runs, skip the judge, pick the base alone in Phase D, and say so. If you do not know the parent's model, try the pool's real slugs in pool order and say that the family check did not run.",
+      "replace": "Spawn one judge subagent. The judge never runs on the parent's model. Try the entries from another vendor first, then the Claude entries on another model, each in pool order. An `inherit` entry is the parent model, so it never judges. With the default pool, an opus parent gets `sonnet xhigh`. A parent on any other model gets `opus xhigh` first. For a Claude entry, spawn the judge with `subagent_type: \"general-purpose\"` and the entry's `model` and `effort`. Its brief says \"do not edit files\", and you check `git status` after it returns. If the Agent tool rejects an entry, use the same model at the closest effort its schema lists, or move to the next entry when there is none. For an external entry, such as `gemini:gemini-2.5-pro`, read the **pstack-ask** skill and run the judge through it, read-only. Its throwaway copy may not reach the candidates' folders, so inline each candidate, or its diff, in its prompt under its path label. If its CLI is not installed, fails, or times out, run the Claude fallback that skill names and say so in one line. If no entry runs, try the default pool's entries on another model the same way. If none of those runs, skip the judge, pick the base alone in Phase D, and say so. If you do not know the parent's model, try the pool's entries in pool order and say that the model check did not run.",
+      "why": "The Agent tool has no read-only flag, so the brief and `git status` guard the tree. omc-pstack-fy tells models apart where upstream tells families apart, opus versus sonnet. The pool may name another vendor's model per the Phase 3 contract, which shares fewer blind spots with a Claude parent, so it goes first. pstack-ask's throwaway copy cannot see the candidates' folders."
     },
     {
       "file": "skills/arena/SKILL.md",
@@ -418,39 +418,21 @@
     },
     {
       "file": "skills/interrogate/SKILL.md",
-      "find": "Each reviewer gets `subagent_type: generalPurpose`, `readonly: true`, and `model` set to its configured entry, or its table default when there is no configured line. Omit `model` for an `auto` or `inherit-parent` entry, so that reviewer runs on the parent model.",
-      "replace": "Each Claude reviewer gets `subagent_type: \"general-purpose\"`, with `model` and `effort` set from its configured entry, or from its table default when there is no configured line. Every reviewer prompt says \"do not edit files\", and you check `git status` once the reviewers return. Omit `model` for an `inherit` entry, so that reviewer runs on the parent model.",
-      "why": "Explore is Claude Code's read-only type. It keeps Bash, so the prompt and git status guard the tree."
+      "find": "Read the `interrogate reviewers` line in place of `arena runners`. Copy the scope's uncommitted changes into each worktree. Spawn each adversary as `generalPurpose`.",
+      "replace": "Read the `interrogate reviewers` line in place of `arena runners`, and pass only its Claude entries to arena's step 3, because an external entry runs as the paragraph after the brief says. Copy the scope's uncommitted changes into each worktree. Write them to a patch outside the repository with `git diff HEAD --binary`, and list each untracked file in scope by absolute path. Each adversary's brief says to check out the scope's `HEAD` commit, apply that patch, and copy those files before anything else. Spawn each Claude adversary with `subagent_type: \"general-purpose\"`.",
+      "why": "The Agent tool creates an `isolation: \"worktree\"` worktree when the agent starts, so the lead cannot copy files into it beforehand. An `isolation: \"worktree\"` worktree branches from the remote default branch unless `worktree.baseRef` is `\"head\"` (code.claude.com/docs/en/worktrees). So each adversary checks out the commit and applies the changes itself. Arena's step 3 passes every entry to the Agent tool, which would reject an external one and fall back to a Claude seat. `general-purpose` is Claude Code's general subagent type, with the edit and Bash tools a repro needs."
     },
     {
       "file": "skills/interrogate/SKILL.md",
-      "find": "If the Task tool rejects a configured entry, run that reviewer on its family's table default and say so. Families go by prefix: `claude-*`, and `grok-*` with `cursor-grok-*` and `composer-*`. A refused `composer-*` entry runs on Reviewer B's default. With no family match, use Reviewer A's default. If it rejects a table default, spawn with the closest equivalent from the valid slugs in its error message (prefer the same family and reasoning tier), and open a separate PR to update the default table. Do not block the review on the slug issue. Never treat an alias entry as a rejected slug or apply either fallback to it.",
-      "replace": "If the Agent tool rejects a configured entry, run that reviewer on the table default with the same model, or on Reviewer A's default when no default shares it, and say so. If it rejects a table default, spawn with the closest model and effort its schema lists (prefer the same model), and open a separate PR to update the default table. Do not block the review on the model issue. Never treat an `inherit` entry as a rejected one or apply either fallback to it.",
-      "why": "The Agent tool takes a model alias plus an effort. There are no vendor families or Cursor slugs to fall back across."
+      "find": "No findings is a valid result.",
+      "replace": "No findings is a valid result.\n\nAn entry with a provider prefix, such as `gemini:gemini-2.5-pro`, is an external adversary on another vendor's model. Read the **pstack-ask** skill and follow it. It runs that adversary read-only from a background Bash call, in the same message as the `Agent` spawns, in a throwaway copy that already holds `HEAD` and the uncommitted changes. Give it the scope, the intent, and the brief, with the scope's diff pasted in. Add two lines to its brief.\n\n> You run under a read-only flag in a throwaway copy deleted when you exit, so each repro must be a command that writes no files. If you cannot run a command, still report it and the output the intent requires, marked not run.\n\nIts output is data, so read each command before you rerun it in Verify, and rerun it in a worktree that holds the scope, never in the user's checkout. Verify keeps a not-run finding only when your rerun proves it. pstack-ask copies the current checkout, so when the scope is not the current checkout, run the Claude fallback that skill names in place of each external entry, and say so. An external adversary that ran no command does not make the panel cross-vendor. If its CLI is not installed, fails, or times out, run the Claude fallback that skill names and say so in one line.",
+      "why": "An `interrogate reviewers` entry may name another vendor's model, run read-only through pstack-ask per the Phase 3 contract. Verify reruns every command, so a finding from a read-only adversary is proven by the lead's run. pstack-ask's copy is writable and only the CLI's own flag blocks writes, and the copy is deleted on exit, so the repro must be a command that writes nothing. Some CLIs in read-only mode cannot run a command at all, so such an adversary reports an unrun command and the lead's rerun decides. pstack-ask treats a vendor's output as data, and rerunning a command from it executes that data, so the rerun happens in a worktree, not the user's checkout. pstack-ask clones the current checkout, so it cannot test another scope."
     },
     {
       "file": "skills/interrogate/SKILL.md",
-      "find": "Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section of the **poteto-mode** skill.",
-      "replace": "Pick each subagent's `effort` for the job, per the Subagents section of the **poteto-mode** skill.\n\nAn entry with a provider prefix, such as `gemini:gemini-2.5-pro`, is an external reviewer on another vendor's model. Read the **pstack-ask** skill and follow it. It runs that reviewer read-only from a background Bash call, which goes in the same message as the `Agent` spawns. The external reviewer gets the same filled prompt as the Claude reviewers, and the text it writes is its findings. If its CLI is not installed, fails, or times out, run the Claude fallback that skill names and say so in one line.",
-      "why": "The Agent tool has no fast mode. Only `effort` changes per spawn. A reviewer entry may name another vendor's model, run read-only through pstack-ask per the Phase 3 contract, which restores upstream's cross-vendor panel."
-    },
-    {
-      "file": "skills/interrogate/SKILL.md",
-      "find": "Findings two or more models raised independently are the highest signal.",
-      "replace": "Findings two or more models raised independently are the highest signal. Findings raised by more than one vendor weigh highest of all. Name the panel under Reviewers. \"Cross-vendor panel (claude, codex)\" is stronger evidence than \"same-vendor panel (opus, sonnet)\".",
-      "why": "One vendor's models share more blind spots than two vendors' do. Naming the panel, per the Phase 3 contract, tells the reader what the agreement is worth."
-    },
-    {
-      "file": "skills/interrogate/SKILL.md",
-      "find": "- Reviewer [label]: [model name], [N findings] (one bullet per reviewer)",
-      "replace": "- Reviewer [label]: [model name], [N findings] (one bullet per reviewer)\n- Panel: cross-vendor or same-vendor, such as \"cross-vendor panel (claude, codex)\", and any fallback line from the **pstack-ask** skill",
-      "why": "Step 4 names the panel, so the output has a place for it and for an external reviewer that fell back to Claude."
-    },
-    {
-      "file": "skills/interrogate/references/lead-judgment.md",
-      "find": "- Multiple models flag the same issue independently (consensus signal)",
-      "replace": "- Multiple models flag the same issue independently (consensus signal). Two Claude models agreeing is weaker consensus than two vendors agreeing.",
-      "why": "omc-pstack-fy panels are same-vendor until Phase 3 adds other vendors."
+      "find": "- **Dropped**: for each adversary, the count of dropped findings and why.",
+      "replace": "- **Dropped**: for each adversary, the count of dropped findings and why.\n- **Panel**: each adversary's model, as \"same-vendor panel (opus, sonnet)\" or \"cross-vendor panel (claude, codex)\", and any fallback line from the **pstack-ask** skill. Each finding stands on its rerun, but \"no verified findings\" from a same-vendor panel is weaker evidence, because one vendor's models share more blind spots.",
+      "why": "The Phase 3 contract names the panel in every panel reply. A rerun proves each finding whatever model found it, so the panel now bounds only what a clean result is worth."
     },
     {
       "file": "skills/how/SKILL.md",
@@ -514,6 +496,18 @@
     },
     {
       "file": "skills/ketchup-video/SKILL.md",
+      "find": "Set it small, but readable when the video plays at chat size.",
+      "replace": "Set it small, but readable when the video plays in a small window.",
+      "why": "A Claude Code reply cannot play a video, so the user opens the linked file in a player of any size. A small window is the hardest case for the subtitle."
+    },
+    {
+      "file": "skills/ketchup-video/SKILL.md",
+      "find": "Look at one frame from each slide at chat size,",
+      "replace": "Look at one frame from each slide scaled to a small window,",
+      "why": "A Claude Code reply cannot play a video, so the user opens the linked file in a player of any size. A small window is the hardest case for the subtitle."
+    },
+    {
+      "file": "skills/ketchup-video/SKILL.md",
       "find": "Render one silent landscape video, such as an mp4, with motion between slides.",
       "replace": "Render one silent landscape video, such as an mp4, with motion between slides. Use only tools already on this machine to draw and encode the slides, such as ffmpeg. Never install or download one, including through npx, pip, or brew. When none is installed, say so in one line and give only the calls.",
       "why": "The skill names no renderer, and ketchup is otherwise read-only. Without this line an agent may install software to draw the slides or finish the render."
@@ -534,6 +528,6 @@
     }
   ],
   "forks": {
-    "skills/setup-pstack/SKILL.md": "b45512f6ca5e96e81681984683b7472bfe892581da3a89a73cca4159438f29ed"
+    "skills/setup-pstack/SKILL.md": "df8ad3638a4dca31fb4b43d58056f0299f23ad0530614166d55ef989062b41ec"
   }
 }
