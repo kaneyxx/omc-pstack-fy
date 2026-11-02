@@ -16,7 +16,8 @@ const USAGE = `node tools/sync.mjs [pstack|omc] [--ref <sha|tag|branch>]   vendo
 node tools/sync.mjs --verify                             check vendor/ still matches every pinned commit
 node tools/sync.mjs --latest                             report, as Markdown, which upstream has newer vendored files (exit 3 when one has)
                                                          omc without --ref, --latest, and tools/watch.mjs need a signed-in gh, because
-                                                         they ask GitHub for published releases. --ref, pstack, and --verify do not.`;
+                                                         they ask GitHub for published releases. --ref, pstack, and --verify do not.
+                                                         Without --ref, a sync stops when the newest release is older than the pin.`;
 // Finder writes .DS_Store. --verify never reads a name in SKIP, which is safe only because the build skips it too.
 const SKIP = new Set([".DS_Store"]);
 // A .gitignore copied into vendor/ would hide vendored files from git.
@@ -185,6 +186,10 @@ function sync(pins, name, ref, dir) {
   const pin = pins[name];
   const target = ref ?? tracked(pin);
   const { sha, committedAt, version } = fetchUpstream(pin, target, dir);
+  // The newest release can be older than the pin, such as after upstream deletes a release. Moving back takes a ref.
+  if (!ref && pin.track === "release" && compare(version, pin.version) < 0) {
+    fail(`The newest published release of ${name} is v${bare(version)}, which is older than the pin, v${bare(pin.version)}. Pass --ref ${target} to move back on purpose.`);
+  }
   const rea = pin.rea ? Object.fromEntries(pin.paths.map((path) => [path, reaFingerprint(join(dir, path))])) : undefined;
   const tag = pin.track === "release" ? { tag: RELEASE.test(target) ? target : undefined } : {};
   // vendor/ still holds the release this sync leaves behind, so check it before the copy below replaces it.

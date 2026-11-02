@@ -234,7 +234,7 @@ describe("sync against a local upstream", () => {
 
   // Upstream tags v1.0.0 and v1.1.0, and the stub gh publishes only `published`, newest first like real gh. The stub fails on any
   // other call, so a dropped flag fails the test, and on a missing token, as gh does in Actions.
-  function released(published) {
+  function released(published, pinned = "1.0.0", overrides = {}) {
     const root = project("1.0.0");
     const upstream = join(root, "upstream.git");
     git(upstream, "tag", "v1.0.0");
@@ -242,7 +242,11 @@ describe("sync against a local upstream", () => {
     git(upstream, "commit", "-q", "-a", "-m", "release 1.1.0");
     git(upstream, "tag", "v1.1.0");
     const pins = JSON.parse(readFileSync(join(root, "upstream.json"), "utf8"));
-    put(root, { "upstream.json": JSON.stringify({ pstack: { ...pins.pstack, track: "release", version: "1.0.0" } }) });
+    const ref = git(upstream, "rev-parse", `v${pinned}^{commit}`);
+    put(root, {
+      "upstream.json": JSON.stringify({ pstack: { ...pins.pstack, track: "release", version: pinned, ref, ...overrides } }),
+      "vendor/pstack/plugin.json": `{"version":"${pinned}"}\n`,
+    });
     const bin = mkdtempSync(join(tmpdir(), "omc-sync-gh-"));
     made.push(bin);
     put(bin, {
@@ -266,8 +270,9 @@ console.log(process.env.STUB_TAGS.split(",").join("\\n"));
     return { root, env: withGh };
   }
 
-  function latest(published) {
-    const { root, env: withGh } = released(published);
+  function latest(published, pinned, edits = {}) {
+    const { root, env: withGh } = released(published, pinned);
+    put(root, edits);
     const result = spawnSync(process.execPath, ["tools/sync.mjs", "--latest"], { cwd: root, encoding: "utf8", env: { ...withGh, GH_TOKEN: "stub" } });
     return { status: result.status, output: result.stdout + result.stderr };
   }
@@ -285,10 +290,67 @@ console.log(process.env.STUB_TAGS.split(",").join("\\n"));
       assert.match(result.output, /v1\.1\.0/);
     });
 
+    test("finds nothing to sync when the pin is ahead of the newest published release", () => {
+      const result = latest(["v1.0.0"], "1.1.0");
+      assert.equal(result.status, 0, result.output);
+      assert.match(result.output, /newest release.*is not newer/);
+    });
+
+    test("finds nothing to sync when the pin is at the newest release, though a vendored file was fixed by hand", () => {
+      const result = latest(["v1.1.0", "v1.0.0"], "1.1.0", { "vendor/pstack/skills/arena/SKILL.md": "fixed\n" });
+      assert.equal(result.status, 0, result.output);
+      assert.match(result.output, /newest release.*is not newer/);
+    });
+
     test("fails when nothing is published", () => {
       const result = latest([]);
       assert.equal(result.status, 1, result.output);
       assert.match(result.output, /has no published releases/);
+    });
+  });
+
+  describe("sync", { skip: process.platform === "win32" && "the stub gh is a POSIX script" }, () => {
+    const sync = (published, pinned, args = [], overrides = {}) => {
+      const { root, env: withGh } = released(published, pinned, overrides);
+      const files = ["upstream.json", "vendor/pstack/plugin.json"];
+      const before = files.map((file) => readFileSync(join(root, file), "utf8"));
+      const result = spawnSync(process.execPath, ["tools/sync.mjs", "pstack", ...args], { cwd: root, encoding: "utf8", env: { ...withGh, GH_TOKEN: "stub" } });
+      const after = files.map((file) => readFileSync(join(root, file), "utf8"));
+      return { status: result.status, output: result.stdout + result.stderr, unchanged: before.every((text, i) => text === after[i]), pin: JSON.parse(after[0]).pstack, vendored: after[1] };
+    };
+
+    test("moves a release pin forward to the newest published release", () => {
+      const result = sync(["v1.1.0", "v1.0.0"], "1.0.0");
+      assert.equal(result.status, 0, result.output);
+      assert.equal(result.pin.version, "1.1.0");
+      assert.equal(result.pin.tag, "v1.1.0");
+      assert.match(result.vendored, /1\.1\.0/);
+    });
+
+    test("syncs again to the release it already has", () => {
+      const result = sync(["v1.1.0", "v1.0.0"], "1.1.0");
+      assert.equal(result.status, 0, result.output);
+      assert.equal(result.pin.version, "1.1.0");
+    });
+
+    test("leaves a pin that follows a branch alone, whatever version the branch holds", () => {
+      const result = sync(["v1.0.0"], "1.1.0", [], { track: "HEAD", version: "2.0.0" });
+      assert.equal(result.status, 0, result.output);
+      assert.equal(result.pin.version, "1.1.0");
+    });
+
+    test("refuses to move a release pin back to the newest published release, and writes nothing", () => {
+      const result = sync(["v1.0.0"], "1.1.0");
+      assert.equal(result.status, 1, result.output);
+      assert.match(result.output, /release of pstack is v1\.0\.0, which is older than the pin, v1\.1\.0\. Pass --ref v1\.0\.0 to move back/);
+      assert.ok(result.unchanged, "upstream.json and vendor/ changed");
+    });
+
+    test("moves back to an older release when --ref names it", () => {
+      const result = sync(["v1.0.0"], "1.1.0", ["--ref", "v1.0.0"]);
+      assert.equal(result.status, 0, result.output);
+      assert.equal(result.pin.version, "1.0.0");
+      assert.match(result.vendored, /1\.0\.0/);
     });
   });
 
