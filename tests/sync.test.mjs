@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { delimiter, dirname, join } from "node:path";
 import { after, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { carryForward, hasContract, matcher, newest, outgoingProblems, repin } from "../tools/sync.mjs";
@@ -15,7 +15,7 @@ describe("sync", () => {
   });
 
   test("picks the newest X.Y.Z tag by number, skipping prereleases", () => {
-    assert.equal(newest(["v5.7.5", "v5.7.10", "v5.10.0-rc.1", "v5.9.12", "latest", undefined]), "v5.9.12");
+    assert.equal(newest(["v5.7.5", "v5.7.10", "v5.10.0-rc.1", "v5.9.12", "latest"]), "v5.9.12");
     assert.equal(newest(["1.2.0", "v1.10.0"]), "v1.10.0");
     assert.equal(newest(["nightly"]), undefined);
   });
@@ -173,7 +173,7 @@ describe("sync", () => {
   });
 });
 
-describe("sync --verify", () => {
+describe("sync against a local upstream", () => {
   const TOOLS = join(dirname(fileURLToPath(import.meta.url)), "..", "tools");
   const made = [];
   after(() => made.forEach((dir) => rmSync(dir, { recursive: true, force: true })));
@@ -184,8 +184,9 @@ describe("sync --verify", () => {
       writeFileSync(join(root, path), text);
     }
   };
-  // A run from a git hook inherits GIT_DIR, which would send these git calls to this repo.
-  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_")));
+  // A run from a git hook inherits GIT_DIR, which would send these git calls to this repo. A run under node --test inherits
+  // NODE_TEST_CONTEXT, which makes the nested `node --test` of the watch trial run its files in-process, whatever they do.
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_") && name !== "NODE_TEST_CONTEXT"));
   const git = (cwd, ...args) => {
     const config = ["user.name=t", "user.email=t@example.com", "commit.gpgsign=false", "core.hooksPath=/dev/null"].flatMap((pair) => ["-c", pair]);
     const result = spawnSync("git", [...config, ...args], { cwd, encoding: "utf8", env });
@@ -193,12 +194,12 @@ describe("sync --verify", () => {
     return result.stdout.trim();
   };
 
-  function project() {
+  function project(version = "1.2.3") {
     const root = mkdtempSync(join(tmpdir(), "omc-sync-verify-"));
     made.push(root);
     const repository = join(root, "upstream");
     const upstream = `${repository}.git`;
-    const files = { "pstack/plugin.json": '{"version":"1.2.3"}\n', "pstack/skills/arena/SKILL.md": "arena\n" };
+    const files = { "pstack/plugin.json": `{"version":"${version}"}\n`, "pstack/skills/arena/SKILL.md": "arena\n" };
     put(upstream, { ...files, "pstack/skills/arena/.gitignore": "upstream\n" });
     git(upstream, "init", "-q");
     git(upstream, "add", ".");
@@ -229,5 +230,83 @@ describe("sync --verify", () => {
     assert.equal(result.status, 1, result.output);
     assert(result.lines.includes("vendor/pstack/skills/arena/.gitignore"), result.output);
     assert(result.lines.some((line) => line.startsWith("vendor/.gitignore")), result.output);
+  });
+
+  // Upstream tags v1.0.0 and v1.1.0, and the stub gh publishes only `published`, newest first like real gh. The stub fails on any
+  // other call, so a dropped flag fails the test, and on a missing token, as gh does in Actions.
+  function released(published) {
+    const root = project("1.0.0");
+    const upstream = join(root, "upstream.git");
+    git(upstream, "tag", "v1.0.0");
+    put(upstream, { "pstack/plugin.json": '{"version":"1.1.0"}\n' });
+    git(upstream, "commit", "-q", "-a", "-m", "release 1.1.0");
+    git(upstream, "tag", "v1.1.0");
+    const pins = JSON.parse(readFileSync(join(root, "upstream.json"), "utf8"));
+    put(root, { "upstream.json": JSON.stringify({ pstack: { ...pins.pstack, track: "release", version: "1.0.0" } }) });
+    const bin = mkdtempSync(join(tmpdir(), "omc-sync-gh-"));
+    made.push(bin);
+    put(bin, {
+      gh: `#!/usr/bin/env node
+const args = process.argv.slice(2);
+const flag = (name) => args[args.indexOf(name) + 1];
+if (!process.env.GH_TOKEN && !process.env.GITHUB_TOKEN) {
+  console.error("gh: set the GH_TOKEN environment variable");
+  process.exit(1);
+}
+const asked = args[0] === "release" && args[1] === "list" && flag("-R") === process.env.STUB_REPO && flag("--json") === "tagName" && flag("--jq") === ".[].tagName";
+if (!asked || !args.includes("--exclude-drafts") || !args.includes("--exclude-pre-releases")) {
+  console.error("stub gh: unexpected call " + JSON.stringify(args));
+  process.exit(1);
+}
+console.log(process.env.STUB_TAGS.split(",").join("\\n"));
+`,
+    });
+    chmodSync(join(bin, "gh"), 0o755);
+    const withGh = { ...env, PATH: [bin, dirname(process.execPath), env.PATH].join(delimiter), STUB_REPO: join(root, "upstream"), STUB_TAGS: published.join(",") };
+    return { root, env: withGh };
+  }
+
+  function latest(published) {
+    const { root, env: withGh } = released(published);
+    const result = spawnSync(process.execPath, ["tools/sync.mjs", "--latest"], { cwd: root, encoding: "utf8", env: { ...withGh, GH_TOKEN: "stub" } });
+    return { status: result.status, output: result.stdout + result.stderr };
+  }
+
+  describe("--latest", { skip: process.platform === "win32" && "the stub gh is a POSIX script" }, () => {
+    test("ignores a tag that has no published release", () => {
+      const result = latest(["v1.0.0"]);
+      assert.equal(result.status, 0, result.output);
+      assert.doesNotMatch(result.output, /v1\.1\.0/);
+    });
+
+    test("reports a release once it is published", () => {
+      const result = latest(["v1.1.0", "v1.0.0"]);
+      assert.equal(result.status, 3, result.output);
+      assert.match(result.output, /v1\.1\.0/);
+    });
+
+    test("fails when nothing is published", () => {
+      const result = latest([]);
+      assert.equal(result.status, 1, result.output);
+      assert.match(result.output, /has no published releases/);
+    });
+  });
+
+  // The workflow gives gh a token, and the trial runs without one, as it must. The trial pins the ref that `latest` found, so its
+  // sync never calls gh. Dropping `--ref` there makes the sync call the stub, which fails without a token.
+  describe("tools/watch.mjs", { skip: process.platform === "win32" && "the stub gh is a POSIX script" }, () => {
+    test("syncs the release it found without a token", () => {
+      const { root, env: withGh } = released(["v1.1.0", "v1.0.0"]);
+      put(root, { ".gitignore": "upstream.git/\n", "plugin/stamp.txt": "x\n", "tests/ok.test.mjs": 'import assert from "node:assert/strict";\nimport { test } from "node:test";\ntest("runs without a token", () => assert.equal(process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN, undefined));\n' });
+      git(root, "init", "-q");
+      git(root, "add", ".");
+      const result = spawnSync(process.execPath, ["tools/watch.mjs"], { cwd: root, encoding: "utf8", env: { ...withGh, GH_TOKEN: "stub" } });
+      const output = result.stdout + result.stderr;
+      assert.equal(result.status, 3, output);
+      assert.match(output, /v1\.1\.0/);
+      assert.doesNotMatch(output, /node tools\/sync\.mjs pstack` fails/);
+      assert.doesNotMatch(output, /`node --test tests\/\*\.test\.mjs` fails/);
+      assert.match(output, /`node tools\/build\.mjs` fails/);
+    });
   });
 });

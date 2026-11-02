@@ -19,7 +19,8 @@ const USAGE = `node tools/watch.mjs           print the upstream report with a v
                                 (exit 0 when the pins are current, 3 when an upstream is newer). The sync runs in a scratch
                                 copy of the working tree, so nothing in this checkout changes.
 node tools/watch.mjs --issue   also open, update, or close the "${TITLE}" issue with gh. Meant for the workflow: it only
-                                touches issues that GitHub Actions opened.`;
+                                touches issues that GitHub Actions opened.
+Both need a signed-in gh, because they ask GitHub for OMC's published releases.`;
 
 const STAGES = {
   sync: { says: "The sync fails to run.", fix: "Rerun it. If it fails again, check `paths` and `versionFile` for that upstream in `upstream.json`." },
@@ -171,7 +172,8 @@ function copyTree(into) {
 export const tidy = (text, dir) =>
   text.replaceAll(`file://${dir}/`, "").replaceAll(`${dir}/`, "").replaceAll(dir, ".").replace(/\S*omc-pstack-fy-sync-\w+/g, "<tmp>");
 
-// Sync each upstream that is behind in a copy, then build and test it. Nothing here touches the checkout.
+// Sync each upstream that is behind in a copy, then build and test it. Nothing here touches the checkout. Each sync takes the
+// ref that `latest` already found, because it runs without a token and tools/sync.mjs would need gh to find the release itself.
 function trial(behind, dir) {
   copyTree(dir);
   git(dir, "init", "-q");
@@ -183,7 +185,7 @@ function trial(behind, dir) {
   const check = (stage, command, result, lines = failLines) => {
     if (result.status !== 0) problems.push({ stage, command, lines: lines(tidy(`${result.stdout}\n${result.stderr}`, dir)) });
   };
-  for (const name of behind) check("sync", `node tools/sync.mjs ${name}`, run("tools/sync.mjs", name));
+  for (const { name, target } of behind) check("sync", `node tools/sync.mjs ${name}`, run("tools/sync.mjs", name, "--ref", target));
   if (problems.length > 0) return { problems, changed: [], stat: "" };
   check("build", BUILD, run("tools/build.mjs"));
   const tests = readdirSync(join(dir, "tests")).filter((name) => name.endsWith(".test.mjs")).sort().map((name) => join("tests", name));
@@ -202,10 +204,10 @@ function trial(behind, dir) {
 
 function report(pins, dir) {
   const upstreams = latest(pins, dir);
-  const behind = upstreams.filter(({ newer }) => newer).map(({ name }) => name);
+  const behind = upstreams.filter(({ newer }) => newer);
   const sections = upstreams.map(({ section }) => section);
   if (behind.length === 0) return { newer: false, body: sections.join("\n\n") };
-  const { summary, markdown } = verdict({ behind, ...trial(behind, join(dir, "trial")) });
+  const { summary, markdown } = verdict({ behind: behind.map(({ name }) => name), ...trial(behind, join(dir, "trial")) });
   return { newer: true, body: [...sections, markdown].join("\n\n"), summary };
 }
 
