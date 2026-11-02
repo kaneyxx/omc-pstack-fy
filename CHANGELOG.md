@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.1] - 2026-11-02
+
+Built from upstream pstack v0.15.36 (https://github.com/cursor/plugins/tree/1ba91fc), checked against oh-my-claudecode v5.7.29 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/083ae63).
+
+### Changed
+
+- The hook now treats oh-my-claudecode 5.7.29 as verified and 5.7.19 through 5.7.27 as compatible, so OMC 5.7.20 through 5.7.29 no longer get the version note at session start. The plugin's skills, agents, and bridge text did not change.
+- A small upstream sync now releases as a patch. A sync that changes what this plugin does, or adds a skill or role, stays a minor. `upstream-watch` and `tools/sync.mjs --latest` recommend the level to match.
+
 ## [1.6.0] - 2026-10-29
 
 Built from upstream pstack v0.15.36 (https://github.com/cursor/plugins/tree/1ba91fc), checked against oh-my-claudecode v5.7.19 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/e10206d).
