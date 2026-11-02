@@ -1,6 +1,6 @@
 # omc-pstack-fy
 
-[English](README.md) | 繁體中文
+[English](README.md) | 繁體中文 | [简体中文](README.zh-CN.md)
 
 omc-pstack-fy 把 pstack 嚴謹的工程做法帶給重度 [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode)（OMC）使用者。OMC 仍是你的主要工具，所有關鍵字和流程照常運作。[pstack](https://github.com/cursor/plugins/tree/main/pstack) 是 Lauren Tan（[poteto](https://x.com/poteto)）寫的 Cursor plugin。omc-pstack-fy 把它原生移植到 Claude Code，當作 OMC 處理程式工作的引擎。
 

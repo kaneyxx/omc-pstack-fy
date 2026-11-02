@@ -16,9 +16,9 @@ The repo has three layers. `vendor/` holds the upstream files at the commits pin
 | `overlays/`, to add a file or to replace an upstream one | `plugin/`. Only `node tools/build.mjs` writes it, and `node tools/build.mjs --check` fails on a hand edit. |
 | `docs/claude-code-mapping.md`, when a mapping is wrong or missing | `upstream.json`. The sync writes the pins. |
 | `tools/*.mjs` and `tests/`, with a test for the behavior you change | `CHANGELOG.md`, `tools/version-lock.json`, and the `version` fields in `tools/rules.json`, `.claude-plugin/marketplace.json`, and `package.json`. `node tools/release.mjs` moves them. |
-| `README.md`, `README.zh-TW.md`, and the files in `docs/` | The meaning of an upstream skill. [Report it upstream](#report-upstream-problems-upstream). |
+| `README.md`, `README.zh-TW.md`, `README.zh-CN.md`, and the files in `docs/` | The meaning of an upstream skill. [Report it upstream](#report-upstream-problems-upstream). |
 
-When you change only the English in `README.md`, the maintainer updates `README.zh-TW.md` to match.
+When you change only the English in `README.md`, the maintainer updates `README.zh-TW.md` and `README.zh-CN.md` to match.
 
 ## Put each rule in its topic file
 
