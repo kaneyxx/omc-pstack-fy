@@ -29,7 +29,7 @@ pstack 是 Lauren 的作品，oh-my-claudecode 是 Yeachan Heo 的作品。這�
    ```
 3. 重開 Claude Code，再執行 `/omc-pstack-fy:setup-pstack`。它會先問設定過程要用英文、簡體中文還是繁體中文。
 
-把 OMC 的程式工作交給 pstack 的是一個 SessionStart hook。它只認 `oh-my-claudecode@omc` 這個 plugin 項目，這個項目由 OMC 自己的 marketplace 建立。有些 fork 會用其他 marketplace 或 plugin 名稱註冊 OMC。這樣註冊的 OMC，hook 不會把它的程式工作交給 pstack。裝完沒有留下這個項目的 OMC 也一樣。安裝順序反了也沒關係。hook 每次 session 開始都會檢查 OMC，所以之後補裝 OMC，重開 Claude Code 就好。
+把 OMC 的程式工作交給 pstack 的是一個 SessionStart hook。它只認 `oh-my-claudecode@omc` 這個 plugin 項目，這個項目由 OMC 自己的 marketplace 建立。有些 fork 會用其他 marketplace 或 plugin 名稱註冊 OMC。這樣註冊的 OMC 接不上橋接。如果 OMC 裝完沒有留下這個項目，也一樣。安裝順序反了也沒關係。hook 每次 session 開始都會檢查 OMC，所以之後補裝 OMC，重開 Claude Code 就好。
 
 每個 pstack 指令都要加上 `omc-pstack-fy:` 前綴。各個 skill 的說明見 plugin 自己的英文 [README](./plugin/README.md) 和[使用指南](./plugin/docs/guide/README.md)。
 
@@ -100,7 +100,7 @@ claude plugin update omc-pstack-fy@omc-pstack-fy
 
 ## 只有英文版的章節
 
-以下章節只有英文版，都在 README.md 裡。建置、發布版本和追蹤上游的細節寫在 [How the build works](README.md#how-the-build-works)、[Versions and releases](README.md#versions-and-releases) 和 [Keeping up with pstack and oh-my-claudecode](README.md#keeping-up-with-pstack-and-oh-my-claudecode)。開發進度寫在 [Roadmap](README.md#roadmap)，用其他廠商的模型做審查寫在 [Other vendors](README.md#other-vendors)。
+以下章節只有英文版，都在 README.md 裡。建置、發布版本和追蹤上游的細節寫在 [How the build works](README.md#how-the-build-works)、[Versions and releases](README.md#versions-and-releases) 和 [Keeping up with pstack and oh-my-claudecode](README.md#keeping-up-with-pstack-and-oh-my-claudecode)。開發進度寫在 [Roadmap](README.md#roadmap)，用其他廠商的模型做審查和評判寫在 [Other vendors](README.md#other-vendors)。
 
 建置和追蹤上游的重點如下。上游原檔放在 `vendor/`，所有修改寫在 `tools/rules/*.json` 和 `overlays/`。每個 Cursor 名稱怎麼改、為什麼這樣改，都記在 `docs/claude-code-mapping.md`。`plugin/` 由 `node tools/build.mjs` 產生。`upstream-watch` workflow 每天檢查 pstack 和 OMC 有沒有新版。推送到 `main` 的修改動到 `upstream.json` 時，它也會執行，所以同步完成後 issue 會自動關閉，不必手動執行。檢查 OMC 時，它只看已發布的 GitHub Release。只有 tag 而沒有 Release 的版本還不算新版。任一邊的上游檔案比 `vendor/` 裡的新，它就先在暫存副本裡試跑 sync、build 和測試，再開 issue 寫明結論。結論可能是只差版本號、plugin 檔案有變要審查，或是哪一步失敗。同步上游時，先跑 `node tools/sync.mjs pstack` 或 `node tools/sync.mjs omc`，再跑 build。OMC 改了橋接依賴的名稱或步驟時，build 會失敗，並指出要重新檢查哪一段。
 
