@@ -92,7 +92,7 @@ To report a bug, include these facts:
 
 A good description says what changed and why, and lists each command you ran with the result it printed. Link the issue when there is one. [The pull request example](docs/contributing/pull-request-example.md) shows a filled-in description for a small rule fix. The [pull request template](.github/pull_request_template.md) has the same headings.
 
-You may write issues and pull requests in English or Traditional Chinese. Pull request titles and commit subjects become changelog entries, so write them in English.
+You may write issues and pull requests in English, Traditional Chinese, or Simplified Chinese. Pull request titles and commit subjects become changelog entries, so write them in English.
 
 ## Report upstream problems upstream
 
