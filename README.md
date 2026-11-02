@@ -1,6 +1,6 @@
 # omc-pstack-fy
 
-English | [繁體中文](README.zh-TW.md)
+English | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md)
 
 pstack's engineering rigor for people who live in [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC). OMC stays your main harness, and every keyword and workflow works as before. omc-pstack-fy adds [pstack](https://github.com/cursor/plugins/tree/main/pstack), the Cursor plugin by Lauren Tan ([poteto](https://x.com/poteto)), rebuilt natively for Claude Code, as the engine OMC hands code to.
 
