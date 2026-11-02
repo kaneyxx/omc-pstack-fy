@@ -12,9 +12,11 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const VENDOR = join(ROOT, "vendor");
 const PIN = join(ROOT, "upstream.json");
 const USAGE = `node tools/sync.mjs [pstack|omc] [--ref <sha|tag|branch>]   vendor an upstream at a ref and pin it (default pstack;
-                                                         pstack follows main, omc its newest release tag)
+                                                         pstack follows main, omc its newest published release)
 node tools/sync.mjs --verify                             check vendor/ still matches every pinned commit
-node tools/sync.mjs --latest                             report, as Markdown, which upstream has newer vendored files (exit 3 when one has)`;
+node tools/sync.mjs --latest                             report, as Markdown, which upstream has newer vendored files (exit 3 when one has)
+                                                         omc without --ref, --latest, and tools/watch.mjs need a signed-in gh, because
+                                                         they ask GitHub for published releases. --ref, pstack, and --verify do not.`;
 // Finder writes .DS_Store. --verify never reads a name in SKIP, which is safe only because the build skips it too.
 const SKIP = new Set([".DS_Store"]);
 // A .gitignore copied into vendor/ would hide vendored files from git.
@@ -97,21 +99,22 @@ const compare = (a, b) => {
   return x.map((n, i) => n - y[i]).find((n) => n !== 0) ?? 0;
 };
 
-// The newest X.Y.Z release tag, with or without a leading v. Prereleases are skipped.
+// The newest X.Y.Z release among the tag names, with or without a leading v. Prereleases are skipped.
 export function newest(tags) {
-  return tags.filter((tag) => RELEASE.test(tag ?? "")).sort(compare).at(-1);
+  return tags.filter((tag) => RELEASE.test(tag)).sort(compare).at(-1);
 }
 
-function newestTag(pin) {
-  const tags = run("git", ["ls-remote", "--tags", "--refs", `${pin.repository}.git`]).split("\n").map((line) => line.split("refs/tags/")[1]);
-  return newest(tags) ?? fail(`${pin.repository} has no release tags`);
+// A tag can exist before its release, and its CI can still fail, so only a published GitHub Release counts as new.
+function newestRelease(pin) {
+  const tags = run("gh", ["release", "list", "-R", pin.repository, "--exclude-drafts", "--exclude-pre-releases", "--json", "tagName", "--jq", ".[].tagName"]).split("\n");
+  return newest(tags) ?? fail(`${pin.repository} has no published releases`);
 }
 
 function fail(message) {
   throw new Error(message);
 }
 
-const tracked = (pin) => (pin.track === "release" ? newestTag(pin) : pin.track);
+const tracked = (pin) => (pin.track === "release" ? newestRelease(pin) : pin.track);
 
 // REA pins the exact upstream tree by content hash, so a later sync can prove what changed.
 function reaFingerprint(source) {
@@ -226,15 +229,15 @@ export function latest(pins, dir) {
     const changed = differences(fetched(checkout, pin), vendored(pin));
     const where = `[${target}](${pin.repository}/tree/${sha})`;
     const pinned = `Pinned v${pin.version} (${pin.ref.slice(0, 7)}).`;
-    if (changed.length === 0) return { name, newer: false, section: `## ${name}\n\n${pinned} The vendored files match ${where}.` };
+    if (changed.length === 0) return { name, target, newer: false, section: `## ${name}\n\n${pinned} The vendored files match ${where}.` };
     // A pin past the newest release, such as a fix taken from a commit, is not behind it.
     if (pin.track === "release" && compare(version, pin.version) <= 0) {
-      return { name, newer: false, section: `## ${name}\n\n${pinned} The newest release, ${where}, is not newer, so there is nothing to sync.` };
+      return { name, target, newer: false, section: `## ${name}\n\n${pinned} The newest release, ${where}, is not newer, so there is nothing to sync.` };
     }
     const list = changed.slice(0, 30).map((file) => `- \`${file}\``);
     if (changed.length > 30) list.push(`- and ${changed.length - 30} more`);
     const section = `## ${name}\n\n${pinned} ${where} is v${version}, and ${changed.length} vendored files differ:\n\n${list.join("\n")}\n\nRun \`node tools/sync.mjs ${name}\`.`;
-    return { name, newer: true, section };
+    return { name, target, newer: true, section };
   });
 }
 
