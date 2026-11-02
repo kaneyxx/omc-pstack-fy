@@ -9,7 +9,7 @@ import { isMain, latest, MINOR_RULE, NEWER, RELEASE_COMMAND } from "./sync.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const TITLE = "Upstream update available";
-const CLOSED = "The pins match the newest pstack and oh-my-claudecode.";
+const CLOSED = "No upstream is newer than its pin.";
 // The version the hook compares against the installed OMC. Every OMC sync rewrites it, so it alone does not call for a review.
 const STAMP = "plugin/hooks/omc-version.json";
 const BUILD = "node tools/build.mjs";
