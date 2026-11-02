@@ -37,7 +37,7 @@ pstack 是 Lauren 的作品，oh-my-claudecode 是 Yeachan Heo 的作品。這�
 
 除非你自己開啟，Claude Code 不會自動更新第三方 marketplace。更新有三種方式，另外還有手動更新可以備用。建議照下面的順序選。不論用哪一種，新版都會在下次啟動 Claude Code 時載入。在已經開著的 session 裡，等更新完成後輸入 `/reload-plugins`。
 
-**開啟一次自動更新**。打開 `/plugin`，進入 **Marketplaces** 後選 `omc-pstack-fy`，再選 **Enable auto-update**。也可以把下面這段合併進 `~/.claude/settings.json`：
+**開啟自動更新（只要設定一次）**。打開 `/plugin`，進入 **Marketplaces** 後選 `omc-pstack-fy`，再選 **Enable auto-update**。也可以把下面這段合併進 `~/.claude/settings.json`：
 
 ```json
 {
@@ -102,7 +102,7 @@ claude plugin update omc-pstack-fy@omc-pstack-fy
 
 以下章節只有英文版，都在 README.md 裡。建置、發布版本和追蹤上游的細節寫在 [How the build works](README.md#how-the-build-works)、[Versions and releases](README.md#versions-and-releases) 和 [Keeping up with pstack and oh-my-claudecode](README.md#keeping-up-with-pstack-and-oh-my-claudecode)。開發進度寫在 [Roadmap](README.md#roadmap)，用其他廠商的模型做審查寫在 [Other vendors](README.md#other-vendors)。
 
-建置和追蹤上游的重點如下。上游原檔放在 `vendor/`，所有修改寫在 `tools/rules/*.json` 和 `overlays/`。每個 Cursor 名稱怎麼改、為什麼這樣改，都記在 `docs/claude-code-mapping.md`。`plugin/` 由 `node tools/build.mjs` 產生。`upstream-watch` workflow 每天檢查 pstack 和 OMC 有沒有新版。推送到 `main` 的修改動到 `upstream.json` 時，它也會執行，所以同步完成後 issue 會自動關閉，不必手動執行。OMC 只認已發布的 GitHub Release，只有 tag 而沒有 Release 的版本還不算新版。任一邊有新版，它就先在暫存副本裡試跑 sync、build 和測試，再開 issue 寫明結論。結論可能是只差版本號、plugin 檔案有變要審查，或是哪一步失敗。同步上游時，先跑 `node tools/sync.mjs pstack` 或 `node tools/sync.mjs omc`，再跑 build。OMC 改了橋接依賴的名稱或步驟時，build 會失敗，並指出要重新檢查哪一段。
+建置和追蹤上游的重點如下。上游原檔放在 `vendor/`，所有修改寫在 `tools/rules/*.json` 和 `overlays/`。每個 Cursor 名稱怎麼改、為什麼這樣改，都記在 `docs/claude-code-mapping.md`。`plugin/` 由 `node tools/build.mjs` 產生。`upstream-watch` workflow 每天檢查 pstack 和 OMC 有沒有新版。推送到 `main` 的修改動到 `upstream.json` 時，它也會執行，所以同步完成後 issue 會自動關閉，不必手動執行。檢查 OMC 時，它只看已發布的 GitHub Release。只有 tag 而沒有 Release 的版本還不算新版。任一邊的上游檔案比 `vendor/` 裡的新，它就先在暫存副本裡試跑 sync、build 和測試，再開 issue 寫明結論。結論可能是只差版本號、plugin 檔案有變要審查，或是哪一步失敗。同步上游時，先跑 `node tools/sync.mjs pstack` 或 `node tools/sync.mjs omc`，再跑 build。OMC 改了橋接依賴的名稱或步驟時，build 會失敗，並指出要重新檢查哪一段。
 
 ## 參與貢獻
 
