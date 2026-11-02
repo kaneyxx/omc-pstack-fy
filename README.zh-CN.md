@@ -106,7 +106,7 @@ claude plugin update omc-pstack-fy@omc-pstack-fy
 
 ## 参与贡献
 
-欢迎参与贡献。提交 pull request 前，先读 [CONTRIBUTING.md](CONTRIBUTING.md)。里面写了哪些文件可以改、怎么验证修改，以及修改合并后怎么发布。CONTRIBUTING.md 只有英文版。你可以用英文或繁体中文写 issue 和 pull request。pull request 的标题和 commit 主题会变成 `CHANGELOG.md` 的条目，所以要用英文写。
+欢迎参与贡献。提交 pull request 前，先读 [CONTRIBUTING.md](CONTRIBUTING.md)。里面写了哪些文件可以改、怎么验证修改，以及修改合并后怎么发布。CONTRIBUTING.md 只有英文版。你可以用英文、繁体中文或简体中文写 issue 和 pull request。pull request 的标题和 commit 主题会变成 `CHANGELOG.md` 的条目，所以要用英文写。
 
 报告 bug 或提议新的 skill，到 [issue tracker](https://github.com/kaneyxx/omc-pstack-fy/issues) 提 issue。pstack skill 本身的用词问题，要反馈到 [cursor/plugins](https://github.com/cursor/plugins)。OMC 本身的问题，要反馈到 [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode)。本项目只改它们的翻译和桥接方式，不改上游本身。
 
