@@ -204,13 +204,16 @@ function sync(pins, name, ref, dir) {
   console.log("Next: node tools/build.mjs, then review `git diff --stat vendor/ plugin/`.");
 }
 
+export const RELEASE_COMMAND = "node tools/release.mjs patch";
+export const MINOR_RULE = "Use `minor` instead of `patch` when the sync changes what this plugin does or adds a skill or role.";
+
 const NEXT = [
   "## Next",
   "",
   "1. `node tools/sync.mjs <name>` for each upstream above that differs.",
   "2. `node tools/build.mjs`. Fix each FAIL line in `tools/rules/`, `overlays/`, or `tools/omc.json`.",
   "3. `node --test tests/*.test.mjs`.",
-  "4. `node tools/release.mjs minor`.",
+  `4. \`${RELEASE_COMMAND}\`. ${MINOR_RULE}`,
 ].join("\n");
 
 // One Markdown section per upstream, for the upstream issue. Only vendored files count, so commits to the rest of an upstream

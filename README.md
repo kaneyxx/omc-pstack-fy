@@ -121,8 +121,8 @@ CI runs `node tools/sync.mjs --verify`, a build check, and the tests. On a pull 
 
 omc-pstack-fy has its own semantic version, separate from both upstreams. Each CHANGELOG entry records the pstack version it was built from and the oh-my-claudecode version it was checked against.
 
-- **patch:** fixes and rule tweaks that change plugin content.
-- **minor:** a pstack or oh-my-claudecode sync, or a new skill or role.
+- **patch:** fixes, rule tweaks, and small upstream syncs. A sync is small when this plugin still does what it did, even if an OMC skill changed.
+- **minor:** a pstack or oh-my-claudecode sync that changes what this plugin does, or a new skill or role.
 - **major:** a change that breaks existing role lines, settings, or commands.
 
 A release moves `tools/rules.json`, the marketplace entry, and `package.json` to the same version, and the build fails when they differ.
@@ -143,7 +143,7 @@ node tools/sync.mjs pstack     # vendor cursor/plugins main and pin the commit (
 node tools/sync.mjs omc        # vendor OMC's newest release tag and pin it
 node tools/build.mjs           # rebuild; a FAIL line names each edit, fork, or OMC anchor to re-check
 git diff --stat vendor/ plugin/
-node tools/release.mjs minor
+node tools/release.mjs patch     # minor instead, when the sync changes what this plugin does
 ```
 
 `node tools/sync.mjs omc` also records the release it replaces under `compatible` in `upstream.json`, with the hash of `tools/omc.json`, when that release passes the OMC side of the contract. That means it ships every agent and skill the file lists and no others, and each anchor's `find` text is still in its `omc` file. A user who still runs a recorded release keeps a quiet hook. A release that fails is left out, and the sync prints one line saying how many checks it failed, so syncing back from a broken release never vouches for it. The hash covers what decides whether an OMC release passes. That is the agent and skill lists, and each anchor's `omc` file and `find` text. It skips `about` and each anchor's `why`, `ours`, and `uses`. Those are prose for people, or they describe this plugin's own files. Fixing them leaves the hook quiet. Changing any other field changes the hash. The next build then drops every other release, and the hook warns for them again.

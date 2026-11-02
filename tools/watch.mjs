@@ -5,7 +5,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { isMain, latest, NEWER } from "./sync.mjs";
+import { isMain, latest, MINOR_RULE, NEWER, RELEASE_COMMAND } from "./sync.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const TITLE = "Upstream update available";
@@ -78,11 +78,11 @@ function kindOf({ problems, changed }) {
 
 const VERDICTS = {
   bookkeeping: ({ changed, commands }) => ({
-    summary: "The contract holds. Only a bookkeeping minor release is left.",
+    summary: "The contract holds. Only a bookkeeping patch release is left.",
     body: [
       `\`${BUILD}\` and \`${TESTS}\` pass, and ${changed.length > 0 ? `\`plugin/\` changes only in \`${STAMP}\`` : "`plugin/` does not change"}.`,
       "Release it with:",
-      fence([...commands, "node tools/release.mjs minor"], "sh"),
+      fence([...commands, RELEASE_COMMAND], "sh"),
     ],
   }),
   review: ({ stat, commands }) => ({
@@ -90,8 +90,8 @@ const VERDICTS = {
     body: [
       `\`${BUILD}\` and \`${TESTS}\` pass, but the sync changes these \`plugin/\` files (\`git diff --stat -- plugin/\`):`,
       fence(cappedStat(stat)),
-      "Review them, then release with:",
-      fence([...commands, "git diff --stat -- plugin/", "node tools/release.mjs minor"], "sh"),
+      `Review the files, then release with the commands below. ${MINOR_RULE}`,
+      fence([...commands, "git diff --stat -- plugin/", RELEASE_COMMAND], "sh"),
     ],
   }),
   broken: ({ problems, commands }) => ({

@@ -17,9 +17,9 @@ describe("verdict", () => {
     for (const changed of [[], [STAMP]]) {
       const result = sync({ changed, stat: ` ${STAMP} | 2 +-` });
       assert.equal(result.kind, "bookkeeping");
-      assert.match(result.summary, /bookkeeping minor release/);
+      assert.match(result.summary, /bookkeeping patch release/);
       const at = lines(result.markdown).indexOf("node tools/sync.mjs omc");
-      assert.deepEqual(lines(result.markdown).slice(at, at + 4), [...COMMANDS, "node tools/release.mjs minor"]);
+      assert.deepEqual(lines(result.markdown).slice(at, at + 4), [...COMMANDS, "node tools/release.mjs patch"]);
       assert.doesNotMatch(result.markdown, /git diff --stat/);
     }
   });
@@ -37,6 +37,9 @@ describe("verdict", () => {
     assert.match(result.summary, /Review them before releasing/);
     assert.ok(result.markdown.includes(stat));
     assert.match(result.markdown, /git diff --stat -- plugin\//);
+    assert.match(result.markdown, /^node tools\/release\.mjs patch$/m);
+    assert.doesNotMatch(result.markdown, /^node tools\/release\.mjs minor$/m);
+    assert.match(result.markdown, /Use `minor` instead of `patch` when the sync changes what this plugin does or adds a skill or role\./);
   });
 
   test("names each failed stage, with its FAIL lines or failing tests and what to fix", () => {
@@ -126,7 +129,7 @@ describe("report text", () => {
 
 describe("issue plan", () => {
   const body = "## omc\n\nPinned v5.7.5.";
-  const summary = "The contract holds. Only a bookkeeping minor release is left.";
+  const summary = "The contract holds. Only a bookkeeping patch release is left.";
 
   test("creates the issue, without a comment, when an upstream is newer and none is open", () => {
     assert.deepEqual(issuePlan({ open: [], body, newer: true, summary }), [{ act: "create" }]);
@@ -165,7 +168,7 @@ describe("issue plan", () => {
 describe("publish", { skip: process.platform === "win32" && "the stub gh is a POSIX script" }, () => {
   const TITLE = "Upstream update available";
   const body = "## omc\n\nPinned v5.7.5.";
-  const summary = "The contract holds. Only a bookkeeping minor release is left.";
+  const summary = "The contract holds. Only a bookkeeping patch release is left.";
   const ours = [
     { number: 4, title: "Something else", body: "unrelated", state: "open" },
     { number: 3, title: TITLE, body: "closed report", state: "closed" },

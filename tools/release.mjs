@@ -14,8 +14,8 @@ const CHANGELOG = join(ROOT, "CHANGELOG.md");
 const USAGE = `node tools/release.mjs <patch|minor|major|X.Y.Z> [--notes <file>] [--trailer <line>] [--dry-run] [--no-publish]
 node tools/release.mjs --resume
 
-patch  fixes and rule tweaks that change plugin content
-minor  an upstream sync, or a new skill or role
+patch  fixes, rule tweaks, and small upstream syncs
+minor  an upstream sync that changes what this plugin does, or a new skill or role
 major  a change that breaks existing role lines, settings, or commands
 
 It checks, bumps tools/rules.json, the marketplace entry, and package.json, records the release in tools/version-lock.json,
