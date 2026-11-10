@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.6.3] - 2026-11-10
+
+Built from upstream pstack v0.15.36 (https://github.com/cursor/plugins/tree/1ba91fc), checked against oh-my-claudecode v5.8.3 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/73e0d61).
+
+### Changed
+
+- The hook now treats oh-my-claudecode 5.8.3 as verified and 5.8.1 and 5.8.2 as compatible. OMC 5.8.0 added 35 skills, and 5.8.1 added `sdd`. Releases without them, 5.7.x and 5.8.0, now get the version note at session start, and updating OMC with `/plugin` clears it. They fail only the checks for the new skills, and the bridge relies on none of OMC's new skills.
+- OMC 5.8 ships its own versions of 26 skills that share a name with this plugin's, among them `interrogate`, `how`, `why`, `arena`, and `reflect`. A bare name in the Skill tool runs OMC's copy, because ours set `disable-model-invocation: true`. The bridge and the routing note in each skill now say so, and still send the model to Read this plugin's `SKILL.md`. OMC workflows still run `/omc-pstack-fy:interrogate` at the final review gate and `/omc-pstack-fy:deslop` in place of ai-slop-cleaner.
+- The READMEs name `/omc-pstack-fy:interrogate` in full, so it is not mistaken for OMC's `interrogate`.
+
 ## [1.6.2] - 2026-11-03
 
 Built from upstream pstack v0.15.36 (https://github.com/cursor/plugins/tree/1ba91fc), checked against oh-my-claudecode v5.7.30 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/14cd0fe).
