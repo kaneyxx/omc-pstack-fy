@@ -300,6 +300,7 @@ function injectGuidance(files, routes, uses) {
   const routingNote =
     `Most ${rules.plugin.name} skills set \`disable-model-invocation: true\`, so the Skill tool refuses them. A refusal never means skip the step. ` +
     `To run a skill this one names, as \`/${rules.plugin.name}:<name>\` or as the **<name>** skill, Read \`../<name>/SKILL.md\` from this skill's base directory and follow it. ` +
+    "The Skill tool may run another plugin's skill of that name, such as `oh-my-claudecode:<name>`, which is a different skill. " +
     `Write \`/${rules.plugin.name}:<name>\` only when the user should type it.`;
   const counts = { adapter: 0, routing: 0 };
   for (const skill of new Set([...uses.keys(), ...routes])) {

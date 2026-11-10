@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # fy mode
 
-Most omc-pstack-fy skills set `disable-model-invocation: true`, so the Skill tool refuses them. A refusal never means skip the step. To run a skill this one names, as `/omc-pstack-fy:<name>` or as the **<name>** skill, Read `../<name>/SKILL.md` from this skill's base directory and follow it. Write `/omc-pstack-fy:<name>` only when the user should type it.
+Most omc-pstack-fy skills set `disable-model-invocation: true`, so the Skill tool refuses them. A refusal never means skip the step. To run a skill this one names, as `/omc-pstack-fy:<name>` or as the **<name>** skill, Read `../<name>/SKILL.md` from this skill's base directory and follow it. The Skill tool may run another plugin's skill of that name, such as `oh-my-claudecode:<name>`, which is a different skill. Write `/omc-pstack-fy:<name>` only when the user should type it.
 
 Read the [**poteto-mode**](../poteto-mode/SKILL.md) skill in full and run it. This file adds to it and overrides it where they conflict. Delegates still run as `omc-pstack-fy:poteto-agent`, report the way poteto-mode says, and follow **For delegates** below.
 
