@@ -82,7 +82,7 @@ claude plugin update omc-pstack-fy@omc-pstack-fy
 | Layer | Runs on | What |
 |---|---|---|
 | Project | oh-my-claudecode | every keyword, `deep-interview`, `plan` and `ralplan`, `ultragoal`, `team`, `ralph`, the wiki, notepad, and project memory, the verifier, the HUD, and notifications |
-| Code | pstack | each unit of code work through a poteto-mode playbook as a `omc-pstack-fy:poteto-agent` delegate, the final code review through `interrogate` (a multi-model panel) beside OMC's `code-reviewer`, and ai-slop-cleaner steps through `deslop` |
+| Code | pstack | each unit of code work through a poteto-mode playbook as a `omc-pstack-fy:poteto-agent` delegate, the final code review through `/omc-pstack-fy:interrogate` (a multi-model panel) beside OMC's `code-reviewer`, and ai-slop-cleaner steps through `deslop` |
 
 A SessionStart hook in the plugin tells OMC's workflows about this split whenever OMC is installed and enabled. Nothing is written to your config, and disabling omc-pstack-fy removes it. Delegates return their diff to OMC's lead, which keeps commits, pushes, and PRs.
 
