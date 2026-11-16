@@ -3,22 +3,22 @@
     "repository": "https://github.com/cursor/plugins",
     "track": "main",
     "versionFile": "pstack/plugin.json",
-    "ref": "1ba91fc25c0977741dd0e267849e6234b037ed0a",
-    "committedAt": "2026-10-28T18:25:55-07:00",
-    "version": "0.15.36",
+    "ref": "bf0c7cd80abdbf7fe47b634978a7d1b4071f71a7",
+    "committedAt": "2026-11-14T19:36:17-08:00",
+    "version": "0.15.42",
     "paths": [
       "pstack",
       "cursor-team-kit"
     ],
     "rea": {
       "pstack": {
-        "version": "6.5.0",
-        "manifest_id": "hsm_dbdb3313aebf430fabd04fa5e3e752c238252992bad72cab5540eed34c68e197",
-        "root_sha256": "02c0ac4d2caf00d26189199b1523c14265bebe794d758b75472c9ad8c3b6a82e"
+        "version": "6.8.0",
+        "manifest_id": "hsm_8a86a57cc0a404b4198712527bdc00fbfe53a4626f76682dcc054e8d2def7621",
+        "root_sha256": "36b620e32e1ef23cf54db0803954183d3274ca52c12399bf7ff204f2feddb20f"
       },
       "cursor-team-kit": {
-        "version": "6.5.0",
-        "manifest_id": "hsm_79313a6ac7afee8833e0899b837ec0c8b8f7aaa56116eb6c6b3522b2b6eb1e15",
+        "version": "6.8.0",
+        "manifest_id": "hsm_f2ca12f4854c8101f57b5aa44881745a3afe90b5e02f4b468be369189388cd86",
         "root_sha256": "9f80489a6418311f489eb4d4e0c73b980076bc00b70b20f4a94dd0300cb1d1d6"
       }
     }

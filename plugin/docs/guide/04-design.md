@@ -12,7 +12,7 @@ The two most common design mistakes are taking the agent's first design and poli
 /omc-pstack-fy:architect design the import pipeline before writing any code. i care most about how callers use it.
 ```
 
-[`/omc-pstack-fy:architect`](../../skills/architect/SKILL.md) grounds itself first, running [`/omc-pstack-fy:how`](../../skills/how/SKILL.md) over the code the design touches and [`/omc-pstack-fy:why`](../../skills/why/SKILL.md) when it moves ownership or layers. Then it runs [`/omc-pstack-fy:arena`](../../skills/arena/SKILL.md) to produce competing design sketches, with the caller's usage written first in each, followed by types, signatures, and a module map.
+[`/omc-pstack-fy:architect`](../../skills/architect/SKILL.md) grounds itself first, tracing the code the design touches and running [`/omc-pstack-fy:why`](../../skills/why/SKILL.md) when it moves ownership or layers. Then it runs [`/omc-pstack-fy:arena`](../../skills/arena/SKILL.md) to produce competing design sketches, with the caller's usage written first in each, followed by types, signatures, and a module map.
 
 By default it proceeds straight from the synthesized design into implementation. If you want to see the design first, say so:
 
@@ -66,7 +66,7 @@ Reach for it when parallelism buys coverage or lets independent checks race. [`/
 /omc-pstack-fy:interrogate the whole branch, but skeptically. no nitpicks unless it's an actual bug or regression.
 ```
 
-[`/omc-pstack-fy:interrogate`](../../skills/interrogate/SKILL.md) gives the change and its intent to adversaries on the configured models, and each tries to break it with a run against the real code. Adversaries find different failures. The default panel pairs opus with sonnet, two Claude models, which share more blind spots than models from two vendors. A finding survives only when rerunning its command shows a failure that breaks the intent. The report lists every verified finding with the adversaries that found it, then what each adversary dropped and why, and applies nothing.
+[`/omc-pstack-fy:interrogate`](../../skills/interrogate/SKILL.md) gives the change and its intent to adversaries on the configured models, and each tries to break it with a run against the real code. Adversaries find different failures. The default panel seats fable, opus, and sonnet, three Claude models, which share more blind spots than models from different vendors. A finding survives only when rerunning its command shows a failure that breaks the intent. The report lists every verified finding with the adversaries that found it, then what each adversary dropped and why, and applies nothing.
 
 Read the Dropped list too. You can override the verdict.
 

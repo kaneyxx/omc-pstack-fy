@@ -10,7 +10,7 @@ there's a growing sense that ai writes too much slop code. i agree. i don't want
 
 **pstack gives you fearless parallelism.** when you can go deep on one agent and trust it to write good, verifiable code, you can truly parallelize with confidence. start multiple agents up with `poteto-mode` and trust that they'll apply rigorous engineering principles to their work.
 
-**pstack plays to each model's strengths.** every frontier model has its strengths and weaknesses. use any claude model with omc-pstack-fy. in fact, many of my skills use multi-model workflows to take advantage of each model's unique strengths. the default panels here pair opus with sonnet. two models from one vendor share more blind spots than two vendors do, so their agreement is weaker evidence than a cross-vendor panel's.
+**pstack plays to each model's strengths.** every frontier model has its strengths and weaknesses. use any claude model with omc-pstack-fy. in fact, many of my skills use multi-model workflows to take advantage of each model's unique strengths. the default panels here seat fable, opus, and sonnet. models from one vendor share more blind spots than models from different vendors, so their agreement is weaker evidence than a cross-vendor panel's.
 
 fork it. improve it. make it yours. PRs are welcome! 
 
@@ -36,7 +36,7 @@ two steps:
 
 new here? the [pstack guide](./docs/guide/README.md) walks you through a first real task, from setup and prompting through verification and overnight runs. stuck, or unsure which skill fits? ask [`/omc-pstack-fy:poteto-help`](./skills/poteto-help/SKILL.md).
 
-that's it. the other skills are situational, and the mode skill uses them for you as needed. out of the box the mode splits work by model strength: code delegates (feature, refactoring, bug fix, perf, hillclimb) go to sonnet, while the hardest changes, prose, and judgment go to opus. the default panels pair opus with sonnet. [`/omc-pstack-fy:setup-pstack`](./skills/setup-pstack/SKILL.md) changes any of it.
+that's it. the other skills are situational, and the mode skill uses them for you as needed. out of the box the mode splits work by model strength: code delegates (feature, refactoring, bug fix, perf, hillclimb), prose, and judgment go to opus, while the hardest changes go to fable. the default panel is fable / opus / sonnet. [`/omc-pstack-fy:setup-pstack`](./skills/setup-pstack/SKILL.md) changes any of it.
 
 ## usage
 
@@ -105,7 +105,7 @@ the full rules and playbooks live in [`skills/poteto-mode/SKILL.md`](./skills/po
 
 ## skills
 
-[`/omc-pstack-fy:poteto-mode`](./skills/poteto-mode/SKILL.md) runs most of these for you when a step needs them (`how`, `why`, `architect`, `arena`, `swarm`, `interrogate`, `unslop`, `no-comments`, `technical-writing`, `tdd`, and the principles). the table below is for when you want one directly:
+[`/omc-pstack-fy:poteto-mode`](./skills/poteto-mode/SKILL.md) runs most of these for you when a step needs them (`why`, `architect`, `arena`, `swarm`, `interrogate`, `unslop`, `no-comments`, `technical-writing`, `tdd`, and the principles). the table below is for when you want one directly:
 
 ```
 /omc-pstack-fy:how do we cancel runs? do we have an n+1 when we look up every run to cancel?
@@ -123,9 +123,9 @@ the full rules and playbooks live in [`skills/poteto-mode/SKILL.md`](./skills/po
 | [`/omc-pstack-fy:poteto-mode`](./skills/poteto-mode/SKILL.md) | default entry point for any non-trivial task. |
 | [`/omc-pstack-fy:poteto-help`](./skills/poteto-help/SKILL.md) | you're new to pstack, or unsure which skill, playbook, or principle fits. finds out what you're trying to do, answers that part, and hands you a prompt to type. runs only when you type [`/omc-pstack-fy:poteto-help`](skills/poteto-help/SKILL.md). |
 | [`/omc-pstack-fy:in-your-own-words`](./skills/in-your-own-words/SKILL.md) | you want the agent to play back your goal and the problem before it starts. runs only when you type [`/omc-pstack-fy:in-your-own-words`](skills/in-your-own-words/SKILL.md). |
-| [`/omc-pstack-fy:sharpen`](./skills/sharpen/SKILL.md) | you want a prompt made deeper, not bigger, before you send it: what a top professional would do that you didn't ask for, the raw material they'd start from, their methods and tools, and an outside check that the result is right. hands back the rewritten prompt and leaves your choices open. doesn't do the task. runs only when you type [`/omc-pstack-fy:sharpen`](skills/sharpen/SKILL.md). |
+| [`/omc-pstack-fy:sharpen`](./skills/sharpen/SKILL.md) | you want a prompt made deeper, not bigger, before you send it: what a top professional would do that you didn't ask for, the raw material they'd start from, their methods and tools, and an outside check that the result is right. hands back the rewritten prompt, which asks the agent to prototype any choice an experiment can settle and leaves product and preference choices to you. doesn't do the task. runs only when you type [`/omc-pstack-fy:sharpen`](skills/sharpen/SKILL.md). |
 | [`/omc-pstack-fy:how`](./skills/how/SKILL.md) | you want a walkthrough of how a subsystem works. |
-| [`/omc-pstack-fy:why`](./skills/why/SKILL.md) | you want to know why something was built this way. discovers available MCPs at run time and queries each evidence category in parallel (source control, issue tracker, long-form docs, real-time chat, infra observability, error tracking, analytics warehouse). |
+| [`/omc-pstack-fy:why`](./skills/why/SKILL.md) | you want to know why something was built this way. answers from the record, not the code: the commits and pr discussions that introduced it and each later change, and other sources when that trail is thin. cites what the authors wrote, marks its own inferences, and says what the record does not answer. |
 | [`/omc-pstack-fy:recall`](./skills/recall/SKILL.md) | you're starting or resuming work and want your recent context on a topic rebuilt from your own chat history and the shared record, handed back as a tight current-state brief. |
 | [`/omc-pstack-fy:ketchup`](./skills/ketchup/SKILL.md) | you want what changed in this chat since your last message, in plain words and small visuals, with every item waiting on you listed and decidable from the reply alone, even when that makes the reply long. |
 | [`/omc-pstack-fy:ketchup-video`](./skills/ketchup-video/SKILL.md) | you want the [`/omc-pstack-fy:ketchup`](skills/ketchup/SKILL.md) catch-up as a short subtitled video of slides, with the calls waiting on you as text under it. |
@@ -275,13 +275,13 @@ type [`/omc-pstack-fy:automate-me`](./skills/automate-me/SKILL.md). it mines you
 
 models are configurable too. type [`/omc-pstack-fy:setup-pstack`](./skills/setup-pstack/SKILL.md). it detects the models you have access to and writes a small rule file, `~/.claude/rules/omc-pstack-fy-models.md`, mapping each role (code, judgment, the review panels) to a model and an effort. claude code loads it into every new session. every skill reads it and falls back to sensible defaults when the rule is absent, so you override only what you want.
 
-when a default changes, a rule written before the change still pins the old default. delete those role lines, or delete the file, then run [`/omc-pstack-fy:setup-pstack`](skills/setup-pstack/SKILL.md) again. a rerun keeps any role whose model differs from the default.
+when a default changes, a rule written before the change still pins the old default until you run [`/omc-pstack-fy:setup-pstack`](skills/setup-pstack/SKILL.md) again. that run replaces the old defaults it recognizes and keeps any other role whose model differs from the default. to drop a pin it does not recognize, delete that role's line or the file first.
 
 > In **omc-pstack-fy**, [`/omc-pstack-fy:poteto-mode`](skills/poteto-mode/SKILL.md) works inside the oh-my-claudecode plugin. oh-my-claudecode is the main harness and keeps every keyword and workflow, and pstack is the engineering engine it hands code to. While oh-my-claudecode is installed and enabled, the plugin's SessionStart hook tells its workflows to run each code unit as a `omc-pstack-fy:poteto-agent` delegate under a poteto-mode playbook, the ai-slop-cleaner step as [`/omc-pstack-fy:deslop`](skills/deslop/SKILL.md), and the final code review as [`/omc-pstack-fy:interrogate`](skills/interrogate/SKILL.md) beside OMC's `code-reviewer`.
 
 ## automations
 
-upstream pstack also ships a dormant [benny automation pack](https://github.com/cursor/plugins/tree/1ba91fc25c0977741dd0e267849e6234b037ed0a/pstack/automations/benny). benny triages slack issue reports, then reproduces and fixes confirmed bugs with real ui evidence. it runs on cursor's automation service, so omc-pstack-fy leaves it out. claude code's `/schedule` runs cloud routines on a cron if you want to build a pipeline like it.
+upstream pstack also ships a dormant [benny automation pack](https://github.com/cursor/plugins/tree/bf0c7cd80abdbf7fe47b634978a7d1b4071f71a7/pstack/automations/benny). benny triages slack issue reports, then reproduces and fixes confirmed bugs with real ui evidence. it runs on cursor's automation service, so omc-pstack-fy leaves it out. claude code's `/schedule` runs cloud routines on a cron if you want to build a pipeline like it.
 
 ## license
 

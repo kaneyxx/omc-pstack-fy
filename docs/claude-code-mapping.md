@@ -49,20 +49,29 @@ A role value is `<model> <effort>`, such as `opus xhigh`. `inherit` means omit `
 
 | Cursor default | omc-pstack-fy default | Why |
 | --- | --- | --- |
-| `claude-opus-5-5-xhigh` (judgment and prose, hardest tasks) | `opus xhigh` | Same model. |
-| `grok-4.7-xhigh-fast` (code delegates, swarm workers, how explorer, why investigators, reflect tooling) | `sonnet xhigh` | Upstream picks a fast, strong code model. Sonnet is Claude's. |
-| two-model panels (`interrogate reviewers`, `arena runners`, `arena cross-judge pool`, `architect runners`) | `opus xhigh, sonnet xhigh` | Two different models keep the panel diverse. Phase 3 adds other vendors through `pstack-ask`. |
-| a different family for a judge or verifier | a different model from the parent (opus versus sonnet) | Same intent within one vendor. Say plainly in replies that a same-vendor panel is weaker evidence than a cross-vendor one. |
+| `claude-opus-5-5-xhigh` (`feature, refactoring`, `bug-fix`, `perf-issue`, `hillclimb`, `judgment and prose`, `reflect judgment, divergent, synthesizer`) | `opus xhigh` | Same model and effort. |
+| `claude-fable-5-2-max` (`hardest tasks`) | `fable xhigh` | Same model. The user chose `xhigh` over upstream's `max` on 2026-11-16. |
+| `claude-opus-5-5-high-fast` (`swarm workers`, verification, trivial mechanical edits) | `opus high` | Same model and effort. The `Agent` tool has no fast mode. |
+| `claude-opus-5-5-high-fast` (`reflect tooling`) | `sonnet high` | The user chose sonnet over upstream's Opus on 2026-11-16. reflect's Judgment and Divergent lenses run on `opus xhigh`, so `opus high` would run all three lenses on one model. The user's standing rule is that a review panel never collapses to one model. |
+| three-seat panels, `claude-fable-5-2-high, claude-opus-5-5-high-fast, gemini-4-carbon-high` (`arena runners`, `arena cross-judge pool`, `architect runners`, `interrogate reviewers`) | `fable high, opus high, sonnet high` | An `Agent` spawn runs only Claude models, so sonnet takes the Gemini seat. Upstream's own Claude Code harness maps Gemini to `inherit-parent`. The user rejected that, because it repeats a seat's model under an opus or fable parent, and sonnet keeps three distinct models under any parent. `pstack-ask` can add another vendor's model to the roles that allow one. |
+| a judge or verifier from another vendor | a model other than the parent's, with another vendor's model through `pstack-ask` first where the role allows one | Same intent within one vendor. Upstream counts Fable and the other Claude models as one vendor, so a Claude judge under a Claude parent is same-vendor. Say plainly in replies that a same-vendor panel is weaker evidence than a cross-vendor one. |
+| `how explorer`, `how explainer`, `why investigators`, `why synthesizer` | retired | Upstream made `how` one read-only subagent and `why` one short file, with no model roles. setup-pstack drops their lines. |
+
+`fable` is a model of its own, as upstream makes Fable its own family, so a panel with `fable` and `opus` seats keeps two models. Upstream compares slug families. omc-pstack-fy compares model aliases, because each alias is one model.
 
 The model rule file is `~/.claude/rules/omc-pstack-fy-models.md`, with no frontmatter. Claude Code loads every `.md` file in `~/.claude/rules/` into each session (the memory docs say so, and it was measured on 2026-10-26). The name differs from the official `pstack-models.md` so both plugins can be installed. Never put role lines in `CLAUDE.md`.
 
-Matching the model to the job: change `effort` one step up or down as poteto-mode says. Keep the role's model, so a two-model panel stays two models.
+To match the model to the job, change `effort` one step up or down as poteto-mode says. Keep the role's model, so a three-model panel stays three models.
+
+**Budgets.** Each role has a target effort, its default's effort moved by the budget. `large` keeps it, `unlimited` raises it one step, `medium` lowers it one step, and `small` lowers it two. Every Claude model takes every effort, so upstream's per-model caps, such as Gemini stopping at `high`, have no counterpart. `second opinion` has no default, so its target is the effort the budget label names.
+
+**Old defaults.** setup-pstack writes a `# defaults: 2` line. A rule without it comes from an older setup, which wrote a line for every role, and the next setup-pstack run replaces the old defaults it recognizes. Upstream recognizes a `grok-*` slug. Its analog here is a `sonnet` value in a role that used to default to sonnet, which is the four code roles, `reflect tooling`, and `swarm workers`. `hardest tasks` holding `opus` takes `fable xhigh`. A panel of exactly one `opus` entry and one `sonnet` entry, in either order, takes the three-seat list. Upstream turns every old slug in any other panel list into its fast Opus. omc-pstack-fy leaves a `sonnet` entry in any other panel list alone. `sonnet` is still a default panel seat, so it is not a retired default there, and turning it into `opus` could repeat an `opus` entry and leave the panel with fewer distinct models. Every other value stays, including `inherit` and external entries. Until setup-pstack reruns, poteto-mode honors the old lines and tells the user once per session to rerun `/omc-pstack-fy:setup-pstack`.
 
 ## Other vendors (Phase 3)
 
-Upstream's panels pair Claude with Grok so reviewers do not share blind spots. omc-pstack-fy keeps that seam open for any vendor's CLI, read-only, on review and judging roles only.
+Upstream's panels pair Claude with Gemini so reviewers do not share blind spots. omc-pstack-fy keeps that seam open for any vendor's CLI, read-only, on review and judging roles only.
 
-**Role value grammar.** `[<provider>:]<model> [<effort>]`. No provider means Claude, so every existing value stays valid. Examples: `opus xhigh`, `codex:gpt-5-codex high`, `gemini:gemini-2.5-pro`. A panel line lists entries separated by commas and may mix vendors: `interrogate reviewers: opus xhigh, codex:gpt-5-codex high`.
+**Role value grammar.** `[<provider>:]<model> [<effort>]`. No provider means Claude, so every existing value stays valid. Examples: `opus xhigh`, `codex:gpt-5-codex high`, `gemini:gemini-2.5-pro`. A panel line lists entries separated by commas and may mix vendors: `interrogate reviewers: fable high, opus high, codex:gpt-5-codex high`.
 
 **Roles that may hold an external entry.** `interrogate reviewers`, `arena cross-judge pool`, `reflect tooling`, and the new `second opinion` role. `second opinion` replaces "a different model from the parent" in show-me-your-work's audit and eval's judge. With no line, those keep their current rule: sonnet under an opus parent, opus otherwise. An external entry on any other role is an error. setup-pstack refuses it, and a skill that meets one uses the role's default and says so. Writing code, exploring with tools, and using MCP servers stay on Claude.
 

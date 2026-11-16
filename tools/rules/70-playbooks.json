@@ -111,8 +111,8 @@
     },
     {
       "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
-      "find": "Which PRs get `pstack/skills/how/SKILL.md` and `pstack/skills/interrogate/SKILL.md`. The trail per `pstack/skills/show-me-your-work/SKILL.md`.",
-      "replace": "Which PRs get `<omc-pstack-fy root>/skills/how/SKILL.md` and `<omc-pstack-fy root>/skills/interrogate/SKILL.md`. The trail per `<omc-pstack-fy root>/skills/show-me-your-work/SKILL.md`.",
+      "find": "Which PRs get `pstack/skills/interrogate/SKILL.md`. The trail per `pstack/skills/show-me-your-work/SKILL.md`.",
+      "replace": "Which PRs get `<omc-pstack-fy root>/skills/interrogate/SKILL.md`. The trail per `<omc-pstack-fy root>/skills/show-me-your-work/SKILL.md`.",
       "why": "A plugin user's repository has no pstack/ folder, so the plan names the installed copy."
     },
     {

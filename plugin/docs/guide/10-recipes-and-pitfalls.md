@@ -162,7 +162,7 @@ To watch the catch-up instead, run [`/omc-pstack-fy:ketchup-video`](../../skills
 
 ## The pitfalls
 
-- **Enumerating skills in the prompt.** "use /omc-pstack-fy:how then /omc-pstack-fy:architect then /omc-pstack-fy:arena" reorders steps the playbook already sequences. State the goal and constraints. Name a skill only to override a default.
+- **Enumerating skills in the prompt.** "use /omc-pstack-fy:architect then /omc-pstack-fy:arena then /omc-pstack-fy:interrogate" reorders steps the playbook already sequences. State the goal and constraints. Name a skill only to override a default.
 - **A vague finish condition.** "make it better" gives `/loop` nothing to check. Give a command or artifact that can pass or fail.
 - **Leading with your theory of the cause.** The agent searches wherever you pointed. Ask it to restate the problem first, then share your hunch.
 - **Taking the first design.** One attempt locks in the first shape the model thought of. Ask for prototypes or [`/omc-pstack-fy:architect`](../../skills/architect/SKILL.md) and pick from evidence.

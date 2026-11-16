@@ -97,6 +97,8 @@ claude plugin update omc-pstack-fy@omc-pstack-fy
 - `/omc-pstack-fy:fy-mode` 在 poteto-mode 上再套用維護者自己的風格。它依每個步驟的產出分派工作。程式碼交給 poteto-mode，研究用的程式碼另外要符合可重現性規則。學術文字交給研究類的 skill。回覆的第一行就是下一步行動或答案。遇到重大選擇，它會先列出選項再問你。每次 push 前，它都會先審查。
 - `omc-pstack-fy:fy` output style 讓每則回覆都套用 fy-mode 的回覆規則，但不執行 playbook，所以簡單問題會得到簡短回答。只要 system prompt 裡有 Claude Code 的寫程式指示，它都會保留。只在一個專案使用時，輸入 `/output-style omc-pstack-fy:fy`。這個指令需要 Claude Code v2.1.269 以上，較舊的版本改在 `/config` 裡選 Output style。所有專案都要用時，在 `~/.claude/settings.json` 加上 `"outputStyle": "omc-pstack-fy:fy"`。
 - 這些個人調整放在 `tools/rules/80-personal.json`、`overlays/hooks/`、`overlays/output-styles/`、`overlays/skills/unslop-zh/` 和 `overlays/skills/fy-mode/`，和翻譯規則分開。
+- `hardest tasks` 的預設是 `fable xhigh`，不是上游的 `fable max`。這個預設寫在 `overlays/skills/setup-pstack/SKILL.md` 和 `tools/rules/50-core-skills.json`。
+- `reflect tooling` 的預設是 `sonnet high`，不是上游的 Opus，所以 reflect 的三個視角不會都在同一個模型上執行。這個預設寫在 `overlays/skills/setup-pstack/SKILL.md` 和 `tools/rules/80-personal.json`。
 
 ## 只有英文版的章節
 

@@ -29,7 +29,7 @@
       "file": "skills/reflect/SKILL.md",
       "find": "Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in the `Task` response body.",
       "replace": "Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in the `Agent` response body.\n\nThe configured role lines decide each lens's model, as poteto-mode's Subagents section says. Only the `reflect tooling` line may name another vendor, such as `gemini:gemini-2.5-pro`. When it does, read the **pstack-ask** skill and run the Tooling lens through it, read-only, from a background Bash call in the same message as the two `Agent` calls. Its prompt is the filled template, and the text it writes is its findings. Its throwaway worktree may not reach the transcript, so fill in the digest as well as the path. If its CLI is unavailable, run the Claude fallback that skill names. If the Tooling lens runs on the parent's own model, say so in the summary, because one model is then checking its own blind spots. Name the panel in the summary. \"Cross-vendor panel (claude, codex)\" is stronger evidence than \"same-vendor panel (opus, sonnet)\".",
-      "why": "Upstream puts the tooling lens on another vendor's model. The reflect tooling line may name one through pstack-ask, per the Phase 3 contract. Naming the panel keeps the reply from overstating what it proves."
+      "why": "The `reflect tooling` line may name another vendor's model through pstack-ask, per the Phase 3 contract. Naming the panel keeps the reply from overstating what it proves."
     },
     {
       "file": "skills/reflect/SKILL.md",
@@ -78,12 +78,6 @@
       "find": "- \"Bugbot flagged regex backtracking on May 2\"",
       "replace": "- \"the review bot flagged regex backtracking on May 2\"",
       "why": "The example is about a dated fact. Any review bot makes the point."
-    },
-    {
-      "file": "skills/reflect/references/synthesizer.md",
-      "find": "- \"we renamed `gpt-4` to `gpt-4o` in `encodingForModel`\"",
-      "replace": "- \"we renamed `cl100k_base` to `o200k_base` in `encodingForModel`\"",
-      "why": "The example is a rename inside one function that drifts. The tokenizer names `encodingForModel` returns make the same point without a model slug."
     },
     {
       "file": "skills/reflect/references/synthesizer.md",
@@ -206,6 +200,12 @@
       "why": "The Agent tool has no per-call fast mode. Effort is the knob poteto-mode's Subagents section adjusts."
     },
     {
+      "file": "skills/recall/SKILL.md",
+      "find": "Spawn one investigator subagent per source, in agent mode because readonly strips MCP access, and ask each",
+      "replace": "Spawn one investigator subagent per source with `subagent_type: \"general-purpose\"`, because it keeps the session's MCP servers, and ask each",
+      "why": "Claude Code has no agent mode or readonly mode. Per the `readonly: false` row of docs/claude-code-mapping.md, `general-purpose` keeps the session's MCP servers, which the per-source investigators need."
+    },
+    {
       "file": "skills/show-me-your-work/SKILL.md",
       "find": "Read this run's transcript under the active workspace's `agent-transcripts/` directory (the system prompt names the path). Don't glob across `~/.cursor/projects/*/`. That reads unrelated private chats.",
       "replace": "Read this run's transcript in the active workspace's project folder, `~/.claude/projects/<slug>/`, where the slug is the workspace path with every character that is not a letter or digit changed to `-`. The newest `<session>.jsonl` directly in it is the current session, and its subagents' transcripts are in `<session>/subagents/`. Don't glob across `~/.claude/projects/*/`. That reads unrelated private chats. In the transcript, what the agent did is the `tool_use` blocks in `type: \"assistant\"` lines. What came back is the `tool_result` blocks in the `type: \"user\"` lines after them, which are tool output, not the user.",
@@ -261,8 +261,8 @@
     },
     {
       "file": "skills/poteto-help/SKILL.md",
-      "find": "pstack is built for Cursor, and it also installs in Claude Code with `/plugin marketplace add cursor/plugins`, then `/plugin install pstack@cursor-plugins`. There, each command takes a `pstack:` prefix, such as `/pstack:poteto-mode`. The [Claude Code adapter](../../docs/harness/claude-code.md) maps the Cursor names, and a step that needs a Cursor-only feature, such as Bugbot or Automations, is skipped with a one-line note.\n\nOther tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/poteto-mode`, `/how`, `/why`, and `/teach`, spawn Cursor subagents with per-role models, and Custom Modes and `/loop` are Cursor features, so those parts may not work there.",
-      "replace": "omc-pstack-fy is a personal Claude Code build of pstack, the Cursor plugin by Lauren Tan. A step that needs a Cursor-only service, such as a webhook routine, is skipped with a one-line note.\n\nOther tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/poteto-mode`, `/how`, `/why`, and `/teach`, spawn Claude Code subagents with per-role models, and `/loop` is a Claude Code command, so those parts may not work there.",
+      "find": "pstack is built for Cursor, and it also installs in Claude Code with `/plugin marketplace add cursor/plugins`, then `/plugin install pstack@cursor-plugins`. There, each command takes a `pstack:` prefix, such as `/pstack:poteto-mode`. The [Claude Code adapter](../../docs/harness/claude-code.md) maps the Cursor names, and a step that needs a Cursor-only feature, such as Bugbot or Automations, is skipped with a one-line note.\n\nOther tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/poteto-mode`, `/how`, and `/teach`, spawn Cursor subagents, some with per-role models, and Custom Modes and `/loop` are Cursor features, so those parts may not work there.",
+      "replace": "omc-pstack-fy is a personal Claude Code build of pstack, the Cursor plugin by Lauren Tan. A step that needs a Cursor-only service, such as a webhook routine, is skipped with a one-line note.\n\nOther tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/poteto-mode`, `/how`, and `/teach`, spawn Claude Code subagents, some with per-role models, and `/loop` is a Claude Code command, so those parts may not work there.",
       "why": "The reader runs Claude Code. The skills are native, so the adapter is gone, and install moved to step 1."
     },
     {

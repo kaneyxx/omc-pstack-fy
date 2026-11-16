@@ -21,8 +21,8 @@
     },
     {
       "file": "README.md",
-      "find": "a rerun keeps any role whose model differs from the default.\n",
-      "replace": "a rerun keeps any role whose model differs from the default.\n\n> In **omc-pstack-fy**, `/poteto-mode` works inside the oh-my-claudecode plugin. oh-my-claudecode is the main harness and keeps every keyword and workflow, and pstack is the engineering engine it hands code to. While oh-my-claudecode is installed and enabled, the plugin's SessionStart hook tells its workflows to run each code unit as a `omc-pstack-fy:poteto-agent` delegate under a poteto-mode playbook, the ai-slop-cleaner step as `/deslop`, and the final code review as `/interrogate` beside OMC's `code-reviewer`.\n",
+      "find": "to drop a pin it does not recognize, delete that role's line or the file first.\n",
+      "replace": "to drop a pin it does not recognize, delete that role's line or the file first.\n\n> In **omc-pstack-fy**, `/poteto-mode` works inside the oh-my-claudecode plugin. oh-my-claudecode is the main harness and keeps every keyword and workflow, and pstack is the engineering engine it hands code to. While oh-my-claudecode is installed and enabled, the plugin's SessionStart hook tells its workflows to run each code unit as a `omc-pstack-fy:poteto-agent` delegate under a poteto-mode playbook, the ai-slop-cleaner step as `/deslop`, and the final code review as `/interrogate` beside OMC's `code-reviewer`.\n",
       "why": "Say where this build departs from Lauren's defaults, beside her own advice on making pstack yours."
     },
     {
@@ -30,6 +30,12 @@
       "find": "A standing project-scale program (multi-day, many stacked PRs, a fleet of subagents under one coordinator) routes to **Orchestrate** instead.",
       "replace": "A standing project-scale program (multi-day, many stacked PRs, a fleet of subagents under one coordinator) routes to **Orchestrate** instead. When oh-my-claudecode is installed, it goes to OMC's ultragoal, team, or ralph instead, as **Working with oh-my-claudecode** says, unless the user names Orchestrate.",
       "why": "The owner's layer split: OMC commands multi-day programs. Without this, the playbook routing contradicts Working with oh-my-claudecode."
+    },
+    {
+      "file": "skills/reflect/SKILL.md",
+      "find": "| Tooling | `reflect tooling` | `claude-opus-5-5-high-fast` | `references/tooling-reviewer.md` |",
+      "replace": "| Tooling | `reflect tooling` | `sonnet high` | `references/tooling-reviewer.md` |",
+      "why": "The owner's choice. The Judgment and Divergent lenses run on `opus xhigh`, so an Opus Tooling lens would run all three of reflect's lenses on one model. The owner's standing rule is that a review panel never collapses to one model, so the Tooling lens defaults to `sonnet high` in place of upstream's fast Opus. The rule shape in overlays/skills/setup-pstack/SKILL.md carries the same default."
     }
   ]
 }

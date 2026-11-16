@@ -46,14 +46,14 @@
       "why": "A role value of inherit omits the Agent model, so the agent runs on the parent's model."
     },
     {
+      "regex": "\\bclaude-opus-5-5-(low|medium|high|xhigh|max)-fast\\b",
+      "replace": "opus $1",
+      "why": "The Agent tool has no fast mode, so a fast slug is the same model at the same effort."
+    },
+    {
       "regex": "\\bclaude-opus-5-5-(xhigh|max|medium)\\b",
       "replace": "opus $1",
       "why": "The Agent tool takes a model alias plus an effort level."
-    },
-    {
-      "regex": "\\bgrok-4\\.7-(xhigh|medium)-fast\\b",
-      "replace": "sonnet $1",
-      "why": "Upstream picks a fast, strong code model. Sonnet is Claude's. Phase 3 adds other vendors through pstack-ask."
     },
     {
       "regex": "\\.cursor/skills\\b",

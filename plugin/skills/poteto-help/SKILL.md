@@ -47,7 +47,7 @@ If cost is the worry, say where the tokens go and how to spend fewer. pstack spe
 
 omc-pstack-fy is a personal Claude Code build of pstack, the Cursor plugin by Lauren Tan. A step that needs a Cursor-only service, such as a webhook routine, is skipped with a one-line note.
 
-Other tools can read the skills, because they use the Agent Skills format. But most workflow skills, including [`/omc-pstack-fy:poteto-mode`](../poteto-mode/SKILL.md), [`/omc-pstack-fy:how`](../how/SKILL.md), [`/omc-pstack-fy:why`](../why/SKILL.md), and [`/omc-pstack-fy:teach`](../teach/SKILL.md), spawn Claude Code subagents with per-role models, and `/loop` is a Claude Code command, so those parts may not work there.
+Other tools can read the skills, because they use the Agent Skills format. But most workflow skills, including [`/omc-pstack-fy:poteto-mode`](../poteto-mode/SKILL.md), [`/omc-pstack-fy:how`](../how/SKILL.md), and [`/omc-pstack-fy:teach`](../teach/SKILL.md), spawn Claude Code subagents, some with per-role models, and `/loop` is a Claude Code command, so those parts may not work there.
 
 ## Start a task with [`/omc-pstack-fy:poteto-mode`](../poteto-mode/SKILL.md)
 

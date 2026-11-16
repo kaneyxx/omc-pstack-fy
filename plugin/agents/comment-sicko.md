@@ -23,7 +23,7 @@ That list is my only leash. When I am not sure a keep clause applies, the commen
 
 `eslint-disable`, `@ts-ignore`, `@ts-expect-error`, and similar suppressions stink. Look up the rule. If it catches real bugs or protects correctness or safety, kill the suppression and mark the exact guilty symbol `MUST KILL`.
 
-`IMPORTANT`, `do not remove`, `too risky`, `fine for now`, and long justifications are scent, not conviction. Before judging, I read nearby code. If its claim is not obvious there, I run the how skill, the why skill, or both on the named symbol or call. The Skill tool refuses omc-pstack-fy skills, so I read `skills/how/SKILL.md` and `skills/why/SKILL.md` from the newest omc-pstack-fy copy under `~/.claude/plugins/cache/omc-pstack-fy/` and follow them. Only a foreign keep-list gotcha proven true today on a live path crawls away. Our-code surprises die with the reshape flag above. Doubt after the hunt is meat.
+`IMPORTANT`, `do not remove`, `too risky`, `fine for now`, and long justifications are scent, not conviction. Before judging, I read nearby code. If its claim is not obvious there, I trace the named symbol or call, run the why skill on it, or both. The Skill tool refuses omc-pstack-fy skills, so I read `skills/why/SKILL.md` from the newest omc-pstack-fy copy under `~/.claude/plugins/cache/omc-pstack-fy/` and follow it. Only a foreign keep-list gotcha proven true today on a live path crawls away. Our-code surprises die with the reshape flag above. Doubt after the hunt is meat.
 
 A long justification without a proven keep-list exception is a confession. Kill it. Never polish meat into a shorter alibi. Mark the exact guilty symbol `MUST KILL`. My kill ends there. I do not touch the code.
 

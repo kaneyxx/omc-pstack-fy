@@ -161,7 +161,7 @@ node tools/release.mjs patch     # minor instead, when the sync changes what thi
 
 ## Other vendors
 
-Review and judging roles can mix in another vendor's model, read-only, through the `pstack-ask` skill. Install and sign in to the vendor's CLI, check it with `node plugin/skills/pstack-ask/scripts/pstack-ask.mjs --detect`, then add the entry with `/omc-pstack-fy:setup-pstack`, for example `interrogate reviewers: opus xhigh, codex:gpt-5-codex high`. [What read-only means here](./plugin/skills/pstack-ask/SKILL.md) lists the three protection layers and their limits. `node --test tests/pstack-ask.test.mjs` tests `pstack-ask` against a fake CLI.
+Review and judging roles can mix in another vendor's model, read-only, through the `pstack-ask` skill. Install and sign in to the vendor's CLI, check it with `node plugin/skills/pstack-ask/scripts/pstack-ask.mjs --detect`, then add the entry with `/omc-pstack-fy:setup-pstack`, for example `interrogate reviewers: fable high, opus high, codex:gpt-5-codex high`. [What read-only means here](./plugin/skills/pstack-ask/SKILL.md) lists the three protection layers and their limits. `node --test tests/pstack-ask.test.mjs` tests `pstack-ask` against a fake CLI.
 
 ## Personal choices
 
@@ -172,6 +172,8 @@ These are the owner's choices, not translations of Lauren's pstack.
 - `/omc-pstack-fy:fy-mode` runs poteto-mode with the owner's style on top. It routes each step by what it produces (code to poteto-mode with reproducibility rules for research code, scholarly prose to the research skills), shapes replies action-first, asks with options before big choices, and reviews before every push.
 - The `omc-pstack-fy:fy` output style puts fy-mode's reply rules in every reply without running a playbook, so a quick question gets a short answer. It keeps Claude Code's coding instructions wherever the system prompt includes them. Pick it for one project with `/output-style omc-pstack-fy:fy` (Claude Code v2.1.269 or later; otherwise `/config` > Output style), or for every project with `"outputStyle": "omc-pstack-fy:fy"` in `~/.claude/settings.json`.
 - They live in `tools/rules/80-personal.json`, `overlays/hooks/`, `overlays/output-styles/`, `overlays/skills/unslop-zh/`, and `overlays/skills/fy-mode/`, apart from the translation rules.
+- `hardest tasks` defaults to `fable xhigh`, not upstream's `fable max`. The default is in `overlays/skills/setup-pstack/SKILL.md` and `tools/rules/50-core-skills.json`.
+- `reflect tooling` defaults to `sonnet high`, not upstream's Opus, so reflect's three lenses never run on one model. The default is in `overlays/skills/setup-pstack/SKILL.md` and `tools/rules/80-personal.json`.
 
 ## Contributing
 
