@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.7.0] - 2026-11-16
+
+Built from upstream pstack v0.15.42 (https://github.com/cursor/plugins/tree/bf0c7cd), checked against oh-my-claudecode v5.8.4 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/b93059f).
+
+### Changed
+
+- Default models follow upstream pstack v0.15.42. The code roles (`feature, refactoring`, `bug-fix`, `perf-issue`, `hillclimb`) default to `opus xhigh`, up from `sonnet xhigh`. `hardest tasks` defaults to `fable xhigh`. `swarm workers` default to `opus high`. The four panel roles (`arena runners`, `arena cross-judge pool`, `architect runners`, `interrogate reviewers`) default to `fable high, opus high, sonnet high`, so each panel keeps three distinct models. `judgment and prose` stays at `opus xhigh`.
+- Two defaults are the owner's choices, not upstream's. `hardest tasks` runs at `xhigh`, not upstream's `max`. `reflect tooling` defaults to `sonnet high`, not upstream's Opus, so reflect's three lenses never run on one model.
+- A budget now moves each role's default effort. `large` keeps it, `unlimited` raises it one step, `medium` lowers it one step, and `small` lowers it two.
+- Rerun `/omc-pstack-fy:setup-pstack` once. A rule file without the new `# defaults: 2` line comes from an older setup. The rerun replaces the old defaults it recognizes and keeps every value you chose yourself, and it never leaves a panel with fewer distinct models. Until you rerun it, poteto-mode keeps honoring your old lines and tells you once per session.
+- poteto-mode no longer runs `/omc-pstack-fy:how` before it designs or debugs. Its playbooks trace the code directly. `/omc-pstack-fy:how` is now one read-only subagent that you invoke yourself.
+- `/omc-pstack-fy:why` is now one short skill. It answers from the commits and PR discussions behind the code, cites what the authors wrote, and marks its own inferences. It starts from source control and looks further only when that trail is thin. `/omc-pstack-fy:recall` now starts its own investigator for each source.
+- `/omc-pstack-fy:statechart` reports the spec's line and column when SANY cannot read it. In its charts, an arrow into a parent state with one way in enters through the parent's border.
+- `/omc-pstack-fy:sharpen` asks the rewritten prompt to prototype any choice an experiment can settle.
+
+### Removed
+
+- The `how explorer`, `how explainer`, `why investigators`, and `why synthesizer` roles. `/omc-pstack-fy:setup-pstack` drops their lines on its next run.
+- `how`'s two prompt templates and `why`'s 12 reference files. Upstream pstack v0.15.42 deleted them.
+
 ## [1.6.4] - 2026-11-11
 
 Built from upstream pstack v0.15.36 (https://github.com/cursor/plugins/tree/1ba91fc), checked against oh-my-claudecode v5.8.4 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/b93059f).
