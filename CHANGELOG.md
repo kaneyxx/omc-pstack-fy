@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.7.1] - 2026-11-17
+
+Built from upstream pstack v0.15.43 (https://github.com/cursor/plugins/tree/e1cc031), checked against oh-my-claudecode v5.8.4 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/b93059f).
+
+### Changed
+
+- Skill texts follow upstream pstack v0.15.43, which shortened them. poteto-mode now has short triggers and shorter Subagents, reply, and Playbooks sections. 14 of the principle skills, `unslop`, `technical-writing`, and the Opening a PR, Babysit, and Multi-phase plan playbooks are shorter too.
+- No role runs above `xhigh`. `/omc-pstack-fy:setup-pstack` offers three budgets, `large`, `medium`, and `small`.
+- Rerun `/omc-pstack-fy:setup-pstack` once. A rule file without the new `# defaults: 3` line comes from an older setup. The rerun turns an `unlimited` budget into `large`, drops the lines of retired roles, and keeps every model you chose, and tells you which values it replaced. Until you rerun it, poteto-mode keeps honoring your old lines and tells you once per session.
+- `hardest tasks` stays, and this is the owner's choice, not upstream's. Upstream retired the role. This plugin keeps it at `fable xhigh`, so poteto-mode still sends the hardest changes to Fable. When a `fable` agent fails, at spawn or in its result, because Fable's usage limit or quota is reached, the same brief reruns on `opus` at the same effort, and the reply says so.
+- That quota rule covers every `fable` entry. An arena runner seat and any other non-reviewer role reruns on `opus` even when that repeats a model. A reviewer panel drops its `fable` seat when `opus` would repeat another seat's model, and says that it ran one seat short. A pool that picks one entry moves to the next entry its own rule allows.
+- Outside a panel, `fable` runs in three cases. A role line or a skill's default names it, you named it for the task, or two `opus xhigh` runs of the same brief failed its check.
+- The `arena cross-judge pool` default stays `fable high, opus high, sonnet high`. Upstream dropped its Fable seat, because it counts Fable and Opus as one vendor. This plugin compares models, so `fable` is still a seat of its own.
+- Another vendor's model now sits on three roles only, `interrogate reviewers`, `arena cross-judge pool`, and `second opinion`. `reflect tooling` is retired.
+- `/omc-pstack-fy:reflect` is one file and starts no subagents. It reads the transcript itself, keeps only lessons that would change a future agent's work, and waits for your approval. An edit to a plugin skill still goes to a rule file.
+- `/omc-pstack-fy:architect` is a short brief. It sketches two shapes and picks one. A large or contested design goes to `/omc-pstack-fy:arena`. It no longer has the "with checkpoint" mode. Ask in the prompt to see the design first.
+- The Multi-phase plan playbook writes the plan and stops. Execution starts when you say go.
+
+### Added
+
+- `worker.md`, in the poteto-mode skill folder. Every agent that poteto-mode starts reads it first. It tells a worker that the kickoff's bar is the whole bar, to decide a reversible choice instead of asking, to open every PR ready for review, and to keep the PR body to 40 lines.
+
+### Removed
+
+- The Orchestrate playbook. Upstream pstack v0.15.43 deleted it. Large or cross-cutting work goes to `/omc-pstack-fy:figure-it-out`. With oh-my-claudecode installed and enabled, a standing multi-day program goes to OMC's ultragoal, team, or ralph.
+- The `architect runners`, `reflect tooling`, and `reflect judgment, divergent, synthesizer` roles. `/omc-pstack-fy:setup-pstack` drops their lines on its next run, a `reflect tooling` line that named another vendor included.
+- The `unlimited` budget.
+- `check-plan.mjs` and its test, `architect`'s three reference files, and `reflect`'s four prompt templates. Upstream pstack v0.15.43 deleted them.
+
 ## [1.7.0] - 2026-11-16
 
 Built from upstream pstack v0.15.42 (https://github.com/cursor/plugins/tree/bf0c7cd), checked against oh-my-claudecode v5.8.4 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/b93059f).
