@@ -56,7 +56,7 @@ In context, that's enough. [`/omc-pstack-fy:tdd`](../../skills/tdd/SKILL.md) wri
 
 ## Clean before you commit
 
-The [Opening a PR playbook](../../skills/poteto-mode/playbooks/opening-a-pr.md) runs [`/omc-pstack-fy:deslop`](../../skills/deslop/SKILL.md) on the diff before each commit and applies [`/omc-pstack-fy:unslop`](../../skills/unslop/SKILL.md) to the PR description and commit bodies. omc-pstack-fy bundles [`/omc-pstack-fy:deslop`](../../skills/deslop/SKILL.md). It removes narrating comments, abnormal defensive checks, and other slop the branch added.
+The [Opening a PR playbook](../../skills/poteto-mode/playbooks/opening-a-pr.md) runs [`/omc-pstack-fy:deslop`](../../skills/deslop/SKILL.md) on the diff before each commit, and poteto-mode applies [`/omc-pstack-fy:unslop`](../../skills/unslop/SKILL.md) to the PR description and commit bodies. omc-pstack-fy bundles [`/omc-pstack-fy:deslop`](../../skills/deslop/SKILL.md). It removes narrating comments, abnormal defensive checks, and other slop the branch added.
 
 For prose, [`/omc-pstack-fy:unslop`](../../skills/unslop/SKILL.md) takes a target and any extra rules you have:
 

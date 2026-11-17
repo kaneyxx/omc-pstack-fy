@@ -71,7 +71,7 @@ For a quick status instead of an audit, run [`/omc-pstack-fy:ketchup`](../../ski
 
 ## When the night holds a queue, not a task
 
-The contract above drives one task to one finish condition. Some nights hold more, a queue of independent changes or a whole program. Three playbooks scale the same trust up.
+The contract above drives one task to one finish condition. Some nights hold more, a queue of independent changes or a whole program. Two playbooks and one skill scale the same trust up.
 
 [Autopilot-full](../../skills/poteto-mode/playbooks/autopilot-full.md) runs a queue of independent PRs to merged. Each PR gets one owner agent that carries it from build through merge, and no owner merges on its own verdict. A swarm of fresh verifiers checks the owner's code-ready head. A later rebase or minor fix gets one fresh verifier, and only new behavior or a large new diff calls the full swarm again. Only a clean verdict on the patch that merges authorizes the merge:
 
@@ -85,15 +85,17 @@ The contract above drives one task to one finish condition. Some nights hold mor
 /omc-pstack-fy:poteto-mode autopilot these five changes, but don't merge. i'll land them in the morning.
 ```
 
-[Orchestrate](../../skills/poteto-mode/playbooks/orchestrate.md) is for a program that outlives any single agent: multi-day, many stacked PRs, fleets of subagents under one standing coordinator chat. The coordinator decides which agent does each piece of work, checks what each one produces, and never writes code itself. If one agent could finish the work in a session, the playbook itself routes you back to the overnight contract above:
+A whole program, such as a migration across many packages, has no playbook of its own. [`/omc-pstack-fy:poteto-mode`](../../skills/poteto-mode/SKILL.md) routes large or cross-cutting work to [`/omc-pstack-fy:figure-it-out`](../../skills/figure-it-out/SKILL.md), which designs one rigorous run for it:
 
 ```text
-/omc-pstack-fy:poteto-mode orchestrate the store migration. own it until every package is converted and merged. i'll check in twice a day.
+/omc-pstack-fy:poteto-mode migrate every package to the new store. own it until each one is converted and merged. i'll check in twice a day.
 ```
+
+With oh-my-claudecode installed and enabled, poteto-mode hands a standing multi-day program like this one to OMC's ultragoal, team, or ralph instead.
 
 ## Run many projects in parallel
 
-Give one coordinator agent a persistent thread, a Claude Code session you keep open or reopen with `claude --resume`. The coordinator doesn't write code. It directs subagents, each in its own worktree on your machine, so keep the machine awake while they run. That's the shape the Orchestrate playbook expects. Start your prompts to the coordinator with [`/omc-pstack-fy:poteto-mode`](../../skills/poteto-mode/SKILL.md), and the subagents it spawns follow the playbooks.
+Give one coordinator agent a persistent thread, a Claude Code session you keep open or reopen with `claude --resume`. The coordinator doesn't write code. It directs subagents, each in its own worktree on your machine, so keep the machine awake while they run. Start your prompts to the coordinator with [`/omc-pstack-fy:poteto-mode`](../../skills/poteto-mode/SKILL.md), and the subagents it spawns follow the playbooks. Each agent it starts reads [`worker.md`](../../skills/poteto-mode/worker.md) first, so workers hold to the kickoff's bar, decide reversible calls instead of asking you, and open PRs ready for review.
 
 A few habits help:
 
@@ -115,7 +117,7 @@ Every loop above still waits for you to start it. A scheduled routine removes th
 - Every stage can stop the line. Triage can decide the report is expected behavior, repro can fail to reproduce it, and the fixer can judge the change too risky. Each of those outcomes is useful, because it keeps bad work from reaching the next stage, where it costs more to undo.
 - Every stage hands over evidence. Repro attaches screenshots and video of the broken state, and the fix attaches before-and-after proof. A human can then check that the agent fixed the right thing before reading a line of code.
 
-Upstream pstack ships this as a dormant [automation pack](https://github.com/cursor/plugins/blob/bf0c7cd80abdbf7fe47b634978a7d1b4071f71a7/pstack/automations/benny/README.md) for Slack issue reports. One automation triages each report. The other reproduces confirmed bugs and may prepare a small draft fix. It runs on Cursor's automation service, so omc-pstack-fy leaves it out, but its files show both rules in practice.
+Upstream pstack ships this as a dormant [automation pack](https://github.com/cursor/plugins/blob/e1cc03121a0e71129a4fb730d7c5528a0a3e43c8/pstack/automations/benny/README.md) for Slack issue reports. One automation triages each report. The other reproduces confirmed bugs and may prepare a small draft fix. It runs on Cursor's automation service, so omc-pstack-fy leaves it out, but its files show both rules in practice.
 
 **Pitfall:** a duration is not a finish condition. "work on this for 4 hours" gives the agent nothing to check, and you'll wake up to four hours of motion instead of a result. Give `/loop` a predicate that can pass or fail.
 

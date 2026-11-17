@@ -51,7 +51,7 @@ Other tools can read the skills, because they use the Agent Skills format. But m
 
 ## Start a task with [`/omc-pstack-fy:poteto-mode`](../poteto-mode/SKILL.md)
 
-[`/omc-pstack-fy:poteto-mode`](../poteto-mode/SKILL.md) matches the task to a playbook, copies the playbook's steps into the todo list, and runs the other skills as the steps need them. A step it skips stays in the list as `skip: <reason>`. A good prompt states the goal and how to tell it's done. It doesn't list skills, because a hand-written sequence tends to drop or reorder steps the playbook would keep. Read [`references/prompting.md`](references/prompting.md) before you help word one. [Guide page 2](../../docs/guide/02-poteto-mode.md) has examples.
+[`/omc-pstack-fy:poteto-mode`](../poteto-mode/SKILL.md) matches the task to a playbook, copies the playbook's steps into the todo list, and runs the other skills as the steps need them. A good prompt states the goal and how to tell it's done. It doesn't list skills, because a hand-written sequence tends to drop or reorder steps the playbook would keep. Read [`references/prompting.md`](references/prompting.md) before you help word one. [Guide page 2](../../docs/guide/02-poteto-mode.md) has examples.
 
 How long [`/omc-pstack-fy:poteto-mode`](../poteto-mode/SKILL.md) stays on:
 
@@ -106,10 +106,9 @@ Close calls:
 
 - [`/omc-pstack-fy:how`](../how/SKILL.md) explains what the code does. [`/omc-pstack-fy:why`](../why/SKILL.md) explains the reasons. [`/omc-pstack-fy:teach`](../teach/SKILL.md) runs one or both and explains the result plainly.
 - [`/omc-pstack-fy:arena`](../arena/SKILL.md) gives every worker the same brief and merges the best parts. [`/omc-pstack-fy:swarm`](../swarm/SKILL.md) splits work into slices or a race and returns one report.
-- [`/omc-pstack-fy:architect`](../architect/SKILL.md) implements right after it settles the design. Add "with checkpoint" to review the design before it writes code.
 - [`/omc-pstack-fy:interrogate`](../interrogate/SKILL.md) reviews the diff. [`/omc-pstack-fy:blast-radius`](../blast-radius/SKILL.md) looks for breakage outside the diff and proves the one fact that makes the change safe.
 - [`/omc-pstack-fy:recall`](../recall/SKILL.md) rebuilds context across recent chats. [`/omc-pstack-fy:ketchup`](../ketchup/SKILL.md) covers only this chat since the user's last message. Resuming one specific chat or branch is the Session pickup playbook.
-- [`/omc-pstack-fy:figure-it-out`](../figure-it-out/SKILL.md) designs one rigorous run. The Orchestrate playbook runs a program that spans days and many PRs. The Autonomous run playbook drives one task to a finish condition.
+- [`/omc-pstack-fy:figure-it-out`](../figure-it-out/SKILL.md) designs one rigorous run. The Autonomous run playbook drives one task to a finish condition.
 
 Bundled with omc-pstack-fy, but not part of pstack:
 
@@ -118,7 +117,7 @@ Bundled with omc-pstack-fy, but not part of pstack:
 Not in pstack:
 
 - `/loop` is a Claude Code command, and `skill-creator` is a separate skill for authoring skills.
-- pstack has no `/orchestrate` skill. Orchestrate is a [`/omc-pstack-fy:poteto-mode`](../poteto-mode/SKILL.md) playbook. If the slash menu shows `/orchestrate`, another plugin provides it.
+- pstack has no `/orchestrate` skill. If the slash menu shows `/orchestrate`, another plugin provides it.
 
 ## Playbooks and principles
 
@@ -131,7 +130,7 @@ Playbooks are step lists inside [`/omc-pstack-fy:poteto-mode`](../poteto-mode/SK
 - "full autopilot on this queue" runs Autopilot-full. "autopilot, don't merge" runs Autopilot-stack.
 - "run the eval playbook" runs Eval.
 
-The Playbooks section of [`poteto-mode`](../poteto-mode/SKILL.md) lists every playbook and when it applies. [Guide page 6](../../docs/guide/06-verify-and-ship.md) covers opening, babysitting, and landing a PR.
+The Playbooks section of [`poteto-mode`](../poteto-mode/SKILL.md) lists every playbook. [Guide page 6](../../docs/guide/06-verify-and-ship.md) covers opening, babysitting, and landing a PR.
 
 pstack has no planning skill. Claude Code's plan mode (shift+tab) works alongside it. For work that spans phases or stacked PRs, asking [`/omc-pstack-fy:poteto-mode`](../poteto-mode/SKILL.md) for a plan runs the [Multi-phase plan playbook](../poteto-mode/playbooks/multi-phase-plan.md), which writes the plan and doesn't implement it. For a design question, the Prototype playbook or [`/omc-pstack-fy:architect`](../architect/SKILL.md) settles it in code first.
 

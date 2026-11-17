@@ -10,7 +10,7 @@ Most omc-pstack-fy skills set `disable-model-invocation: true`, so the Skill too
 
 A second opinion is the same prompt against a different model. A different vendor is the strongest second opinion, because two vendors rarely share a blind spot. This skill runs one panel entry on another vendor's CLI and hands back what it said.
 
-It runs only for the roles that review or judge: `interrogate reviewers`, `arena cross-judge pool`, `reflect tooling`, and `second opinion`. Writing code, exploring with tools, and using MCP servers stay on Claude.
+It runs only for the roles that review or judge: `interrogate reviewers`, `arena cross-judge pool`, and `second opinion`. Writing code, exploring with tools, and using MCP servers stay on Claude.
 
 ## Read the entry
 
@@ -38,7 +38,7 @@ A role value is `[<provider>:]<model> [<effort>]`. An entry with no provider is 
 | `not-installed`, `failed`, `timeout` | Run the role's Claude fallback instead, and write one line, `External reviewer <provider>:<model> unavailable: <status>. Used <fallback>.` |
 | `usage` | Fix the command and run it again once. |
 
-**The Claude fallback** never repeats a model already answering. On a pick-one role (`arena cross-judge pool`, `second opinion`), use the first Claude entry in the line whose model differs from the parent's, else `sonnet xhigh` under an opus parent and `opus xhigh` under any other. On a fan-out role (`interrogate reviewers`, `reflect tooling`), use a Claude model that is neither on the panel nor the parent's. If none is left, run the panel one reviewer short and say so, because a duplicate reviewer would inflate how often findings look independently confirmed.
+**The Claude fallback** never repeats a model already answering. On a pick-one role (`arena cross-judge pool`, `second opinion`), use the first Claude entry in the line whose model differs from the parent's, else `sonnet xhigh` under an opus parent and `opus xhigh` under any other. On a fan-out role (`interrogate reviewers`), use a Claude model that is neither on the panel nor the parent's. If none is left, run the panel one reviewer short and say so, because a duplicate reviewer would inflate how often findings look independently confirmed.
 
 A `note` that says the template is unverified is expected until someone runs that vendor's CLI for real. Until then, the CLI's own read-only flag may be wrong, so lean on the integrity check.
 

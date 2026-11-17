@@ -16,7 +16,7 @@ Run:
 
 [`/omc-pstack-fy:setup-pstack`](../../skills/setup-pstack/SKILL.md) detects the models you have access to, asks for a reasoning budget, shows you each role (code delegates, judgment, the review panels), and asks what you want. Answer the questions. It writes `~/.claude/rules/omc-pstack-fy-models.md`, a small rule every pstack skill reads.
 
-The defaults are the same as the `large` budget. Most roles run at `xhigh` reasoning, the hardest changes included, and the review panels and swarm workers run at `high`. `unlimited` raises each role one level, up to `max`. `medium` lowers each role one level and `small` lowers it two, and both spend fewer tokens.
+The defaults are the same as the `large` budget. Code, prose, and judgment run on Opus at `xhigh` reasoning, and the review panels and swarm workers run at `high`. No role runs above `xhigh`. The hardest changes run on Fable at `xhigh`, and on Opus when Fable's quota runs out. Outside a review panel, Fable also runs when you name it for a task or after two Opus runs of the same brief fail their check. `medium` lowers each role one level and `small` lowers it two, and both spend fewer tokens.
 
 You only override what you care about. A role with no line in the rule keeps the skill's default. To restore a default, delete that role's line. A rerun of [`/omc-pstack-fy:setup-pstack`](../../skills/setup-pstack/SKILL.md) keeps any role whose model differs from the default. When a default changes, a rule written before the change still pins the old default until you run [`/omc-pstack-fy:setup-pstack`](../../skills/setup-pstack/SKILL.md) again. That run replaces the old defaults it recognizes, tells you which, and keeps your other choices. To drop a pin it does not recognize, delete that role's line or the file first.
 
@@ -51,7 +51,7 @@ Pick something real but small, and describe it the way you'd describe it to a co
 /omc-pstack-fy:poteto-mode add a --json flag to this command. text output stays byte-identical. verify both.
 ```
 
-Watch the todo list. Its first items are the matched playbook's steps copied in, the Feature playbook for this prompt. If [`/omc-pstack-fy:poteto-mode`](../../skills/poteto-mode/SKILL.md) skips a step, the step stays in the list with `skip: <reason>`, so you can see what it chose not to do.
+Watch the todo list. Its first items are the matched playbook's steps copied in, the Feature playbook for this prompt.
 
 From here you can type normal follow-ups. [`/omc-pstack-fy:poteto-mode`](../../skills/poteto-mode/SKILL.md) stays on for the whole chat, because a loaded skill stays in context for the rest of the session. Compaction keeps only the start of a long skill, so run [`/omc-pstack-fy:poteto-mode`](../../skills/poteto-mode/SKILL.md) again after a compaction or in a new session.
 

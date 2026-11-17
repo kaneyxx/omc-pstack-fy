@@ -29,7 +29,7 @@ Each file in `tools/rules/` owns one topic, and its `about` field names it. The 
 | `10-naming.json` | Install commands, the `omc-pstack-fy:` prefix, and the notes in the plugin README about this build |
 | `30-excluded.json` | Mentions of skills the build leaves out |
 | `40-core.json` | Global substitutions for Cursor names whose Claude Code form is right in every context |
-| `50-core-skills.json` | poteto-mode's `SKILL.md`, the agents, setup-pstack, the panel and research skills, the plugin README, and the guide |
+| `50-core-skills.json` | poteto-mode's `SKILL.md` and `worker.md`, the agents, setup-pstack, the panel and research skills, the plugin README, and the guide |
 | `60-history.json` | Skills that read chat history or author skills, the help and teaching skills, the principles, and the bundled cursor-team-kit skills |
 | `70-playbooks.json` | poteto-mode's playbooks, references, and scripts |
 | `80-personal.json` | The owner's personal choices, which are not translations |

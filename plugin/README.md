@@ -36,7 +36,7 @@ two steps:
 
 new here? the [pstack guide](./docs/guide/README.md) walks you through a first real task, from setup and prompting through verification and overnight runs. stuck, or unsure which skill fits? ask [`/omc-pstack-fy:poteto-help`](./skills/poteto-help/SKILL.md).
 
-that's it. the other skills are situational, and the mode skill uses them for you as needed. out of the box the mode splits work by model strength: code delegates (feature, refactoring, bug fix, perf, hillclimb), prose, and judgment go to opus, while the hardest changes go to fable. the default panel is fable / opus / sonnet. [`/omc-pstack-fy:setup-pstack`](./skills/setup-pstack/SKILL.md) changes any of it.
+that's it. the other skills are situational, and the mode skill uses them for you as needed. out of the box, code delegates (feature, refactoring, bug fix, perf, hillclimb), prose, and judgment go to opus at xhigh, and no role runs above xhigh. the hardest changes go to fable at xhigh, and to opus when fable's quota runs out. outside a review panel, fable also runs when you name it or after two opus runs of the same brief fail. the default panel is fable / opus / sonnet. [`/omc-pstack-fy:setup-pstack`](./skills/setup-pstack/SKILL.md) changes any of it.
 
 ## usage
 
@@ -46,7 +46,7 @@ start your message with [`/omc-pstack-fy:poteto-mode`](skills/poteto-mode/SKILL.
 
 ### just use [`/omc-pstack-fy:poteto-mode`](./skills/poteto-mode/SKILL.md)
 
-this skill is the main shortcut. i use it whenever i need the agent to do rigorous engineering work. it comes with twenty-three playbooks:
+this skill is the main shortcut. i use it whenever i need the agent to do rigorous engineering work. it comes with twenty-two playbooks:
 
 ```
 /omc-pstack-fy:poteto-mode this pr has a subtle bug where the scroll drifts every 750ms even when idle. repro
@@ -59,7 +59,7 @@ morning.
 ```
 
 <details>
-<summary>the twenty-three playbooks</summary>
+<summary>the twenty-two playbooks</summary>
 
 | playbook | for |
 |---|---|
@@ -78,7 +78,6 @@ morning.
 | [babysit](./skills/poteto-mode/playbooks/babysit.md) | drive a pr or a stack to merge-ready: conflicts, review threads, ci. |
 | [shipping](./skills/poteto-mode/playbooks/shipping.md) | independently verify a green stack, then land the contiguous verified run bottom-up through github by default or origin when available. |
 | [autonomous run](./skills/poteto-mode/playbooks/autonomous-run.md) | drive a long task to completion without stopping. |
-| [orchestrate](./skills/poteto-mode/playbooks/orchestrate.md) | a standing project handed to one coordinator chat: multi-day, many stacked prs, fleets of subagents. |
 | [autopilot-full](./skills/poteto-mode/playbooks/autopilot-full.md) | run independent prs to merged with one owner per pr. a swarm verifies each code-ready head, and every later change to the patch gets a fresh check. |
 | [autopilot-stack](./skills/poteto-mode/playbooks/autopilot-stack.md) | autopilot-full without the merge. build and verify prs for the operator to review and land, stacking a pr only on a pr it builds on. |
 | [session pickup](./skills/poteto-mode/playbooks/session-pickup.md) | resume or take over a prior agent's in-flight work. |
@@ -281,7 +280,7 @@ when a default changes, a rule written before the change still pins the old defa
 
 ## automations
 
-upstream pstack also ships a dormant [benny automation pack](https://github.com/cursor/plugins/tree/bf0c7cd80abdbf7fe47b634978a7d1b4071f71a7/pstack/automations/benny). benny triages slack issue reports, then reproduces and fixes confirmed bugs with real ui evidence. it runs on cursor's automation service, so omc-pstack-fy leaves it out. claude code's `/schedule` runs cloud routines on a cron if you want to build a pipeline like it.
+upstream pstack also ships a dormant [benny automation pack](https://github.com/cursor/plugins/tree/e1cc03121a0e71129a4fb730d7c5528a0a3e43c8/pstack/automations/benny). benny triages slack issue reports, then reproduces and fixes confirmed bugs with real ui evidence. it runs on cursor's automation service, so omc-pstack-fy leaves it out. claude code's `/schedule` runs cloud routines on a cron if you want to build a pipeline like it.
 
 ## license
 

@@ -61,14 +61,9 @@
       "why": "Claude Code reads project skills from .claude/skills/ and personal skills from ~/.claude/skills/."
     },
     {
-      "find": "Pick each subagent's reasoning level and fast or standard speed for the job",
-      "replace": "Pick each subagent's effort level for the job",
-      "why": "Claude Code subagents take an effort level and have no per-call fast mode. poteto-mode says how to pick it."
-    },
-    {
-      "find": "Pick each subagent's `effort` for the job",
-      "replace": "Pick each subagent's effort level for the job",
-      "why": "One wording for the shared effort sentence across rules written in parallel."
+      "find": "Pick each subagent's reasoning level",
+      "replace": "Pick each subagent's effort level",
+      "why": "The Agent tool calls a subagent's reasoning level `effort`. poteto-mode says how to pick it."
     }
   ]
 }
