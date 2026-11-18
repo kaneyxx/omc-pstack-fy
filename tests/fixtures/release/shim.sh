@@ -36,7 +36,6 @@ case $tool in
   gh)
     case "$1 $2" in
       "auth status") ;;
-      "release view") [ -f "$RELEASE_STATE/gh/$3.json" ] ;;
       *) "$REAL_NODE" "$RELEASE_FAKES" gh "$@" ;;
     esac
     ;;

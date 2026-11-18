@@ -19,15 +19,7 @@ const SOURCE = readFileSync(RELEASE, "utf8");
 // `depth` is the fewest faults on a path that reach it, a fault in a what-if included. `start` names the search that
 // reaches it, "feature" by default. The run fails when a violation matches no entry, and when an entry that should show
 // up in that search at this depth does not.
-const FINDINGS = [
-  {
-    id: "F5",
-    depth: 1,
-    start: "stale",
-    title: "When a read in unfinished() fails, preflight says the finished release is not finished, and the recovery from a stale plugin/ needs a fourth run.",
-    is: ({ property, what, steps }) => property === "P5" && /needs \d+ runs/.test(what) && steps.some(({ fault, output }) => fault?.mode === "fail" && /release is not finished\./.test(output)),
-  },
-];
+const FINDINGS = [];
 const known = (violation) => FINDINGS.some(({ is }) => is(violation));
 
 // Broken copies of release.mjs. Each must break the property it names, or the check for that property proves nothing.
