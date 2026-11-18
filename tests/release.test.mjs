@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { createLab, destroyLab, explore, NAME, RELEASE, replay } from "./fixtures/release/lab.mjs";
+import { createLab, destroyLab, explore, NAME, RELEASE } from "./fixtures/release/lab.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 // The most faults on one path. CI runs 1. RELEASE_FAULT_DEPTH=2 is the deep run.
@@ -20,12 +20,6 @@ const SOURCE = readFileSync(RELEASE, "utf8");
 // reaches it, "feature" by default. The run fails when a violation matches no entry, and when an entry that should show
 // up in that search at this depth does not.
 const FINDINGS = [
-  {
-    id: "F1",
-    depth: 1,
-    title: "After a kill between the version bump and the release commit, `Commit or stash first.` leads to a dead end when the maintainer commits.",
-    is: ({ property, steps }) => property === "P5" && steps.some((step, i) => step.run === "commit" && /Commit or stash first\./.test(steps[i - 1].output)) && /nothing to release/.test(steps.at(-1).output),
-  },
   {
     id: "F5",
     depth: 1,
@@ -63,7 +57,7 @@ const MUTANTS = [
     does: "lets claude tag HEAD and does not check the tag",
     breaks: "P2",
     says: /points at the commit/,
-    fault: { call: /^git commit /, mode: "kill-after" },
+    fault: { call: /^git merge -q --ff-only /, mode: "kill-after" },
     edits: [
       ['commit === head ? spawnSync("claude", ["plugin", "tag", "plugin", "-m", `${name} v%s`], { cwd: ROOT, encoding: "utf8" }) : { error: { code: "ENOENT" } }', 'spawnSync("claude", ["plugin", "tag", "plugin", "-m", `${name} v%s`], { cwd: ROOT, encoding: "utf8" })'],
       ['if (git("rev-parse", `${tag}^{commit}`) !== commit) throw new Error(`tag ${tag} does not point at the release commit`);', ""],
@@ -73,7 +67,7 @@ const MUTANTS = [
     does: "leaves tools/version-lock.json out of the release commit",
     breaks: "P2",
     says: /version-lock\.json says/,
-    edits: [['git("add", "-A");', 'git("add", "-A", ":(exclude)tools/version-lock.json");']],
+    edits: [['run("git", ["add", "-A"], { cwd: dir });', 'run("git", ["add", "-A", ":(exclude)tools/version-lock.json"], { cwd: dir });']],
   },
   {
     does: "deletes origin's tag after it creates the GitHub release",
@@ -84,14 +78,14 @@ const MUTANTS = [
   {
     does: "skips the unfinished-release check in preflight",
     breaks: "P3",
-    fault: { call: /^git commit /, mode: "kill-after" },
+    fault: { call: /^git merge -q --ff-only /, mode: "kill-after" },
     edits: [["if (half) throw new Error(`the v${half.version} release is not finished. Run \\`node tools/release.mjs --resume\\`.`);", ""]],
   },
   {
-    does: "does not reset the tree after a failed bump",
+    does: "writes the bump into this tree instead of the worktree",
     breaks: "P4",
     fault: { call: /^node tools\/build\.mjs --release/, mode: "fail" },
-    edits: [['run("git", ["reset", "-q", "--hard", "HEAD"], { allowFail: true });', ""]],
+    edits: [["const inside = (path) => join(dir, relative(ROOT, path));", "const inside = (path) => path;"]],
   },
   {
     does: "leaves a local tag on the commit that a rebase replaced",
@@ -169,15 +163,6 @@ describe("release.mjs under faults", { concurrency: true }, () => {
       judge(t, violations, start);
     });
   }
-
-  test("the runbook in SKILL.md finishes the release from where F1 stops", async () => {
-    for (const fault of [{ call: /^node tools\/build\.mjs --release/, mode: "kill-after" }, { call: /^git add /, mode: "kill-before" }]) {
-      const { said, missing } = await replay(lab, [{ run: "release", fault }, { run: "release" }, "commit", { run: "release" }, "undo", { run: "release" }]);
-      assert.match(said[1], /Commit or stash first\./);
-      assert.match(said[2], /nothing to release/);
-      assert.deepEqual(missing, []);
-    }
-  });
 
   test("finishes a release with plain git when claude is not on PATH", async () => {
     const { violations, runs } = await explore(lab, { claude: false, depth: 0 });

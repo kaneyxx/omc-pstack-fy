@@ -3,7 +3,7 @@
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -140,12 +140,12 @@ function notesFor(options, lastTag) {
     .join("\n\n");
 }
 
-function prependChangelog(section) {
+function prependChangelog(path, section) {
   let previous = "";
   try {
-    previous = readFileSync(CHANGELOG, "utf8").replace(/^# Changelog\s*/, "").trim();
+    previous = readFileSync(path, "utf8").replace(/^# Changelog\s*/, "").trim();
   } catch {}
-  writeFileSync(CHANGELOG, `# Changelog\n\n${section.trim()}\n${previous ? `\n${previous}\n` : ""}`);
+  writeFileSync(path, `# Changelog\n\n${section.trim()}\n${previous ? `\n${previous}\n` : ""}`);
 }
 
 const sectionOf = (version) => {
@@ -190,42 +190,37 @@ function publish(name, version, commit) {
 function release(options, name) {
   const released = committedLock().version;
   const version = nextVersion(options.bump, released);
+  // Preflight's build, the bump, and the release commit happen in a throwaway worktree of HEAD, and main moves to that commit
+  // in one fast-forward. A failure, a crash, or Ctrl-C before then leaves this tree as the run found it.
   const dir = mkdtempSync(join(tmpdir(), "omc-pstack-fy-release-"));
-  let tag;
+  const inside = (path) => join(dir, relative(ROOT, path));
   try {
     git("worktree", "add", "-q", "--detach", dir);
-    tag = preflight(name, version, dir, { publish: !options.noPublish && !options.dryRun });
+    const tag = preflight(name, version, dir, { publish: !options.noPublish && !options.dryRun });
+    const { pstack: pin, omc } = readJson(join(ROOT, "upstream.json"));
+    const upstreamVersion = readJson(join(ROOT, "vendor", "pstack", "plugin.json")).version;
+    const notes = notesFor(options, released ? tagFor(name, released) : undefined);
+    const section = `## [${version}] - ${localDate()}\n\nBuilt from upstream pstack v${upstreamVersion} (${pin.repository}/tree/${pin.ref.slice(0, 7)}), checked against oh-my-claudecode v${omc.version} (${omc.repository}/tree/${omc.ref.slice(0, 7)}).\n\n${notes}\n`;
+    if (options.dryRun) {
+      console.log(`checks pass. Would release ${name} ${released ? `v${released}` : "(first release)"} -> v${version}, tag ${tag}\n\n${section}`);
+      return;
+    }
+    const rules = readJson(inside(RULES));
+    rules.plugin.version = version;
+    writeJson(inside(RULES), rules);
+    const marketplace = readJson(inside(MARKETPLACE));
+    marketplace.plugins.find((plugin) => plugin.name === name).version = version;
+    writeJson(inside(MARKETPLACE), marketplace);
+    writeJson(inside(PACKAGE), { ...readJson(inside(PACKAGE)), version });
+    run("node", ["tools/build.mjs", "--release"], { cwd: dir });
+    run("node", ["tools/build.mjs", "--check"], { cwd: dir });
+    prependChangelog(inside(CHANGELOG), section);
+    run("git", ["add", "-A"], { cwd: dir });
+    run("git", ["commit", "-q", "-m", [`release: ${name} v${version}`, ...(options.trailers.length ? ["", ...options.trailers] : [])].join("\n")], { cwd: dir });
+    git("merge", "-q", "--ff-only", run("git", ["rev-parse", "HEAD"], { cwd: dir }).stdout.trim());
   } finally {
     run("git", ["worktree", "remove", "--force", dir], { allowFail: true });
     rmSync(dir, { recursive: true, force: true });
-  }
-  const { pstack: pin, omc } = readJson(join(ROOT, "upstream.json"));
-  const upstreamVersion = readJson(join(ROOT, "vendor", "pstack", "plugin.json")).version;
-  const notes = notesFor(options, released ? tagFor(name, released) : undefined);
-  const section = `## [${version}] - ${localDate()}\n\nBuilt from upstream pstack v${upstreamVersion} (${pin.repository}/tree/${pin.ref.slice(0, 7)}), checked against oh-my-claudecode v${omc.version} (${omc.repository}/tree/${omc.ref.slice(0, 7)}).\n\n${notes}\n`;
-  if (options.dryRun) {
-    console.log(`checks pass. Would release ${name} ${released ? `v${released}` : "(first release)"} -> v${version}, tag ${tag}\n\n${section}`);
-    return;
-  }
-
-  try {
-    const rules = readJson(RULES);
-    rules.plugin.version = version;
-    writeJson(RULES, rules);
-    const marketplace = readJson(MARKETPLACE);
-    marketplace.plugins.find((plugin) => plugin.name === name).version = version;
-    writeJson(MARKETPLACE, marketplace);
-    writeJson(PACKAGE, { ...readJson(PACKAGE), version });
-    run("node", ["tools/build.mjs", "--release"]);
-    run("node", ["tools/build.mjs", "--check"]);
-    prependChangelog(section);
-    git("add", "-A");
-    git("commit", "-q", "-m", [`release: ${name} v${version}`, ...(options.trailers.length ? ["", ...options.trailers] : [])].join("\n"));
-  } catch (error) {
-    // Nothing is committed yet, so put the tree back the way preflight found it.
-    run("git", ["reset", "-q", "--hard", "HEAD"], { allowFail: true });
-    run("git", ["clean", "-fq", "--", "CHANGELOG.md"], { allowFail: true });
-    throw error;
   }
   console.log(`committed release ${name} v${version}`);
   if (options.noPublish) {
