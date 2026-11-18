@@ -19,13 +19,15 @@ Claude Code installs this plugin from `main` and from the release tag, so a rele
 
 P4 has one exception that `release.mjs` names itself. Preflight rebuilds a stale `plugin/`, leaves it in the tree, and says `Commit the rebuilt plugin/ first, then release.`
 
+P3 and P5 rely on reads that tell a failure from "no". Each read of a tag, of `origin/main`, or of a GitHub release answers "no" with an exit 0, so a read that fails stops the run with `FAIL` and the command. `git ls-remote` runs without `--exit-code`. `git rev-list --count` tells whether `origin/main` holds a commit. `git tag --list` tells whether a local tag exists. `gh api graphql` tells whether a GitHub release exists, because `gh release view` exits 1 both when the release is missing and when `gh` fails. The two `gh auth status` checks and the two `--check` builds still read any failure as "no". A failure there either stops the run or leads to the normal release path.
+
 ## See whether a change touches the verified code
 
 The check covers these files in the version whose blob hashes this section records. `git hash-object` prints a file's blob hash, which depends only on the file's bytes, so it stays the same when a rebase merge rewrites commit hashes.
 
 | File | Covered | Not covered |
 | --- | --- | --- |
-| `tools/release.mjs` | `committedLock()`, `remoteTagCommit()`, `unfinished()`, `preflight()`, `publish()`, `release()` with its worktree, and the `--resume` branch of `main()`, driven by `patch` and by `--resume` | `--dry-run`, `--no-publish`, `--notes`, `--trailer`, `minor`, `major`, an explicit `X.Y.Z`, and what `notesFor()` writes |
+| `tools/release.mjs` | `committedLock()`, `remoteTagCommit()`, `localTagCommit()`, `merged()`, `published()`, `unfinished()`, `preflight()`, `publish()`, `release()` with its worktree, and the `--resume` branch of `main()`, driven by `patch` and by `--resume` | `--dry-run`, `--no-publish`, `--notes`, `--trailer`, `minor`, `major`, an explicit `X.Y.Z`, and what `notesFor()` writes |
 | `tools/build.mjs` | `resolveVersion()`, `checkMarketplace()`, the version line of `checkPackage()`, and the `--check` comparison of `plugin/` with what the build generates. `tests/fixtures/release/build.mjs` stands in for them. | Everything else the build does |
 
 Any edit to `tools/release.mjs` or `tools/build.mjs` since that version means you rerun the check and recheck this file, even when the edit looks unrelated to the tables above. This command compares the files on disk, uncommitted edits included, with the recorded hashes.
@@ -60,32 +62,20 @@ A passing run prints a line of counts for each of the two searches, then each kn
 | --- | --- | --- |
 | `FixtureError`, with text such as `release.mjs made a call the fixture does not model`, `the planned fault ... is not what happened`, `a fixture step failed`, or `a what-if step failed` | The fixture cannot model this run. It is out of date with `release.mjs`, or `release.mjs` made different calls on the same input, or a step the fixture takes on its own failed. `a fixture step failed` can also come from `release.mjs`, when it leaves a repository the fixture cannot read, such as one with no local `main`. | Read the run that came before the error. If `release.mjs` left the repository that way, treat it as a counterexample. Otherwise fix the fixture under `tests/fixtures/release/`. A new `gh` or `claude` call needs a case in `fakes.mjs` or `shim.sh`. A run that changes between two tries on the same input breaks the fault plan, so find what varies. |
 | `release.mjs breaks a promise in a way that is not a recorded finding`, then `P1` to `P5` and numbered steps | The search found a counterexample. Two kinds of P5 name themselves. `release.mjs hangs` means it did not exit within 60 seconds. `the step that the message names cannot be done` means the maintainer did what the output said, and that step failed, as `git commit` does on a clean tree. | Read the steps against `tools/release.mjs`. If a real maintainer, real git, and real GitHub can take each step, it is a bug. Fix `release.mjs`, or report it and add it to `FINDINGS`. If a step cannot happen outside the fixture, fix the fixture and say why in the commit. Never edit a promise to make the run pass. |
-| `F5 no longer shows up`, or another finding id | `release.mjs` no longer has that bug, or the search no longer reaches it. | Read the diff of `tools/release.mjs`. If the bug is fixed, delete the finding from `FINDINGS` in `tests/release.test.mjs` and from this file. If not, the search lost a path, so fix the search. |
+| A finding id, then `no longer shows up` | `release.mjs` no longer has that bug, or the search no longer reaches it. | Read the diff of `tools/release.mjs`. If the bug is fixed, delete the finding from `FINDINGS` in `tests/release.test.mjs` and from this file. If not, the search lost a path, so fix the search. |
 | `the search did not catch the mutant` | The check for that promise can no longer fail, or the mutant's faults no longer lead to the break. | For one run, call `explore()` in the mutant loop of `tests/release.test.mjs` with `depth: 2` and without `only` and `until`. If that search catches the mutant, update its `fault` or `depth`. If not, the check is broken, so fix it before you trust a pass. |
 | `tools/release.mjs no longer has exactly one ...` | The line a mutant rewrites has changed. | Rewrite that mutant's `edits` against the new line. |
 | `answers like tools/build.mjs at every step of a release` fails | The stand-in build and the real build disagree. | Change `tests/fixtures/release/build.mjs` to match `tools/build.mjs`, then run the check again. |
 
 ## Known findings
 
-The current `release.mjs` breaks its promises in one way. The check passes while it stays as recorded. It is a bug to fix in `release.mjs`. The depth is the fewest faults on a path in the search that reach the finding. A run at a lower depth does not show it.
-
-**F5. A failed read in `unfinished()` calls a finished release unfinished.** It breaks P5. Depth 1, in the search from a stale `plugin/`.
-
-1. `HEAD` holds a stale `plugin/`. The maintainer runs `node tools/release.mjs patch`. `git ls-remote` for the tag of v1.0.0 fails, and the run stops with ``the v1.0.0 release is not finished. Run `node tools/release.mjs --resume`.``
-2. Someone else's commit lands on `origin/main`.
-3. The maintainer runs `node tools/release.mjs --resume`. It prints `nothing to resume: the last release is tagged, pushed, and published.`
-4. `node tools/release.mjs patch` stops with `main is behind origin/main. Pull first.` The maintainer pulls.
-5. `node tools/release.mjs patch` stops with `plugin/ was stale. Commit the rebuilt plugin/ first, then release.` The maintainer commits.
-6. `node tools/release.mjs patch` releases v1.0.1.
-
-The recovery takes 4 runs, one more than P5 allows, because the `--resume` in step 3 has nothing to do. `unfinished()` reads a failed `git ls-remote` as "origin has no tag". By the code, it reads a failed `git merge-base --is-ancestor` or `gh release view` the same way. From an up-to-date `plugin/` the same path takes 3 runs, so only the search from a stale `plugin/` shows it. F5 is not new. The search from a stale `plugin/` finds it in the code before the F4 fix too. The harm is one wasted run. A fix makes each of the three reads tell a failure from "no". `git ls-remote` without `--exit-code` already exits 0 when the tag is missing. `gh release view` exits 1 in both cases, so it needs another call, which the fakes would also have to model.
+The current `release.mjs` breaks none of its promises in either search, so `FINDINGS` in `tests/release.test.mjs` is empty. A bug that the search finds and that is not fixed at once goes there and here. Record its id, the property it breaks, the search that reaches it, its depth, and its shortest counterexample. The depth is the fewest faults on a path in that search that reach it. A run at a lower depth does not show it. The check passes while each finding stays as recorded.
 
 ## When a real release stops partway
 
 These steps come from the runs above.
 
 - **No commit `release: omc-pstack-fy vX` exists.** Run `node tools/release.mjs patch` again, and do what it says. A run that stops before the release commit leaves the tree as it found it, apart from a stale `plugin/` that it rebuilds and names.
-- **Preflight says the last release is not finished, and `--resume` then says there is nothing to resume.** A read failed in the first run. This is F5. Run `node tools/release.mjs patch` again.
 - **The release commit exists.** Run `node tools/release.mjs --resume`. If git rejects the push because `origin/main` moved, run `git pull --rebase`, then `--resume` again.
 
 A killed run can leave a worktree named `omc-pstack-fy-release-` and a suffix in the system temp folder. `git worktree list` shows it. It does not block a later run. `git worktree remove -f -f <path>` deletes it, also when a kill during `git worktree add` left it locked.
@@ -108,7 +98,7 @@ A pass does not cover these.
 - The first release, which runs only without faults to set up the fixture.
 - Other start states, such as a `main` that is behind `origin/main`.
 - Two copies of `release.mjs` running at once, and a tag or GitHub release deleted by hand.
-- Real GitHub and the real `claude`. The fakes follow `gh release view`, `gh release create --verify-tag`, `gh auth status`, and `claude plugin tag` as Claude Code 2.1.327 behaves. `node tools/sync.mjs --verify` and the test suite always pass in the fixture.
+- Real GitHub and the real `claude`. The fakes follow the release lookup through `gh api graphql` as gh 2.102.0 answers it, `gh release create --verify-tag`, `gh auth status`, and `claude plugin tag` as Claude Code 2.1.327 behaves. `node tools/sync.mjs --verify` and the test suite always pass in the fixture.
 
 Two shortcuts keep the run short. Two worlds count as one state when they have the same refs, the same commits on `main`, the same `git status` with the same changed file contents, and the same GitHub releases. A worktree that a killed run leaves behind is not part of that state. A kill point is skipped when the world is byte for byte the same as at the kill point before it. To check the second shortcut, set `RELEASE_FAULT_EVERY_KILL=1`, which runs every kill point for real. That run must pass and print the same number of distinct worlds.
 

@@ -77,12 +77,22 @@ function nextVersion(bump, released) {
   return bump === "major" ? `${major + 1}.0.0` : bump === "minor" ? `${major}.${minor + 1}.0` : `${major}.${minor}.${patch + 1}`;
 }
 
-// The tag's commit on origin, peeled through an annotated tag, or "" when origin has no such tag.
+// Each read below answers "no" with an exit 0, so a command that fails stops the run instead of reading as "no".
+
+// The tag's commit on origin, peeled through an annotated tag, or "" when origin has no such tag. Without --exit-code,
+// `git ls-remote` exits 0 when no ref matches.
 function remoteTagCommit(tag) {
-  const lines = run("git", ["ls-remote", "--tags", "origin", `refs/tags/${tag}`, `refs/tags/${tag}^{}`], { allowFail: true }).stdout.trim().split("\n");
+  const lines = git("ls-remote", "--tags", "origin", `refs/tags/${tag}`, `refs/tags/${tag}^{}`).split("\n");
   const peeled = lines.find((line) => line.endsWith("^{}")) ?? lines.find(Boolean) ?? "";
   return peeled.split(/\s+/)[0] ?? "";
 }
+
+const localTagCommit = (tag) => (git("tag", "--list", tag) ? git("rev-parse", `refs/tags/${tag}^{commit}`) : "");
+const merged = (commit) => git("rev-list", "--count", `origin/main..${commit}`) === "0";
+// `gh release view` exits 1 both when the release is missing and when gh fails, so ask GraphQL, which answers true or false.
+const RELEASE_QUERY = "query($owner: String!, $name: String!, $tag: String!) { repository(owner: $owner, name: $name) { release(tagName: $tag) { id } } }";
+const published = (tag) =>
+  run("gh", ["api", "graphql", "-F", "owner={owner}", "-F", "name={repo}", "-f", `tag=${tag}`, "-f", `query=${RELEASE_QUERY}`, "--jq", ".data.repository.release != null"]).stdout.trim() === "true";
 
 // A release whose tag, push, or GitHub release is missing must be finished, never stacked on. The release commit is found
 // by its subject, not assumed to be HEAD, so commits added or a rebase done after a failure cannot hide it.
@@ -92,10 +102,7 @@ function unfinished(name) {
   const commit = git("log", "-1", "--format=%H", "--fixed-strings", `--grep=release: ${name} v${lock.version}`);
   if (!commit) return null;
   const tag = tagFor(name, lock.version);
-  const tagged = remoteTagCommit(tag) === commit;
-  const merged = ok("git", ["merge-base", "--is-ancestor", commit, "origin/main"]);
-  const published = ok("gh", ["release", "view", tag]);
-  return tagged && merged && published ? null : { version: lock.version, tag, commit };
+  return remoteTagCommit(tag) === commit && merged(commit) && published(tag) ? null : { version: lock.version, tag, commit };
 }
 
 // Every check that CI runs, plus a clean, current main, so the release commit holds only the release. Whether plugin/ is
@@ -108,8 +115,8 @@ function preflight(name, version, dir, { publish }) {
   const half = unfinished(name);
   if (half) throw new Error(`the v${half.version} release is not finished. Run \`node tools/release.mjs --resume\`.`);
   const tag = tagFor(name, version);
-  if (ok("git", ["rev-parse", "-q", "--verify", `refs/tags/${tag}`])) throw new Error(`tag ${tag} already exists locally`);
-  if (ok("git", ["ls-remote", "--exit-code", "--tags", "origin", `refs/tags/${tag}`])) throw new Error(`tag ${tag} already exists on origin`);
+  if (localTagCommit(tag)) throw new Error(`tag ${tag} already exists locally`);
+  if (remoteTagCommit(tag)) throw new Error(`tag ${tag} already exists on origin`);
   if (publish && !ok("gh", ["auth", "status"])) throw new Error("gh is not signed in. Run `gh auth login` first.");
   run("node", ["tools/sync.mjs", "--verify"]);
   run("node", ["--test", ...git("ls-files", "tests/*.test.mjs").split("\n").filter(Boolean)]);
@@ -163,7 +170,7 @@ function publish(name, version, commit) {
   const head = git("rev-parse", "HEAD");
   const remote = remoteTagCommit(tag);
   if (remote && remote !== commit) throw new Error(`origin's ${tag} points at ${remote.slice(0, 7)}, not the release commit ${commit.slice(0, 7)}. Fix it by hand.`);
-  const local = run("git", ["rev-parse", "-q", "--verify", `refs/tags/${tag}^{commit}`], { allowFail: true }).stdout.trim();
+  const local = localTagCommit(tag);
   // A rebase after a rejected push rewrites the release commit, so a local-only tag on the old commit is moved.
   if (local && local !== commit && !remote) git("tag", "-d", tag);
   if (!local || (local !== commit && !remote)) {
@@ -173,9 +180,8 @@ function publish(name, version, commit) {
     else if (tagged.status !== 0) throw new Error(`claude plugin tag failed\n${tagged.stdout}${tagged.stderr}`);
   }
   if (git("rev-parse", `${tag}^{commit}`) !== commit) throw new Error(`tag ${tag} does not point at the release commit`);
-  const merged = ok("git", ["merge-base", "--is-ancestor", commit, "origin/main"]);
-  if (remote !== commit || !merged) git("push", "-q", "--atomic", "origin", "main", `refs/tags/${tag}`);
-  if (!ok("gh", ["release", "view", tag])) {
+  if (remote !== commit || !merged(commit)) git("push", "-q", "--atomic", "origin", "main", `refs/tags/${tag}`);
+  if (!published(tag)) {
     const dir = mkdtempSync(join(tmpdir(), "omc-pstack-fy-release-"));
     try {
       writeFileSync(join(dir, "notes.md"), `${sectionOf(version)}\n`);
