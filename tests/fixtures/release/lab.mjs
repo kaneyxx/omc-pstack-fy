@@ -531,6 +531,18 @@ export async function explore(lab, { start = "feature", source = readFileSync(RE
   return report(nodes, edges, { ...tally, worlds: worlds.size, nodes: nodes.size });
 }
 
+// One run of release.mjs with no fault, from the 1.0.0 release with the MANUAL step `start` and then `script` on top. It
+// checks what the search never runs, such as the release notes and --dry-run.
+export const runOnce = (lab, { start, script = "", args }) =>
+  lab.limit(async () => {
+    const dir = fork(lab, lab.base);
+    resetScratch(dir);
+    await sh(lab, dir, `${MANUAL[start].script}\n${script}`);
+    const before = await observe(lab, dir);
+    const { status, output } = await invoke(lab, lab.env, dir, args, null);
+    return { status, output, before, after: await observe(lab, dir) };
+  });
+
 // Turns the explored graph into violations, each with the shortest run of steps that reaches it.
 function report(nodes, edges, tally) {
   const rank = ({ steps: [first, ...rest] }) => [first.fault ? 1 : 0, first.fault?.at ?? 0, MODES.indexOf(first.fault?.mode), first.run, rest.map(({ run }) => run).join()];
