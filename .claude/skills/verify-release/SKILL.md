@@ -14,7 +14,7 @@ Claude Code installs this plugin from `main` and from the release tag, so a rele
 | P1 | `origin/main` never holds a commit `release: omc-pstack-fy vX` without the tag `omc-pstack-fy--vX` on that commit. Origin never holds that tag while `origin/main` lacks its commit. | Users on `main` get a version with no tag, or the tag points at code `main` does not have. | `publish()`, the `--atomic` push |
 | P2 | Origin's tag `omc-pstack-fy--vX` points at the commit whose subject is `release: omc-pstack-fy vX` and whose `tools/version-lock.json` says X. A GitHub release for X exists only when origin has that tag. | The tag installs content that was never released as X. | `unfinished()`, the tag checks in `publish()`, `--verify-tag` |
 | P3 | No release lands on top of a release that still lacks its tag, its push, or its GitHub release. | The older version is never tagged or published, and `--resume` no longer finds it. | `preflight()` with `unfinished()` |
-| P4 | When `node tools/release.mjs patch` fails on its own before the release commit, `HEAD` and the working tree are as they were. | A half bump stays in the tree, and the next run refuses to start. | the `catch` in `release()` |
+| P4 | When `node tools/release.mjs patch` fails on its own before the release commit, `HEAD` and the working tree are as they were. | A half bump stays in the tree, and the next run refuses to start. | the `catch` in `release()`, and the worktree that preflight builds in |
 | P5 | After a fault at any point, doing what `release.mjs` says next ends with the tag, `main`, and the GitHub release present and consistent, within 3 runs of `release.mjs`. | The maintainer holds a half release, and no command finishes it. | the `--resume` branch of `main()`, `publish()`, and every message that names a next step |
 
 P4 has one exception that `release.mjs` names itself. Preflight rebuilds a stale `plugin/`, leaves it in the tree, and says `Commit the rebuilt plugin/ first, then release.`
@@ -42,9 +42,9 @@ No output means the check still describes the code. Any output means the covered
 node --test tests/release.test.mjs
 ```
 
-CI runs this command with the rest of `tests/`. It allows one fault on each path and takes about 30 seconds on an 8-core Mac.
+CI runs this command with the rest of `tests/`. It allows one fault on each path and takes about 40 seconds on an 8-core Mac.
 
-After any change to `tools/release.mjs`, also run the deep search, which allows two faults on each path. It takes 2 to 3 minutes.
+After any change to `tools/release.mjs`, also run the deep search, which allows two faults on each path. It takes about 3.5 minutes.
 
 ```bash
 RELEASE_FAULT_DEPTH=2 node --test tests/release.test.mjs
@@ -52,7 +52,7 @@ RELEASE_FAULT_DEPTH=2 node --test tests/release.test.mjs
 
 A depth of 3 has never been run to the end, so no pass covers three faults on a path.
 
-A passing run prints one line of counts and then each known finding that the depth reaches, with its shortest counterexample. Those findings are bugs in `release.mjs` that are still open. They are listed under [Known findings](#known-findings).
+A passing run prints a line of counts for each of the two searches, then each known finding that the depth reaches in that search, with its shortest counterexample. Those findings are bugs in `release.mjs` that are still open. They are listed under [Known findings](#known-findings).
 
 ## Read a failure
 
@@ -79,26 +79,29 @@ The current `release.mjs` breaks its promises in two ways. The check passes whil
 
 `HEAD` now holds a `tools/version-lock.json` for the new version with no release commit, no tag, and no GitHub release, and neither command moves on. `git stash` in step 3 lets the release finish and leaves the half bump in the stash. The step that works is `git reset --hard HEAD`, which the message does not name. F1 is likely. The real `node tools/build.mjs --check` takes seconds, and a Ctrl-C during it lands in this window.
 
-**F4. A failed `git status` leaves a rebuilt `plugin/` in the tree.** It breaks P4. Depth 2.
+**F5. A failed read in `unfinished()` calls a finished release unfinished.** It breaks P5. Depth 1, in the search from a stale `plugin/`.
 
-1. The maintainer runs `node tools/release.mjs patch`. The process is killed just before `node tools/build.mjs --release`, so the three version fields say v1.0.1 and `plugin/` still says v1.0.0.
-2. The maintainer runs `node tools/release.mjs patch`. It stops with `the working tree is not clean. Commit or stash first.`
-3. The maintainer commits.
-4. The maintainer runs `node tools/release.mjs patch`. Preflight's plain build rewrites the stale `plugin/.claude-plugin/plugin.json`. Then `git status --porcelain plugin` fails, and the run stops with `git status --porcelain plugin failed`.
+1. `HEAD` holds a stale `plugin/`. The maintainer runs `node tools/release.mjs patch`. `git ls-remote` for the tag of v1.0.0 fails, and the run stops with ``the v1.0.0 release is not finished. Run `node tools/release.mjs --resume`.``
+2. Someone else's commit lands on `origin/main`.
+3. The maintainer runs `node tools/release.mjs --resume`. It prints `nothing to resume: the last release is tagged, pushed, and published.`
+4. `node tools/release.mjs patch` stops with `main is behind origin/main. Pull first.` The maintainer pulls.
+5. `node tools/release.mjs patch` stops with `plugin/ was stale. Commit the rebuilt plugin/ first, then release.` The maintainer commits.
+6. `node tools/release.mjs patch` releases v1.0.1.
 
-The rebuilt `plugin/.claude-plugin/plugin.json` stays modified, with no `Commit the rebuilt plugin/` message. Steps 1 to 3 only make `plugin/` stale. Outside the fixture a stale `plugin/` is common, so one failed `git status` is enough. That failure is rare. Git fails on a repository it can read only when it cannot start, as on EAGAIN or ENOMEM, or when an object is missing or corrupt. The harm is small. The next run says `Commit or stash first.`, and committing the rebuilt `plugin/` is what the missing message would have said.
+The recovery takes 4 runs, one more than P5 allows, because the `--resume` in step 3 has nothing to do. `unfinished()` reads a failed `git ls-remote` as "origin has no tag". By the code, it reads a failed `git merge-base --is-ancestor` or `gh release view` the same way. From an up-to-date `plugin/` the same path takes 3 runs, so only the search from a stale `plugin/` shows it. F5 is not new. The search from a stale `plugin/` finds it in the code before the F4 fix too. The harm is one wasted run. A fix makes each of the three reads tell a failure from "no". `git ls-remote` without `--exit-code` already exits 0 when the tag is missing. `gh release view` exits 1 in both cases, so it needs another call, which the fakes would also have to model.
 
 ## When a real release stops partway
 
-These steps come from the runs above. Use them until F1 and F4 are fixed.
+These steps come from the runs above. Use them until F1 and F5 are fixed.
 
 - **No commit `release: omc-pstack-fy vX` exists, and `git status` shows changes.** Check that the changes are only the bump, which is the three version fields, `tools/version-lock.json`, `plugin/.claude-plugin/plugin.json`, and `CHANGELOG.md`. Then run `git reset --hard HEAD` and release again. Do not commit the changes.
 - **The bump is already committed, in a commit that is not `release: omc-pstack-fy vX`.** This is where F1 leaves you after its step 3. `node tools/release.mjs patch` says `nothing to release`, and `git show --stat HEAD` lists `tools/version-lock.json`. Check that the commit holds only the bump files the bullet above names. If it holds other work too, stop, because the next step drops it. If you have not pushed that commit, run `git reset --hard HEAD~1`, then `node tools/release.mjs patch`. The test `the runbook in SKILL.md finishes the release from where F1 stops` runs these steps from both kill points that lead to F1. No run covers a pushed half bump.
+- **Preflight says the last release is not finished, and `--resume` then says there is nothing to resume.** A read failed in the first run. This is F5. Run `node tools/release.mjs patch` again.
 - **The release commit exists.** Run `node tools/release.mjs --resume`. If git rejects the push because `origin/main` moved, run `git pull --rebase`, then `--resume` again.
 
 ## What a pass covers
 
-The search starts from one state. Release 1.0.0 is complete, `plugin/` is up to date, and local `main` is one unpushed commit of new plugin content ahead. The command is `node tools/release.mjs patch`.
+The search starts from one state. Release 1.0.0 is complete, `plugin/` is up to date, and local `main` is one unpushed commit of new plugin content ahead. A second search starts from the same commit with `plugin/` left as release 1.0.0 built it, so preflight finds `plugin/` stale. The command is `node tools/release.mjs patch`. Both searches follow the rules below.
 
 - **Faults.** At most one fault in each run of `release.mjs`, at any of its external calls. The call exits 1 before it does anything, or `release.mjs` gets SIGKILL just before the call, or just after it.
 - **Environment.** Before a `--resume`, someone else's commit lands on `origin/main` once. It changes no plugin file. It lands only on paths where the maintainer has not committed or stashed by hand, and where the unrelated commit of the what-ifs has not landed.
@@ -112,7 +115,7 @@ A pass does not cover these.
 - A command that takes effect and then reports failure, a command cut off halfway, a hang of a command that `release.mjs` calls, and two faults in one run. A hang of `release.mjs` itself is caught, after 60 seconds.
 - A kill between two file writes that `release.mjs` makes with no external call between them.
 - The first release, which runs only without faults to set up the fixture.
-- Other start states, such as a stale `plugin/` or a `main` that is behind `origin/main`.
+- Other start states, such as a `main` that is behind `origin/main`.
 - Two copies of `release.mjs` running at once, and a tag or GitHub release deleted by hand.
 - Real GitHub and the real `claude`. The fakes follow `gh release view`, `gh release create --verify-tag`, `gh auth status`, and `claude plugin tag` as Claude Code 2.1.327 behaves. `node tools/sync.mjs --verify` and the test suite always pass in the fixture.
 
