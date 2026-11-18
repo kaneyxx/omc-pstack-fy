@@ -14,7 +14,6 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 // The most faults on one path. CI runs 1. RELEASE_FAULT_DEPTH=2 is the deep run.
 const DEPTH = Number(process.env.RELEASE_FAULT_DEPTH ?? 1);
 const SOURCE = readFileSync(RELEASE, "utf8");
-const LOCK_READ = "git show HEAD:tools/version-lock.json";
 
 const failedCall = ({ fault, calls }) => (fault?.mode === "fail" ? calls[fault.at - 1] : "");
 
@@ -27,18 +26,6 @@ const FINDINGS = [
     depth: 1,
     title: "After a kill between the version bump and the release commit, `Commit or stash first.` leads to a dead end when the maintainer commits.",
     is: ({ property, steps }) => property === "P5" && steps.some((step, i) => step.run === "commit" && /Commit or stash first\./.test(steps[i - 1].output)) && /nothing to release/.test(steps.at(-1).output),
-  },
-  {
-    id: "F2",
-    depth: 2,
-    title: `When \`${LOCK_READ}\` fails during preflight, release.mjs releases on top of an unfinished release.`,
-    is: ({ property, steps }) => (property === "P3" || property === "P1") && steps.at(-1).run === "release" && failedCall(steps.at(-1)) === LOCK_READ,
-  },
-  {
-    id: "F3",
-    depth: 2,
-    title: `When \`${LOCK_READ}\` fails during --resume, release.mjs exits 0 and says the unfinished release is published.`,
-    is: ({ property, steps }) => property === "P5" && steps.at(-1).run === "resume" && failedCall(steps.at(-1)) === LOCK_READ,
   },
   {
     id: "F4",

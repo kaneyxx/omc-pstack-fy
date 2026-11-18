@@ -55,11 +55,9 @@ const git = (...args) => run("git", args).stdout.trim();
 const ok = (command, args) => run(command, args, { allowFail: true }).status === 0;
 const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
 const writeJson = (path, value) => writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
-// The last release is what HEAD records, never the working tree, so a half-applied bump cannot fool the next run.
-const committedLock = () => {
-  const shown = run("git", ["show", "HEAD:tools/version-lock.json"], { allowFail: true });
-  return shown.status === 0 ? JSON.parse(shown.stdout) : {};
-};
+// The last release is what HEAD records, never the working tree, so a half-applied bump cannot fool the next run. Only a HEAD
+// without the lock means no release yet. `git ls-tree` exits 0 either way, so a git that fails stops the run instead.
+const committedLock = () => (git("ls-tree", "--name-only", "HEAD", "--", "tools/version-lock.json") ? JSON.parse(git("show", "HEAD:tools/version-lock.json")) : {});
 const parse = (version) => version.split(".").map(Number);
 const newer = (a, b) => {
   const [x, y] = [parse(a), parse(b)];

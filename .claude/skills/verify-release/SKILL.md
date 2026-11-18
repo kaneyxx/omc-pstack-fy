@@ -68,7 +68,7 @@ A passing run prints one line of counts and then each known finding that the dep
 
 ## Known findings
 
-The current `release.mjs` breaks its promises in four ways. The check passes while these stay as recorded. Each one is a bug to fix in `release.mjs`. The depth is the fewest faults on a path in the search that reach the finding. A run at a lower depth does not show it.
+The current `release.mjs` breaks its promises in two ways. The check passes while these stay as recorded. Each one is a bug to fix in `release.mjs`. The depth is the fewest faults on a path in the search that reach the finding. A run at a lower depth does not show it.
 
 **F1. `Commit or stash first.` leads to a dead end.** It breaks P5. Depth 1.
 
@@ -79,21 +79,6 @@ The current `release.mjs` breaks its promises in four ways. The check passes whi
 
 `HEAD` now holds a `tools/version-lock.json` for the new version with no release commit, no tag, and no GitHub release, and neither command moves on. `git stash` in step 3 lets the release finish and leaves the half bump in the stash. The step that works is `git reset --hard HEAD`, which the message does not name. F1 is likely. The real `node tools/build.mjs --check` takes seconds, and a Ctrl-C during it lands in this window.
 
-**F2. A failed `git show` lets a release land on an unfinished one.** It breaks P3 and P1. Depth 2.
-
-1. A release of v1.0.1 stops after `claude plugin tag`, so the commit and the local tag exist and nothing is pushed.
-2. The maintainer commits new plugin content on top.
-3. The maintainer runs `node tools/release.mjs patch`. Inside `unfinished()`, `git show HEAD:tools/version-lock.json` fails. The run exits 0 and prints `released omc-pstack-fy v1.0.2`.
-
-`origin/main` now holds `release: omc-pstack-fy v1.0.1` with no tag for it. `--resume` says there is nothing to resume.
-
-**F3. A failed `git show` makes `--resume` report success.** It breaks P5. Depth 2.
-
-1. A release stops after `git commit`.
-2. The maintainer runs `node tools/release.mjs --resume`. `git show HEAD:tools/version-lock.json` fails. The run exits 0 and prints `nothing to resume: the last release is tagged, pushed, and published.`
-
-F2 and F3 share one cause. `committedLock()` reads any failure of `git show` as "there is no release yet". Both are rare. `git show` of a file that `HEAD` holds fails only when git cannot start, as on EAGAIN or ENOMEM, or when the object is missing or corrupt. When it does fail, the release goes wrong with no error.
-
 **F4. A failed `git status` leaves a rebuilt `plugin/` in the tree.** It breaks P4. Depth 2.
 
 1. The maintainer runs `node tools/release.mjs patch`. The process is killed just before `node tools/build.mjs --release`, so the three version fields say v1.0.1 and `plugin/` still says v1.0.0.
@@ -101,16 +86,15 @@ F2 and F3 share one cause. `committedLock()` reads any failure of `git show` as 
 3. The maintainer commits.
 4. The maintainer runs `node tools/release.mjs patch`. Preflight's plain build rewrites the stale `plugin/.claude-plugin/plugin.json`. Then `git status --porcelain plugin` fails, and the run stops with `git status --porcelain plugin failed`.
 
-The rebuilt `plugin/.claude-plugin/plugin.json` stays modified, with no `Commit the rebuilt plugin/` message. Steps 1 to 3 only make `plugin/` stale. Outside the fixture a stale `plugin/` is common, so one failed `git status` is enough. That failure is as rare as the one behind F2. The harm is small. The next run says `Commit or stash first.`, and committing the rebuilt `plugin/` is what the missing message would have said.
+The rebuilt `plugin/.claude-plugin/plugin.json` stays modified, with no `Commit the rebuilt plugin/` message. Steps 1 to 3 only make `plugin/` stale. Outside the fixture a stale `plugin/` is common, so one failed `git status` is enough. That failure is rare. Git fails on a repository it can read only when it cannot start, as on EAGAIN or ENOMEM, or when an object is missing or corrupt. The harm is small. The next run says `Commit or stash first.`, and committing the rebuilt `plugin/` is what the missing message would have said.
 
 ## When a real release stops partway
 
-These steps come from the runs above. Use them until F1 to F4 are fixed.
+These steps come from the runs above. Use them until F1 and F4 are fixed.
 
 - **No commit `release: omc-pstack-fy vX` exists, and `git status` shows changes.** Check that the changes are only the bump, which is the three version fields, `tools/version-lock.json`, `plugin/.claude-plugin/plugin.json`, and `CHANGELOG.md`. Then run `git reset --hard HEAD` and release again. Do not commit the changes.
 - **The bump is already committed, in a commit that is not `release: omc-pstack-fy vX`.** This is where F1 leaves you after its step 3. `node tools/release.mjs patch` says `nothing to release`, and `git show --stat HEAD` lists `tools/version-lock.json`. Check that the commit holds only the bump files the bullet above names. If it holds other work too, stop, because the next step drops it. If you have not pushed that commit, run `git reset --hard HEAD~1`, then `node tools/release.mjs patch`. The test `the runbook in SKILL.md finishes the release from where F1 stops` runs these steps from both kill points that lead to F1. No run covers a pushed half bump.
 - **The release commit exists.** Run `node tools/release.mjs --resume`. If git rejects the push because `origin/main` moved, run `git pull --rebase`, then `--resume` again.
-- **`--resume` says there is nothing to resume, and the tag or the GitHub release is missing.** Run `--resume` again.
 
 ## What a pass covers
 
