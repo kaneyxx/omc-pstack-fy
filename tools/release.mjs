@@ -107,7 +107,7 @@ function unfinished(name) {
 
 // Every check that CI runs, plus a clean, current main, so the release commit holds only the release. Whether plugin/ is
 // stale is learned by a build in `dir`, a worktree of HEAD, so no failure after that build can leave this tree changed.
-function preflight(name, version, dir, { publish }) {
+function preflight(name, version, dir, { publish, dryRun }) {
   if (git("rev-parse", "--abbrev-ref", "HEAD") !== "main") throw new Error("release from main");
   if (git("status", "--porcelain")) throw new Error("the working tree is not clean. Commit or stash first.");
   run("git", ["fetch", "-q", "origin", "main"]);
@@ -122,6 +122,7 @@ function preflight(name, version, dir, { publish }) {
   run("node", ["--test", ...git("ls-files", "tests/*.test.mjs").split("\n").filter(Boolean)]);
   run("node", ["tools/build.mjs"], { cwd: dir });
   if (run("git", ["status", "--porcelain", "plugin"], { cwd: dir }).stdout.trim()) {
+    if (dryRun) throw new Error("plugin/ is stale. Run `node tools/build.mjs` and commit the rebuilt plugin/, then release.");
     // The rebuild of this tree is the last call, so the message always follows it.
     run("node", ["tools/build.mjs"]);
     throw new Error("plugin/ was stale. Commit the rebuilt plugin/ first, then release.");
@@ -204,7 +205,7 @@ function release(options, name) {
   const inside = (path) => join(dir, relative(ROOT, path));
   try {
     git("worktree", "add", "-q", "--detach", dir);
-    const tag = preflight(name, version, dir, { publish: !options.noPublish && !options.dryRun });
+    const tag = preflight(name, version, dir, { publish: !options.noPublish && !options.dryRun, dryRun: options.dryRun });
     const { pstack: pin, omc } = readJson(join(ROOT, "upstream.json"));
     const upstreamVersion = readJson(join(ROOT, "vendor", "pstack", "plugin.json")).version;
     const notes = notesFor(options, released ? tagFor(name, released) : undefined);

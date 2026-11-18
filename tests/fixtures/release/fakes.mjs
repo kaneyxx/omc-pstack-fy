@@ -30,7 +30,7 @@ const field = (name) => args.find((arg) => arg.startsWith(`${name}=`))?.slice(na
 if (args[0] === "--version") {
   console.log(`fake ${tool} for the release fixture`);
 } else if (tool === "gh" && args[0] === "api" && args[1] === "graphql" && /release\(tagName: \$tag\)/.test(field("query")) && flagValue("--jq") === ".data.repository.release != null") {
-  // Measured on gh 2.102.0, this lookup prints true or false and exits 0, and exits 1 only when gh fails.
+  // Measured on gh 2.102.0, this lookup prints true or false and exits 0, and exits nonzero only when gh fails.
   console.log(existsSync(join(RELEASE_STATE, "gh", `${field("tag")}.json`)));
 } else if (tool === "gh" && args[0] === "release" && args[1] === "create") {
   const tag = args[2];

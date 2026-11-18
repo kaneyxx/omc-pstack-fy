@@ -17,7 +17,7 @@ Claude Code installs this plugin from `main` and from the release tag, so a rele
 | P4 | When `node tools/release.mjs patch` fails on its own before the release commit, `HEAD` and the working tree are as they were. | A half bump stays in the tree, and the next run refuses to start. | the worktree in `release()`, where preflight's build, the bump, and the release commit happen |
 | P5 | After a fault at any point, doing what `release.mjs` says next ends with the tag, `main`, and the GitHub release present and consistent, within 3 runs of `release.mjs`. | The maintainer holds a half release, and no command finishes it. | the `--resume` branch of `main()`, `publish()`, and every message that names a next step |
 
-P4 has one exception that `release.mjs` names itself. Preflight rebuilds a stale `plugin/`, leaves it in the tree, and says `Commit the rebuilt plugin/ first, then release.`
+P4 has one exception that `release.mjs` names itself. Preflight rebuilds a stale `plugin/`, leaves it in the tree, and says `Commit the rebuilt plugin/ first, then release.` Under `--dry-run` it rebuilds nothing and names `node tools/build.mjs` instead.
 
 P3 and P5 rely on reads that tell a failure from "no". Each read of a tag, of `origin/main`, or of a GitHub release answers "no" with an exit 0, so a read that fails stops the run with `FAIL` and the command. `git ls-remote` runs without `--exit-code`. `git rev-list --count` tells whether `origin/main` holds a commit. `git tag --list` tells whether a local tag exists. `gh api graphql` tells whether a GitHub release exists, because `gh release view` exits 1 both when the release is missing and when `gh` fails. The two `gh auth status` checks and the two `--check` builds still read any failure as "no". A failure there either stops the run or leads to the normal release path.
 
@@ -27,13 +27,13 @@ The check covers these files in the version whose blob hashes this section recor
 
 | File | Covered | Not covered |
 | --- | --- | --- |
-| `tools/release.mjs` | `committedLock()`, `remoteTagCommit()`, `localTagCommit()`, `merged()`, `published()`, `unfinished()`, `preflight()`, `publish()`, `release()` with its worktree, and the `--resume` branch of `main()`, driven by `patch` and by `--resume`. One run of `patch` without faults checks that `notesFor()` lists the groups with a title first, in title order. | `--dry-run`, `--no-publish`, `--notes`, `--trailer`, `minor`, `major`, an explicit `X.Y.Z`, and the rest of what `notesFor()` writes |
+| `tools/release.mjs` | `committedLock()`, `remoteTagCommit()`, `localTagCommit()`, `merged()`, `published()`, `unfinished()`, `preflight()`, `publish()`, `release()` with its worktree, and the `--resume` branch of `main()`, driven by `patch` and by `--resume`. One run of `patch` without faults checks that `notesFor()` lists the groups with a title first, in title order. One run of `patch --dry-run` from a stale `plugin/` checks that it names the build and leaves the world as it was. | `--dry-run` from other states, `--no-publish`, `--notes`, `--trailer`, `minor`, `major`, an explicit `X.Y.Z`, and the text of each group that `notesFor()` writes |
 | `tools/build.mjs` | `resolveVersion()`, `checkMarketplace()`, the version line of `checkPackage()`, and the `--check` comparison of `plugin/` with what the build generates. `tests/fixtures/release/build.mjs` stands in for them. | Everything else the build does |
 
 Any edit to `tools/release.mjs` or `tools/build.mjs` since that version means you rerun the check and recheck this file, even when the edit looks unrelated to the tables above. This command compares the files on disk, uncommitted edits included, with the recorded hashes.
 
 ```bash
-git hash-object tools/release.mjs tools/build.mjs | diff - <(printf '%s\n' eb7f36607d461621cebe87a9a80c9b50c80a172c 5726e19cc2e7f1c405d4729c61fd41958f0a98e4)
+git hash-object tools/release.mjs tools/build.mjs | diff - <(printf '%s\n' 3c8c09f9c1cd3ada60303c3c44e3b2173cedf5c7 5726e19cc2e7f1c405d4729c61fd41958f0a98e4)
 ```
 
 No output means the check still describes the code. A `1c1` means `tools/release.mjs` changed, a `2c2` means `tools/build.mjs` changed, and `1,2c1,2` means both changed. Then run the check and follow [Move the sync point](#move-the-sync-point).
@@ -98,7 +98,7 @@ A pass does not cover these.
 - The first release, which runs only without faults to set up the fixture.
 - Other start states, such as a `main` that is behind `origin/main`.
 - Two copies of `release.mjs` running at once, and a tag or GitHub release deleted by hand.
-- Real GitHub and the real `claude`. The fakes follow the release lookup through `gh api graphql` as gh 2.102.0 answers it, `gh release create --verify-tag`, `gh auth status`, and `claude plugin tag` as Claude Code 2.1.327 behaves. `node tools/sync.mjs --verify` and the test suite always pass in the fixture.
+- Real GitHub and the real `claude`. The fakes follow `gh release create --verify-tag` and `gh auth status`. The fake `claude plugin tag` follows Claude Code 2.1.327. The fake release lookup through `gh api graphql` answers as gh 2.102.0 did on this repository. `node tools/sync.mjs --verify` and the test suite always pass in the fixture.
 
 Two shortcuts keep the run short. Two worlds count as one state when they have the same refs, the same commits on `main`, the same `git status` with the same changed file contents, and the same GitHub releases. A worktree that a killed run leaves behind is not part of that state. A kill point is skipped when the world is byte for byte the same as at the kill point before it. To check the second shortcut, set `RELEASE_FAULT_EVERY_KILL=1`, which runs every kill point for real. That run must pass and print the same number of distinct worlds.
 
