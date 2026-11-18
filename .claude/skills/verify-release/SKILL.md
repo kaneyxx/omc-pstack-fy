@@ -27,7 +27,7 @@ The check covers these files in the version whose blob hashes this section recor
 
 | File | Covered | Not covered |
 | --- | --- | --- |
-| `tools/release.mjs` | `committedLock()`, `remoteTagCommit()`, `localTagCommit()`, `merged()`, `published()`, `unfinished()`, `preflight()`, `publish()`, `release()` with its worktree, and the `--resume` branch of `main()`, driven by `patch` and by `--resume` | `--dry-run`, `--no-publish`, `--notes`, `--trailer`, `minor`, `major`, an explicit `X.Y.Z`, and what `notesFor()` writes |
+| `tools/release.mjs` | `committedLock()`, `remoteTagCommit()`, `localTagCommit()`, `merged()`, `published()`, `unfinished()`, `preflight()`, `publish()`, `release()` with its worktree, and the `--resume` branch of `main()`, driven by `patch` and by `--resume`. One run of `patch` without faults checks that `notesFor()` lists the groups with a title first, in title order. | `--dry-run`, `--no-publish`, `--notes`, `--trailer`, `minor`, `major`, an explicit `X.Y.Z`, and the rest of what `notesFor()` writes |
 | `tools/build.mjs` | `resolveVersion()`, `checkMarketplace()`, the version line of `checkPackage()`, and the `--check` comparison of `plugin/` with what the build generates. `tests/fixtures/release/build.mjs` stands in for them. | Everything else the build does |
 
 Any edit to `tools/release.mjs` or `tools/build.mjs` since that version means you rerun the check and recheck this file, even when the edit looks unrelated to the tables above. This command compares the files on disk, uncommitted edits included, with the recorded hashes.

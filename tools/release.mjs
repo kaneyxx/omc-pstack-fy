@@ -141,8 +141,10 @@ function notesFor(options, lastTag) {
     groups.set(type, [...(groups.get(type) ?? []), scope ? `${scope}: ${text}` : text]);
   }
   const titles = { feat: "Added", fix: "Fixed", rules: "Rules", build: "Build", docs: "Docs", other: "Other" };
+  const order = Object.keys(titles);
+  const rank = (type) => (order.includes(type) ? order.indexOf(type) : order.length);
   return [...groups]
-    .sort(([a], [b]) => Object.keys(titles).indexOf(a) - Object.keys(titles).indexOf(b))
+    .sort(([a], [b]) => rank(a) - rank(b))
     .map(([type, items]) => `### ${titles[type] ?? type}\n\n${items.map((item) => `- ${item}`).join("\n")}`)
     .join("\n\n");
 }

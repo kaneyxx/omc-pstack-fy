@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { createLab, destroyLab, explore, NAME, RELEASE } from "./fixtures/release/lab.mjs";
+import { createLab, destroyLab, explore, NAME, RELEASE, runOnce } from "./fixtures/release/lab.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 // The most faults on one path. CI runs 1. RELEASE_FAULT_DEPTH=2 is the deep run.
@@ -160,6 +160,14 @@ describe("release.mjs under faults", { concurrency: true }, () => {
     const { violations, runs } = await explore(lab, { claude: false, depth: 0 });
     assert.equal(runs, 1);
     assert.equal(violations.length, 0, told(violations));
+  });
+
+  test("lists the groups with a title first in the release notes, in title order", async () => {
+    const script = `echo tidy > TIDY.md; "$REAL_GIT" add -A; "$REAL_GIT" commit -q -m "chore: tidy"
+echo note > NOTES.md; "$REAL_GIT" add -A; "$REAL_GIT" commit -q -m "docs: a note"`;
+    const { status, output, after } = await runOnce(lab, { start: "feature", script, args: ["patch"] });
+    assert.equal(status, 0, output);
+    assert.deepEqual(after.releases[`${NAME}--v1.0.1`].notes.match(/^### .+$/gm), ["### Added", "### Docs", "### chore"]);
   });
 
   for (const { does, breaks, says, fault, depth = fault ? 1 : 0, edits } of MUTANTS) {
