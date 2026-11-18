@@ -170,6 +170,13 @@ echo note > NOTES.md; "$REAL_GIT" add -A; "$REAL_GIT" commit -q -m "docs: a note
     assert.deepEqual(after.releases[`${NAME}--v1.0.1`].notes.match(/^### .+$/gm), ["### Added", "### Docs", "### chore"]);
   });
 
+  test("--dry-run from a stale plugin/ names the build and changes nothing", async () => {
+    const { status, output, before, after } = await runOnce(lab, { start: "stale", args: ["patch", "--dry-run"] });
+    assert.deepEqual(after, before);
+    assert.notEqual(status, 0);
+    assert.match(output, /plugin\/ is stale\. Run `node tools\/build\.mjs`/);
+  });
+
   for (const { does, breaks, says, fault, depth = fault ? 1 : 0, edits } of MUTANTS) {
     test(`a release.mjs that ${does} breaks ${breaks}`, async () => {
       const only = fault && ((call, mode) => mode === fault.mode && fault.call.test(call));
