@@ -291,6 +291,10 @@ const MANUAL = {
     text: "The maintainer commits new plugin content on top, with plugin/ rebuilt.",
     script: `echo more >> overlays/SKILL.md; "$REAL_NODE" tools/build.mjs; "$REAL_GIT" add -A; "$REAL_GIT" commit -q -m "feat: more content"`,
   },
+  stale: {
+    text: "The maintainer commits new plugin content on top, without a rebuild of plugin/.",
+    script: `echo more >> overlays/SKILL.md; "$REAL_GIT" add -A; "$REAL_GIT" commit -q -m "feat: more content"`,
+  },
   land: {
     text: "Someone else's commit lands on origin/main.",
     script: `cd ../origin.git
@@ -381,6 +385,7 @@ const INSTRUCTIONS = [
 // Explores the worlds that faults can reach, starting one unpushed commit of new plugin content after the 1.0.0 release.
 // A node is a world plus the command the maintainer runs next. From each node the command runs once without a fault,
 // then once per call with that call failing, and once per kill point that changes the world.
+//   start   the MANUAL step that makes that commit. "stale" leaves plugin/ as the 1.0.0 release built it.
 //   source  the text of release.mjs to run. The default is the real file.
 //   depth   the most faults on one path. A fault in a what-if counts.
 //   only    narrows the faults to the calls and modes it accepts. Such a search kills at every kill point it accepts.
@@ -390,7 +395,7 @@ const INSTRUCTIONS = [
 // Before a --resume, someone else's commit may land on origin/main once. Two what-ifs branch off every unfinished release.
 // An unrelated commit on top must not stop the recovery, and new plugin content on top must not get a release of its own.
 // No what-if branches off a world that the maintainer reached by committing or stashing, or by the unrelated commit.
-export async function explore(lab, { source = readFileSync(RELEASE, "utf8"), depth = 1, only, until, claude = true, everyKill = Boolean(only) } = {}) {
+export async function explore(lab, { start = "feature", source = readFileSync(RELEASE, "utf8"), depth = 1, only, until, claude = true, everyKill = Boolean(only) } = {}) {
   const wanted = only ?? (() => true);
   const env = { ...lab.env, PATH: join(lab.root, claude ? "bin" : "bin-without-claude") };
   const worlds = new Map();
@@ -514,8 +519,8 @@ export async function explore(lab, { source = readFileSync(RELEASE, "utf8"), dep
     return found.filter(Boolean);
   }
 
-  const start = await manual(lab.base, "feature", { prepare: (dir) => writeFileSync(join(workOf(dir), "tools", "release.mjs"), source) });
-  let level = [discover(start.world, "release").node];
+  const first = await manual(lab.base, start, { prepare: (dir) => writeFileSync(join(workOf(dir), "tools", "release.mjs"), source) });
+  let level = [discover(first.world, "release").node];
   for (let faults = 0; level.length > 0; faults++) {
     const members = [];
     for (let batch = level; batch.length > 0; ) {

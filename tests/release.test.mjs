@@ -15,11 +15,10 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DEPTH = Number(process.env.RELEASE_FAULT_DEPTH ?? 1);
 const SOURCE = readFileSync(RELEASE, "utf8");
 
-const failedCall = ({ fault, calls }) => (fault?.mode === "fail" ? calls[fault.at - 1] : "");
-
 // What the current release.mjs is known to break. Each entry is a bug to fix in release.mjs, not a property to relax.
-// `depth` is the fewest faults on a path that reach it, a fault in a what-if included. The run fails when a violation
-// matches no entry, and when an entry that should show up at this depth does not.
+// `depth` is the fewest faults on a path that reach it, a fault in a what-if included. `start` names the search that
+// reaches it, "feature" by default. The run fails when a violation matches no entry, and when an entry that should show
+// up in that search at this depth does not.
 const FINDINGS = [
   {
     id: "F1",
@@ -28,10 +27,11 @@ const FINDINGS = [
     is: ({ property, steps }) => property === "P5" && steps.some((step, i) => step.run === "commit" && /Commit or stash first\./.test(steps[i - 1].output)) && /nothing to release/.test(steps.at(-1).output),
   },
   {
-    id: "F4",
-    depth: 2,
-    title: "When `git status --porcelain plugin` fails after preflight rebuilt a stale plugin/, the rebuilt plugin/ stays in the tree.",
-    is: ({ property, steps }) => property === "P4" && failedCall(steps.at(-1)) === "git status --porcelain plugin",
+    id: "F5",
+    depth: 1,
+    start: "stale",
+    title: "When a read in unfinished() fails, preflight says the finished release is not finished, and the recovery from a stale plugin/ needs a fourth run.",
+    is: ({ property, what, steps }) => property === "P5" && /needs \d+ runs/.test(what) && steps.some(({ fault, output }) => fault?.mode === "fail" && /release is not finished\./.test(output)),
   },
 ];
 const known = (violation) => FINDINGS.some(({ is }) => is(violation));
@@ -140,6 +140,16 @@ function mutate(edits) {
 
 const told = (violations) => violations.map(({ text }) => text).join("\n\n");
 
+function judge(t, violations, start) {
+  const surprises = violations.filter((violation) => !known(violation));
+  assert.equal(surprises.length, 0, `release.mjs breaks a promise in a way that is not a recorded finding.\n\n${told(surprises)}`);
+  for (const { id, title, is } of FINDINGS.filter((finding) => finding.depth <= DEPTH && (finding.start ?? "feature") === start)) {
+    const instances = violations.filter(is).sort((a, b) => a.steps.length - b.steps.length);
+    assert.notEqual(instances.length, 0, `${id} no longer shows up. If release.mjs fixed it, delete ${id} from FINDINGS here and from .claude/skills/verify-release/SKILL.md.`);
+    t.diagnostic(`${id}, a known bug in release.mjs, on ${instances.length} schedules. ${title}\n${instances[0].text}`);
+  }
+}
+
 describe("release.mjs under faults", { concurrency: true }, () => {
   let lab;
   before(async () => {
@@ -147,21 +157,18 @@ describe("release.mjs under faults", { concurrency: true }, () => {
   });
   after(() => lab && destroyLab(lab));
 
-  test("keeps P1 to P5 on every explored schedule, apart from the recorded findings", async (t) => {
-    assert.ok(Number.isInteger(DEPTH) && DEPTH >= 1, "RELEASE_FAULT_DEPTH must be a whole number of faults, 1 or more");
-    const { violations, ...counts } = await explore(lab, { depth: DEPTH, everyKill: process.env.RELEASE_FAULT_EVERY_KILL === "1" });
-    t.diagnostic(
-      `${counts.points} fault points, with ${DEPTH === 1 ? "one fault" : `at most ${DEPTH} faults`} on a path. ${counts.same} are kill points that leave the same world as the one before, so they are not run. ` +
-        `${counts.runs} runs of release.mjs, ${counts.worlds} distinct worlds, and the longest recovery takes ${counts.longest} runs.`,
-    );
-    const surprises = violations.filter((violation) => !known(violation));
-    assert.equal(surprises.length, 0, `release.mjs breaks a promise in a way that is not a recorded finding.\n\n${told(surprises)}`);
-    for (const { id, title, is } of FINDINGS.filter(({ depth }) => depth <= DEPTH)) {
-      const instances = violations.filter(is).sort((a, b) => a.steps.length - b.steps.length);
-      assert.notEqual(instances.length, 0, `${id} no longer shows up. If release.mjs fixed it, delete ${id} from FINDINGS here and from .claude/skills/verify-release/SKILL.md.`);
-      t.diagnostic(`${id}, a known bug in release.mjs, on ${instances.length} schedules. ${title}\n${instances[0].text}`);
-    }
-  });
+  // The first search starts with plugin/ up to date. Only the second reaches preflight's answer to a stale plugin/.
+  for (const [start, where] of [["feature", "on every explored schedule"], ["stale", "from a stale plugin/"]]) {
+    test(`keeps P1 to P5 ${where}, apart from the recorded findings`, async (t) => {
+      assert.ok(Number.isInteger(DEPTH) && DEPTH >= 1, "RELEASE_FAULT_DEPTH must be a whole number of faults, 1 or more");
+      const { violations, ...counts } = await explore(lab, { start, depth: DEPTH, everyKill: process.env.RELEASE_FAULT_EVERY_KILL === "1" });
+      t.diagnostic(
+        `${counts.points} fault points, with ${DEPTH === 1 ? "one fault" : `at most ${DEPTH} faults`} on a path. ${counts.same} are kill points that leave the same world as the one before, so they are not run. ` +
+          `${counts.runs} runs of release.mjs, ${counts.worlds} distinct worlds, and the longest recovery takes ${counts.longest} runs.`,
+      );
+      judge(t, violations, start);
+    });
+  }
 
   test("the runbook in SKILL.md finishes the release from where F1 stops", async () => {
     for (const fault of [{ call: /^node tools\/build\.mjs --release/, mode: "kill-after" }, { call: /^git add /, mode: "kill-before" }]) {

@@ -45,8 +45,8 @@ function parseArgs(argv) {
   return options;
 }
 
-function run(command, args, { allowFail = false } = {}) {
-  const result = spawnSync(command, args, { cwd: ROOT, encoding: "utf8" });
+function run(command, args, { allowFail = false, cwd = ROOT } = {}) {
+  const result = spawnSync(command, args, { cwd, encoding: "utf8" });
   if (result.status !== 0 && !allowFail) throw new Error(`${command} ${args.join(" ")} failed\n${result.stdout ?? ""}${result.stderr ?? result.error}`);
   return result;
 }
@@ -98,8 +98,9 @@ function unfinished(name) {
   return tagged && merged && published ? null : { version: lock.version, tag, commit };
 }
 
-// Every check that CI runs, plus a clean, current main, so the release commit holds only the release.
-function preflight(name, version, { publish }) {
+// Every check that CI runs, plus a clean, current main, so the release commit holds only the release. Whether plugin/ is
+// stale is learned by a build in `dir`, a worktree of HEAD, so no failure after that build can leave this tree changed.
+function preflight(name, version, dir, { publish }) {
   if (git("rev-parse", "--abbrev-ref", "HEAD") !== "main") throw new Error("release from main");
   if (git("status", "--porcelain")) throw new Error("the working tree is not clean. Commit or stash first.");
   run("git", ["fetch", "-q", "origin", "main"]);
@@ -112,8 +113,12 @@ function preflight(name, version, { publish }) {
   if (publish && !ok("gh", ["auth", "status"])) throw new Error("gh is not signed in. Run `gh auth login` first.");
   run("node", ["tools/sync.mjs", "--verify"]);
   run("node", ["--test", ...git("ls-files", "tests/*.test.mjs").split("\n").filter(Boolean)]);
-  run("node", ["tools/build.mjs"]);
-  if (git("status", "--porcelain", "plugin")) throw new Error("plugin/ was stale. Commit the rebuilt plugin/ first, then release.");
+  run("node", ["tools/build.mjs"], { cwd: dir });
+  if (run("git", ["status", "--porcelain", "plugin"], { cwd: dir }).stdout.trim()) {
+    // The rebuild of this tree is the last call, so the message always follows it.
+    run("node", ["tools/build.mjs"]);
+    throw new Error("plugin/ was stale. Commit the rebuilt plugin/ first, then release.");
+  }
   if (ok("node", ["tools/build.mjs", "--check"])) throw new Error("nothing to release: plugin content matches the last release.");
   return tag;
 }
@@ -185,7 +190,15 @@ function publish(name, version, commit) {
 function release(options, name) {
   const released = committedLock().version;
   const version = nextVersion(options.bump, released);
-  const tag = preflight(name, version, { publish: !options.noPublish && !options.dryRun });
+  const dir = mkdtempSync(join(tmpdir(), "omc-pstack-fy-release-"));
+  let tag;
+  try {
+    git("worktree", "add", "-q", "--detach", dir);
+    tag = preflight(name, version, dir, { publish: !options.noPublish && !options.dryRun });
+  } finally {
+    run("git", ["worktree", "remove", "--force", dir], { allowFail: true });
+    rmSync(dir, { recursive: true, force: true });
+  }
   const { pstack: pin, omc } = readJson(join(ROOT, "upstream.json"));
   const upstreamVersion = readJson(join(ROOT, "vendor", "pstack", "plugin.json")).version;
   const notes = notesFor(options, released ? tagFor(name, released) : undefined);
