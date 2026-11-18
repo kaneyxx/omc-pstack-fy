@@ -14,27 +14,27 @@ Claude Code installs this plugin from `main` and from the release tag, so a rele
 | P1 | `origin/main` never holds a commit `release: omc-pstack-fy vX` without the tag `omc-pstack-fy--vX` on that commit. Origin never holds that tag while `origin/main` lacks its commit. | Users on `main` get a version with no tag, or the tag points at code `main` does not have. | `publish()`, the `--atomic` push |
 | P2 | Origin's tag `omc-pstack-fy--vX` points at the commit whose subject is `release: omc-pstack-fy vX` and whose `tools/version-lock.json` says X. A GitHub release for X exists only when origin has that tag. | The tag installs content that was never released as X. | `unfinished()`, the tag checks in `publish()`, `--verify-tag` |
 | P3 | No release lands on top of a release that still lacks its tag, its push, or its GitHub release. | The older version is never tagged or published, and `--resume` no longer finds it. | `preflight()` with `unfinished()` |
-| P4 | When `node tools/release.mjs patch` fails on its own before the release commit, `HEAD` and the working tree are as they were. | A half bump stays in the tree, and the next run refuses to start. | the `catch` in `release()`, and the worktree that preflight builds in |
+| P4 | When `node tools/release.mjs patch` fails on its own before the release commit, `HEAD` and the working tree are as they were. | A half bump stays in the tree, and the next run refuses to start. | the worktree in `release()`, where preflight's build, the bump, and the release commit happen |
 | P5 | After a fault at any point, doing what `release.mjs` says next ends with the tag, `main`, and the GitHub release present and consistent, within 3 runs of `release.mjs`. | The maintainer holds a half release, and no command finishes it. | the `--resume` branch of `main()`, `publish()`, and every message that names a next step |
 
 P4 has one exception that `release.mjs` names itself. Preflight rebuilds a stale `plugin/`, leaves it in the tree, and says `Commit the rebuilt plugin/ first, then release.`
 
 ## See whether a change touches the verified code
 
-The check covers these files as they were at the sync commit `362ad25`.
+The check covers these files in the version whose blob hashes this section records. `git hash-object` prints a file's blob hash, which depends only on the file's bytes, so it stays the same when a rebase merge rewrites commit hashes.
 
 | File | Covered | Not covered |
 | --- | --- | --- |
-| `tools/release.mjs` | `committedLock()`, `remoteTagCommit()`, `unfinished()`, `preflight()`, `publish()`, `release()` with its `catch`, and the `--resume` branch of `main()`, driven by `patch` and by `--resume` | `--dry-run`, `--no-publish`, `--notes`, `--trailer`, `minor`, `major`, an explicit `X.Y.Z`, and what `notesFor()` writes |
+| `tools/release.mjs` | `committedLock()`, `remoteTagCommit()`, `unfinished()`, `preflight()`, `publish()`, `release()` with its worktree, and the `--resume` branch of `main()`, driven by `patch` and by `--resume` | `--dry-run`, `--no-publish`, `--notes`, `--trailer`, `minor`, `major`, an explicit `X.Y.Z`, and what `notesFor()` writes |
 | `tools/build.mjs` | `resolveVersion()`, `checkMarketplace()`, the version line of `checkPackage()`, and the `--check` comparison of `plugin/` with what the build generates. `tests/fixtures/release/build.mjs` stands in for them. | Everything else the build does |
 
-Any edit to `tools/release.mjs` or `tools/build.mjs` since the sync commit means you rerun the check and recheck this file, even when the edit looks unrelated to the tables above. This command lists those edits, uncommitted ones included.
+Any edit to `tools/release.mjs` or `tools/build.mjs` since that version means you rerun the check and recheck this file, even when the edit looks unrelated to the tables above. This command compares the files on disk, uncommitted edits included, with the recorded hashes.
 
 ```bash
-git diff --stat 362ad25 -- tools/release.mjs tools/build.mjs
+git hash-object tools/release.mjs tools/build.mjs | diff - <(printf '%s\n' eb7f36607d461621cebe87a9a80c9b50c80a172c 5726e19cc2e7f1c405d4729c61fd41958f0a98e4)
 ```
 
-No output means the check still describes the code. Any output means the covered code may have moved after the last confirmation, so run the check and then follow [Move the sync commit](#move-the-sync-commit).
+No output means the check still describes the code. A `1c1` means `tools/release.mjs` changed, a `2c2` means `tools/build.mjs` changed, and `1,2c1,2` means both changed. Then run the check and follow [Move the sync point](#move-the-sync-point).
 
 ## Run the check
 
@@ -42,9 +42,9 @@ No output means the check still describes the code. Any output means the covered
 node --test tests/release.test.mjs
 ```
 
-CI runs this command with the rest of `tests/`. It allows one fault on each path and takes about 40 seconds on an 8-core Mac.
+CI runs this command with the rest of `tests/`. It allows one fault on each path and takes about 35 seconds on an 8-core Mac.
 
-After any change to `tools/release.mjs`, also run the deep search, which allows two faults on each path. It takes about 3.5 minutes.
+After any change to `tools/release.mjs`, also run the deep search, which allows two faults on each path. It takes about 2 minutes.
 
 ```bash
 RELEASE_FAULT_DEPTH=2 node --test tests/release.test.mjs
@@ -60,24 +60,14 @@ A passing run prints a line of counts for each of the two searches, then each kn
 | --- | --- | --- |
 | `FixtureError`, with text such as `release.mjs made a call the fixture does not model`, `the planned fault ... is not what happened`, `a fixture step failed`, or `a what-if step failed` | The fixture cannot model this run. It is out of date with `release.mjs`, or `release.mjs` made different calls on the same input, or a step the fixture takes on its own failed. `a fixture step failed` can also come from `release.mjs`, when it leaves a repository the fixture cannot read, such as one with no local `main`. | Read the run that came before the error. If `release.mjs` left the repository that way, treat it as a counterexample. Otherwise fix the fixture under `tests/fixtures/release/`. A new `gh` or `claude` call needs a case in `fakes.mjs` or `shim.sh`. A run that changes between two tries on the same input breaks the fault plan, so find what varies. |
 | `release.mjs breaks a promise in a way that is not a recorded finding`, then `P1` to `P5` and numbered steps | The search found a counterexample. Two kinds of P5 name themselves. `release.mjs hangs` means it did not exit within 60 seconds. `the step that the message names cannot be done` means the maintainer did what the output said, and that step failed, as `git commit` does on a clean tree. | Read the steps against `tools/release.mjs`. If a real maintainer, real git, and real GitHub can take each step, it is a bug. Fix `release.mjs`, or report it and add it to `FINDINGS`. If a step cannot happen outside the fixture, fix the fixture and say why in the commit. Never edit a promise to make the run pass. |
-| `F1 no longer shows up`, or another finding id | `release.mjs` no longer has that bug, or the search no longer reaches it. | Read the diff of `tools/release.mjs`. If the bug is fixed, delete the finding from `FINDINGS` in `tests/release.test.mjs` and from this file. If not, the search lost a path, so fix the search. |
+| `F5 no longer shows up`, or another finding id | `release.mjs` no longer has that bug, or the search no longer reaches it. | Read the diff of `tools/release.mjs`. If the bug is fixed, delete the finding from `FINDINGS` in `tests/release.test.mjs` and from this file. If not, the search lost a path, so fix the search. |
 | `the search did not catch the mutant` | The check for that promise can no longer fail, or the mutant's faults no longer lead to the break. | For one run, call `explore()` in the mutant loop of `tests/release.test.mjs` with `depth: 2` and without `only` and `until`. If that search catches the mutant, update its `fault` or `depth`. If not, the check is broken, so fix it before you trust a pass. |
 | `tools/release.mjs no longer has exactly one ...` | The line a mutant rewrites has changed. | Rewrite that mutant's `edits` against the new line. |
-| `the runbook in SKILL.md finishes the release from where F1 stops` fails | The runbook step for F1 no longer works, or the run no longer reaches F1. | Read the failed assertion. Fix the runbook in this file and the steps in the test together. |
 | `answers like tools/build.mjs at every step of a release` fails | The stand-in build and the real build disagree. | Change `tests/fixtures/release/build.mjs` to match `tools/build.mjs`, then run the check again. |
 
 ## Known findings
 
-The current `release.mjs` breaks its promises in two ways. The check passes while these stay as recorded. Each one is a bug to fix in `release.mjs`. The depth is the fewest faults on a path in the search that reach the finding. A run at a lower depth does not show it.
-
-**F1. `Commit or stash first.` leads to a dead end.** It breaks P5. Depth 1.
-
-1. The maintainer runs `node tools/release.mjs patch`. The process is killed after `node tools/build.mjs --release` and before `git commit`. A crash or Ctrl-C does the same.
-2. The maintainer runs `node tools/release.mjs patch`. It stops with `the working tree is not clean. Commit or stash first.`
-3. The maintainer commits.
-4. `node tools/release.mjs patch` stops with `nothing to release: plugin content matches the last release.` `node tools/release.mjs --resume` prints `nothing to resume: the last release is tagged, pushed, and published.`
-
-`HEAD` now holds a `tools/version-lock.json` for the new version with no release commit, no tag, and no GitHub release, and neither command moves on. `git stash` in step 3 lets the release finish and leaves the half bump in the stash. The step that works is `git reset --hard HEAD`, which the message does not name. F1 is likely. The real `node tools/build.mjs --check` takes seconds, and a Ctrl-C during it lands in this window.
+The current `release.mjs` breaks its promises in one way. The check passes while it stays as recorded. It is a bug to fix in `release.mjs`. The depth is the fewest faults on a path in the search that reach the finding. A run at a lower depth does not show it.
 
 **F5. A failed read in `unfinished()` calls a finished release unfinished.** It breaks P5. Depth 1, in the search from a stale `plugin/`.
 
@@ -92,12 +82,13 @@ The recovery takes 4 runs, one more than P5 allows, because the `--resume` in st
 
 ## When a real release stops partway
 
-These steps come from the runs above. Use them until F1 and F5 are fixed.
+These steps come from the runs above.
 
-- **No commit `release: omc-pstack-fy vX` exists, and `git status` shows changes.** Check that the changes are only the bump, which is the three version fields, `tools/version-lock.json`, `plugin/.claude-plugin/plugin.json`, and `CHANGELOG.md`. Then run `git reset --hard HEAD` and release again. Do not commit the changes.
-- **The bump is already committed, in a commit that is not `release: omc-pstack-fy vX`.** This is where F1 leaves you after its step 3. `node tools/release.mjs patch` says `nothing to release`, and `git show --stat HEAD` lists `tools/version-lock.json`. Check that the commit holds only the bump files the bullet above names. If it holds other work too, stop, because the next step drops it. If you have not pushed that commit, run `git reset --hard HEAD~1`, then `node tools/release.mjs patch`. The test `the runbook in SKILL.md finishes the release from where F1 stops` runs these steps from both kill points that lead to F1. No run covers a pushed half bump.
+- **No commit `release: omc-pstack-fy vX` exists.** Run `node tools/release.mjs patch` again, and do what it says. A run that stops before the release commit leaves the tree as it found it, apart from a stale `plugin/` that it rebuilds and names.
 - **Preflight says the last release is not finished, and `--resume` then says there is nothing to resume.** A read failed in the first run. This is F5. Run `node tools/release.mjs patch` again.
 - **The release commit exists.** Run `node tools/release.mjs --resume`. If git rejects the push because `origin/main` moved, run `git pull --rebase`, then `--resume` again.
+
+A killed run can leave a worktree named `omc-pstack-fy-release-` and a suffix in the system temp folder. `git worktree list` shows it. It does not block a later run. `git worktree remove -f -f <path>` deletes it, also when a kill during `git worktree add` left it locked.
 
 ## What a pass covers
 
@@ -119,7 +110,7 @@ A pass does not cover these.
 - Two copies of `release.mjs` running at once, and a tag or GitHub release deleted by hand.
 - Real GitHub and the real `claude`. The fakes follow `gh release view`, `gh release create --verify-tag`, `gh auth status`, and `claude plugin tag` as Claude Code 2.1.327 behaves. `node tools/sync.mjs --verify` and the test suite always pass in the fixture.
 
-Two shortcuts keep the run short. Two worlds count as one state when they have the same refs, the same commits on `main`, the same `git status` with the same changed file contents, and the same GitHub releases. A kill point is skipped when the world is byte for byte the same as at the kill point before it. To check the second shortcut, set `RELEASE_FAULT_EVERY_KILL=1`, which runs every kill point for real. That run must pass and print the same number of distinct worlds.
+Two shortcuts keep the run short. Two worlds count as one state when they have the same refs, the same commits on `main`, the same `git status` with the same changed file contents, and the same GitHub releases. A worktree that a killed run leaves behind is not part of that state. A kill point is skipped when the world is byte for byte the same as at the kill point before it. To check the second shortcut, set `RELEASE_FAULT_EVERY_KILL=1`, which runs every kill point for real. That run must pass and print the same number of distinct worlds.
 
 The search uses half of the machine's cores, because the other test files run beside it and some of them time their children. That is not enough when three full suites run at once on an 8-core Mac. Then the `orphan` test in `tests/pstack-ask.test.mjs` goes past its 5 second limit. One suite at a time passes.
 
@@ -128,7 +119,7 @@ The search uses half of the machine's cores, because the other test files run be
 1. For a new or changed message that tells the maintainer what to do, add or change its row in `INSTRUCTIONS` in `tests/fixtures/release/lab.mjs`.
 2. For a new `gh` or `claude` call, model it in `tests/fixtures/release/fakes.mjs`.
 3. For a new promise, add its check next to `invariants()` or `rollback()` in `lab.mjs`, and add a mutant to `MUTANTS` in `tests/release.test.mjs` that breaks it. Give the mutant `says` when it targets one clause of a promise.
-4. For a fixed finding, delete it from `FINDINGS` and from this file. For F1, also delete the runbook step and its test.
+4. For a fixed finding, delete it from `FINDINGS` and from this file.
 5. Run both commands under [Run the check](#run-the-check).
 
 ## Mutants
@@ -144,7 +135,7 @@ Each promise, and each clause the table names, was seen to fail on a broken copy
 | leaves `tools/version-lock.json` out of the release commit | P2 | the tagged commit's lock names another version | 0 |
 | deletes origin's tag after it creates the GitHub release | P2 | a GitHub release with no tag | 0 |
 | skips the `unfinished()` check in `preflight()` | P3 | | 1 |
-| drops `git reset --hard HEAD` from the `catch` | P4 | | 1 |
+| writes the bump into this tree instead of the worktree | P4 | | 1 |
 | leaves a local tag on a commit that a rebase replaced | P5 | | 1 |
 | says `Commit or stash first.` on a clean tree when a local tag exists | P5 | the named step cannot be done | 1 |
 | stops after each of the tag, the push, and the GitHub release | P5 | the recovery needs more than 3 runs | 0 |
@@ -152,11 +143,11 @@ Each promise, and each clause the table names, was seen to fail on a broken copy
 
 The third mutant is reached only through the unrelated-commit what-if with a second fault after it. It guards the rule that faults land on every state, what-ifs included.
 
-## Move the sync commit
+## Move the sync point
 
-The sync commit is `362ad25`. Move it only after you confirm that the check describes the code at the new commit.
+Move the sync point only after you confirm that the check describes the code on disk.
 
-1. Read `git diff 362ad25 -- tools/release.mjs tools/build.mjs`.
+1. Read what changed. `git show` prints the recorded version of a file from its hash, so `git show <hash> | diff - tools/release.mjs` shows the edits since then.
 2. Update the tables in this file where a covered function was added, renamed, or removed.
 3. Run both commands under [Run the check](#run-the-check), and `RELEASE_FAULT_EVERY_KILL=1 node --test tests/release.test.mjs`.
-4. Replace `362ad25` in this file with the new commit.
+4. Replace the two hashes in the command under [See whether a change touches the verified code](#see-whether-a-change-touches-the-verified-code) with what `git hash-object tools/release.mjs tools/build.mjs` prints.

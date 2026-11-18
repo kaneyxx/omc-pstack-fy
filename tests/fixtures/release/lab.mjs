@@ -286,7 +286,6 @@ const MANUAL = {
   commit: { text: "The maintainer commits what `git status` shows, as the message says.", script: `"$REAL_GIT" add -A; "$REAL_GIT" commit -q -m "chore: commit before the release"` },
   stash: { text: "The maintainer runs `git stash`, as the message says.", script: `"$REAL_GIT" stash -q` },
   note: { text: "The maintainer commits an unrelated file on top.", script: `echo note > NOTES.md; "$REAL_GIT" add -A; "$REAL_GIT" commit -q -m "docs: a note"` },
-  undo: { text: "The maintainer runs `git reset --hard HEAD~1`, as the runbook in SKILL.md says.", script: `"$REAL_GIT" reset -q --hard HEAD~1` },
   feature: {
     text: "The maintainer commits new plugin content on top, with plugin/ rebuilt.",
     script: `echo more >> overlays/SKILL.md; "$REAL_NODE" tools/build.mjs; "$REAL_GIT" add -A; "$REAL_GIT" commit -q -m "feat: more content"`,
@@ -530,32 +529,6 @@ export async function explore(lab, { start = "feature", source = readFileSync(RE
     level = (await Promise.all(members.flatMap((node) => node.plans.map((fault) => attempt(node, fault))))).flatMap(({ found }) => found);
   }
   return report(nodes, edges, { ...tally, worlds: worlds.size, nodes: nodes.size });
-}
-
-// Takes the steps in order from the start world, where each step is a MANUAL name or a command with an optional fault.
-// The fault names its call by a pattern, so the steps stay true when release.mjs adds a call before it. Returns the last
-// line each command printed, and what the target release still lacks at the end.
-export async function replay(lab, steps) {
-  const dir = fork(lab, lab.base);
-  const said = [];
-  for (const step of ["feature", ...steps]) {
-    resetScratch(dir);
-    if (MANUAL[step]) {
-      await sh(lab, dir, MANUAL[step].script);
-      continue;
-    }
-    const args = COMMANDS[step.run];
-    let fault = null;
-    if (step.fault) {
-      const { calls } = await invoke(lab, lab.env, fork(lab, { dir }), args, null);
-      const at = calls.findIndex((call) => step.fault.call.test(call)) + 1;
-      if (at === 0) throw new FixtureError(`no call of \`release.mjs ${args.join(" ")}\` matches ${step.fault.call}`);
-      fault = { at, mode: step.fault.mode };
-    }
-    const { output } = await invoke(lab, lab.env, dir, args, fault);
-    said.push(output.trim().split("\n").at(-1));
-  }
-  return { said, missing: missing(await observe(lab, dir)) };
 }
 
 // Turns the explored graph into violations, each with the shortest run of steps that reaches it.
