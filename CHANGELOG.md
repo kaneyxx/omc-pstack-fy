@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.7.2] - 2026-11-23
+
+Built from upstream pstack v0.15.46 (https://github.com/cursor/plugins/tree/7a58391), checked against oh-my-claudecode v5.8.4 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/b93059f).
+
+### Fixed
+
+- `/omc-pstack-fy:statechart` runs on native Windows, from upstream pstack v0.15.46. It stops TLC's process group without `/bin/sh`, and it reads TLC's `\r\n` line ends. Before, a spec with a broken rule could stop on Windows with "TLC exited 12 ... but its output names no rule that broke". On native Windows, run `node --disable-warning=ExperimentalWarning <skill dir>/scripts/statechart.ts` with Node 22.18 to 22.x, or Node 23.6 or later.
+
+### Changed
+
+- Upstream pstack v0.15.44 and v0.15.45 moved its Gemini panel seat to `gemini-4-neon-xhigh`. This plugin's default panels stay `fable high, opus high, sonnet high`, and an external `gemini:` entry you chose keeps its effort. You do not need to rerun `/omc-pstack-fy:setup-pstack`.
+
+### Build
+
+- `tools/release.mjs` stops when a read of a tag, `origin/main`, or a GitHub release fails. It builds and commits the version bump in a worktree, lists untitled note groups after the titled ones, and leaves a stale `plugin/` alone under `--dry-run`. `.claude/skills/verify-release/` checks the script under injected faults. None of this ships in the plugin.
+
 ## [1.7.1] - 2026-11-17
 
 Built from upstream pstack v0.15.43 (https://github.com/cursor/plugins/tree/e1cc031), checked against oh-my-claudecode v5.8.4 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/b93059f).
