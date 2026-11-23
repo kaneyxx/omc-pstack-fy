@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.7.3] - 2026-11-23
+
+Built from upstream pstack v0.15.46 (https://github.com/cursor/plugins/tree/7a58391), checked against oh-my-claudecode v5.8.4 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/b93059f).
+
+### Changed
+
+- `/omc-pstack-fy:fy-mode` sends requirements, plans, and the run of a plan to oh-my-claudecode (OMC) when OMC is installed and enabled. Before, it listed OMC's `deep-interview`, `plan`, and `ralplan` with no trigger, so an agent could skip them.
+- fy-mode checks the project once per request, before any code, plan, or playbook. A project passes when a spec in `.omc/specs/`, a plan in `.omc/plans/`, a README, a `CLAUDE.md`, or a design doc states its goal and its architecture. When either is missing, fy-mode runs `oh-my-claudecode:deep-interview` first. A new project lands there.
+- A change to one or two existing files with an obvious approach goes ahead without the interview. The check is skipped for a question, for scholarly prose, and when you started an OMC workflow yourself. You can tell fy-mode to skip the interview. An unattended run skips it and labels its assumed goal and architecture as guesses.
+- Work that needs more than one PR gets `oh-my-claudecode:ralplan` first, in place of poteto-mode's Multi-phase plan playbook. An OMC workflow runs a spec or a plan. Work that fits one PR still runs its poteto-mode playbook in the chat. `/omc-pstack-fy:poteto-mode` on its own is unchanged.
+
+### Maintenance
+
+- CI runs `actions/checkout` and `actions/setup-node` v7 on Node 24.
+
 ## [1.7.2] - 2026-11-23
 
 Built from upstream pstack v0.15.46 (https://github.com/cursor/plugins/tree/7a58391), checked against oh-my-claudecode v5.8.4 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/b93059f).
