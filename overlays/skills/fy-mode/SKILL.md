@@ -1,6 +1,6 @@
 ---
 name: fy-mode
-description: "fy's working style on top of poteto-mode: action-first replies built for limited working memory, in the user's own Chinese script when they write Chinese; options before big or one-way choices; an independent review before every push; each step routed by what it produces, with academic writing going to the research skills and research code held to reproducibility rules. Use for /fy-mode or requests to work in fy's style."
+description: "fy's working style on top of poteto-mode: action-first replies built for limited working memory, in the user's own Chinese script when they write Chinese; options before big or one-way choices; an independent review before every push; each step routed by what it produces, with academic writing going to the research skills and research code held to reproducibility rules; with oh-my-claudecode installed and enabled, its deep-interview before code work in a project that states no goal or states no architecture, a new project included, and plans and their runs under oh-my-claudecode. Use for /fy-mode or requests to work in fy's style."
 disable-model-invocation: true
 ---
 
@@ -26,14 +26,30 @@ Academic work mixes code and writing, so route each step by its output, not by t
 
 ## With oh-my-claudecode
 
-When oh-my-claudecode (OMC) is installed and enabled, route by need. Confirm each skill name in the session's skill list.
+When oh-my-claudecode (OMC) is installed and enabled, OMC owns requirements, plans, and the run of a plan, and poteto-mode writes the code. Confirm each skill name in the session's skill list.
 
-- **Requirements.** `oh-my-claudecode:deep-interview`.
-- **Plans.** `oh-my-claudecode:plan` or `oh-my-claudecode:ralplan`.
-- **A multi-day, many-PR program.** `oh-my-claudecode:ultragoal`, `oh-my-claudecode:team`, or `oh-my-claudecode:ralph`. OMC commands the program and keeps its state. Each code unit is handed to poteto-mode as a `omc-pstack-fy:poteto-agent` delegate with the playbook that fits, never to OMC's `executor`. The delegate runs only the playbook's code steps, skips commit, push, and Opening a PR, and returns its diff and evidence to OMC's lead.
+**Check the project before any code, plan, or playbook.** Run this check once per user request. Skip it in these cases:
+
+- The request changes no file, such as a question or an investigation.
+- The request is scholarly prose only.
+- The user started an OMC workflow by name or keyword, or one is already running. OMC's own gates apply there.
+- You are a delegate.
+
+1. Look for a written statement of the project's goal and of its architecture. A spec in `.omc/specs/` or a plan in `.omc/plans/` for this project passes the check. Otherwise a README, a `CLAUDE.md`, or a design doc must state both. Code layout and a package manifest do not count.
+2. When the goal is missing, or the architecture is missing, run `oh-my-claudecode:deep-interview` first, with the user's request as its argument. A new project that has none of these lands here.
+3. Write no code and start no playbook until the interview has written its spec and the user has picked how to continue. Then offer to write the goal and the architecture into the README or `CLAUDE.md`, because `.omc/` is local and often git-ignored, so a fresh clone fails this check again.
+4. One kind of change goes ahead without the interview. It touches one or two existing files and has an obvious approach, and a bug fix of that size counts. End the reply by saying whether the goal or the architecture is missing, and offer the interview as the next action. Make that offer once per session.
+5. Skip the interview when the user says to skip it, or under an autonomy grant with nobody to answer it. Then route the request as if the check passed, and state in the reply the goal and the architecture you assumed, each labeled a guess. A skip lasts for the session.
+
+**Then route by need.**
+
+- **Requirements.** `oh-my-claudecode:deep-interview`, by the check above, and whenever you cannot state the request's goal and its done-check. The check's skips and its item 5 apply here too.
+- **Plans.** Work that needs more than one PR gets a plan before any code. Use `oh-my-claudecode:ralplan`, or `oh-my-claudecode:plan` when the user names it. They replace poteto-mode's Multi-phase plan playbook.
+- **Running a spec or a plan.** An OMC workflow runs it, never a bare playbook in this chat. poteto-mode's Autopilot-full and Autopilot-stack playbooks run only when the user names them. `oh-my-claudecode:autopilot`, `oh-my-claudecode:ralph`, and `oh-my-claudecode:team` run a spec or a plan, and `oh-my-claudecode:ultragoal` runs a multi-day, many-PR program. The user picks which. OMC commands the run and keeps its state. Each code unit is handed to poteto-mode as a `omc-pstack-fy:poteto-agent` delegate with the playbook that fits, never to OMC's `executor`. The delegate runs only the playbook's code steps, skips commit, push, and Opening a PR, and returns its diff and evidence to OMC's lead.
+- **One code task** is work that fits one PR and is not the run of a spec or a plan. In a project that passes the check, it runs its poteto-mode playbook in this chat.
 - **OMC's mandatory steps** run with the pstack equivalents. Its ai-slop-cleaner step runs the **deslop** skill, and only its final code review gate adds the **interrogate** skill beside its `code-reviewer`. OMC's verifier stays.
 - **Knowledge.** `oh-my-claudecode:wiki`, the notepad, and project memory.
-- **Code units** run poteto-mode's playbooks. Scholarly prose keeps the routing above.
+- **Scholarly prose** keeps the routing above.
 - **The bridge.** omc-pstack-fy's SessionStart hook carries these rules into OMC's own workflows while OMC is installed and enabled. OMC keeps every keyword and workflow.
 
 ## Research code
