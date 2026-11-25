@@ -5,7 +5,7 @@ description: Configure which models pstack uses per role and at what reasoning b
 
 # Setup pstack
 
-Write `~/.claude/rules/omc-pstack-fy-models.md`, a rule file that sets pstack's model and effort per role. Claude Code loads every rule file in `~/.claude/rules/` when a session starts, so every pstack skill sees it without being told where it lives.
+Write `~/.claude/rules/omc-pstack-fy-models.md`, a rule file that sets pstack's model and effort per role. Claude Code loads every rule file in `~/.claude/rules/` when a session starts, so every pstack skill sees it without being told where it lives. Step 10 offers a second rule file, `~/.claude/rules/omc-pstack-fy-delegates.md`, for people who use `/fy-mode`.
 
 ## Steps
 
@@ -77,7 +77,7 @@ interrogate reviewers: fable high, opus high, sonnet high
 
 ### 6. Confirm
 
-Tell the user the rule was written and that it applies to new sessions, because Claude Code loads rule files when a session starts. Re-running this skill updates it.
+Tell the user the rule was written and that it applies to new sessions, because Claude Code loads rule files when a session starts. Re-running this skill updates it. Then run step 10 and come back to step 7, because steps 7 and 8 can each start another skill that takes many turns. Step 10 runs once.
 
 ### 7. Offer a verification skill (optional)
 
@@ -90,3 +90,23 @@ Check whether the project already has a formal verification skill (a project ski
 ### 9. The oh-my-claudecode bridge
 
 Nothing to set up. While oh-my-claudecode is installed and enabled, omc-pstack-fy's SessionStart hook adds the bridge that hands its workflows' code units and deslop step to omc-pstack-fy and adds interrogate to their final code review, and disabling omc-pstack-fy removes it, so write no global config for it.
+
+### 10. Offer the delegate rule (optional)
+
+fy-mode's rules for delegates reach an `omc-pstack-fy:poteto-agent` delegate only when its brief names fy-mode's **For delegates** section. The rule file `~/.claude/rules/omc-pstack-fy-delegates.md` covers a brief that leaves the section out. An `omc-pstack-fy:poteto-agent` delegate loads the rule files its session loads, so it reads this one. The rule changes how every delegate works, and only people who use `/fy-mode` want that. So offer it, and write it only on a yes. Ask and report in the language from step 0. The rule file stays in English.
+
+Check for the file the way step 2 checks the model rule. When it is present, read it and compare it with the text below. Line endings and a final newline do not count as a difference. If you compare with a command, use one that exits 0 either way. Prefer AskUserQuestion for each question.
+
+- **Missing.** Say what the rule does in one or two sentences. It has every `omc-pstack-fy:poteto-agent` delegate read fy-mode's **For delegates** section and follow it, even when its brief does not name the section. Offer once to write it. On no, move on without pushing.
+- **Present with exactly the text below.** Say it is current and move on.
+- **Present with other text.** Show the difference and ask before you overwrite it. On no, leave the file as it is.
+
+Write the file with no frontmatter and exactly this text, ending in one newline.
+
+```
+# omc-pstack-fy delegates
+
+When your instructions include the heading `# Poteto subagent`, you are an `omc-pstack-fy:poteto-agent` delegate. Then, before any work, read the **For delegates** section of the fy-mode skill and follow it. Use `skills/fy-mode/SKILL.md` in the copy under `~/.claude/plugins/cache/omc-pstack-fy/` whose `.claude-plugin/plugin.json` has the highest semantic `version`. If that file has no **For delegates** section, ignore this rule. If your brief contradicts that section, follow your brief and name the conflict in your report.
+```
+
+After writing it, tell the user that it applies to new sessions.

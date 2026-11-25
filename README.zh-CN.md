@@ -27,7 +27,7 @@ pstack 是 Lauren 的作品，oh-my-claudecode 是 Yeachan Heo 的作品。本�
    ```bash
    /plugin install omc-pstack-fy@omc-pstack-fy
    ```
-3. 重启 Claude Code，再运行 `/omc-pstack-fy:setup-pstack`。它会先问设置过程要用英文、简体中文还是繁体中文。
+3. 重启 Claude Code，再运行 `/omc-pstack-fy:setup-pstack`。它会先问设置过程要用英文、简体中文还是繁体中文。它也会问要不要写入 `~/.claude/rules/omc-pstack-fy-delegates.md`。如果你用 `/omc-pstack-fy:fy-mode`，请同意写入。
 
 把 OMC 的代码工作交给 pstack 的是一个 SessionStart hook。它只认 `oh-my-claudecode@omc` 这个插件条目，这个条目由 OMC 自己的 marketplace 创建。有些 fork 会用其他 marketplace 或插件名注册 OMC。这样注册的 OMC 接不上桥接。如果 OMC 安装后没有留下这个条目，也一样。安装顺序反了也没关系。hook 在每次会话开始时都会检查 OMC，所以之后补装 OMC，重启 Claude Code 就行。
 
@@ -95,6 +95,7 @@ claude plugin update omc-pstack-fy@omc-pstack-fy
 - 上面的 oh-my-claudecode 桥接。它由 `overlays/hooks/` 和 `tools/rules/80-personal.json` 里对 poteto-mode 的修改组成。
 - 你用中文写消息时，回复会配合你用繁体或简体，并遵守 `unslop-zh` skill。繁体中文用台湾用语，简体中文用中国大陆用语。代码、commit 和文档仍保持英文。
 - `/omc-pstack-fy:fy-mode` 在 poteto-mode 上再套用维护者自己的风格。它按每个步骤的产出分派工作。代码交给 poteto-mode，科研代码另外要符合可复现性规则。学术文字交给科研类的 skill。回复的第一行就是下一步行动或答案。遇到重大选择，它会先列出选项再问你。每次 push 前，它都会先审查。OMC 已安装并启用时，如果项目没有写明目标，或没有写明架构，它会先运行 OMC 的 `deep-interview` 再写代码，新项目也一样。计划和计划的执行也交给 OMC。
+- fy-mode 给子代理的规则写在 **For delegates** 这一节。`omc-pstack-fy:poteto-agent` 子代理只有在任务说明提到这一节时才会遵守。`/omc-pstack-fy:setup-pstack` 会问要不要写入规则文件 `~/.claude/rules/omc-pstack-fy-delegates.md`。写入后，任务说明没提到这一节，这类子代理也会遵守。这个步骤写在 `overlays/skills/setup-pstack/SKILL.md` 里。
 - `omc-pstack-fy:fy` output style 让每条回复都套用 fy-mode 的回复规则，但不执行 playbook，所以简单问题会得到简短回答。只要 system prompt 里有 Claude Code 的编程指令，它都会保留。只在一个项目使用时，输入 `/output-style omc-pstack-fy:fy`。这条命令需要 Claude Code v2.1.269 及以上版本，较旧的版本改在 `/config` 里选 Output style。所有项目都要用时，在 `~/.claude/settings.json` 里加上 `"outputStyle": "omc-pstack-fy:fy"`。
 - 这些个人调整放在 `tools/rules/80-personal.json`、`overlays/hooks/`、`overlays/output-styles/`、`overlays/skills/unslop-zh/` 和 `overlays/skills/fy-mode/`，和翻译规则分开。
 - 上游在 pstack v0.15.43 取消了 `hardest tasks` 这个角色。这个 plugin 保留它，默认值是 `fable xhigh`。Fable 的额度用完时，改用 `opus`。这个角色的设置写在 `overlays/skills/setup-pstack/SKILL.md` 里，规则写在 `tools/rules/80-personal.json` 里。
