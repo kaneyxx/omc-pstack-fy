@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.2] - 2026-11-25
+
+Built from upstream pstack v0.15.48 (https://github.com/cursor/plugins/tree/41e4009), checked against oh-my-claudecode v5.8.7 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/4c7f14f).
+
+### Fixed
+
+- fy-mode's **For delegates** section now says that no rule in poteto-mode's `worker.md` overrules it. The delegate rule from `/omc-pstack-fy:setup-pstack` yields to a brief that contradicts the section, and `worker.md` reaches a delegate through its brief. A strict reading could let `worker.md` drop the section's checks and its stops before publishing and before changing global config. The rule file's own text is unchanged, so setup does not ask to overwrite an installed copy.
+
+### Build
+
+- The test for the delegate rule pins the rule's text by hash, and checks that the plugin cache folder and the manifest the rule names belong to this plugin. A changed rule now fails the tests until the release notes say that setup will ask to overwrite the installed file.
+
 ## [1.8.1] - 2026-11-25
 
 Built from upstream pstack v0.15.48 (https://github.com/cursor/plugins/tree/41e4009), checked against oh-my-claudecode v5.8.7 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/4c7f14f).
