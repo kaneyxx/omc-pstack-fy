@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.8.1] - 2026-11-25
+
+Built from upstream pstack v0.15.48 (https://github.com/cursor/plugins/tree/41e4009), checked against oh-my-claudecode v5.8.7 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/4c7f14f).
+
+### Added
+
+- `/omc-pstack-fy:setup-pstack` now offers to write `~/.claude/rules/omc-pstack-fy-delegates.md`. The rule has every `omc-pstack-fy:poteto-agent` delegate read fy-mode's **For delegates** section and follow it, even when its brief does not name the section. Say yes if you use `/omc-pstack-fy:fy-mode`. Setup asks first and writes nothing on a no. A file that already holds the rule is reported as current. A file with other text is shown as a difference, and setup asks before it overwrites it. Before, this file had to be written by hand on each machine.
+
+### Changed
+
+- fy-mode's **For delegates** section says the rule file counts the same as a brief that names the section.
+
+### Fixed
+
+- The first run of `/omc-pstack-fy:setup-pstack` on a new machine no longer shows a red `Error: Exit code 1`. The model rule and the `~/.claude/rules/` folder do not exist yet on a first run, and setup now checks for the file with a command that exits 0 either way.
+
+### Build
+
+- `tools/omc.json` pins the sentences in oh-my-claudecode's `deep-interview` and `plan` skills that say where specs and plans are saved. fy-mode's project check relies on `.omc/specs/` and `.omc/plans/`, so the build now fails when an OMC release rewrites either sentence. The list of compatible OMC releases is unchanged.
+
 ## [1.8.0] - 2026-11-25
 
 Built from upstream pstack v0.15.48 (https://github.com/cursor/plugins/tree/41e4009), checked against oh-my-claudecode v5.8.7 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/4c7f14f).
