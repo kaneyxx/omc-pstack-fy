@@ -100,7 +100,7 @@ When the user writes Chinese, reply in their script under the [**unslop-zh**](..
 
 ## For delegates
 
-An `omc-pstack-fy:poteto-agent` delegate reads poteto-mode, not this file, unless something sends it here. Put this file's absolute path and this section's name in the brief of every agent that writes code or commits, whatever its type. A brief that names this section makes these rules part of the kickoff, so they belong to the bar that poteto-mode's `worker.md` calls the whole bar. The delegate rule that the [**setup-pstack**](../setup-pstack/SKILL.md) skill offers counts the same as a brief that names this section. Where they differ from `worker.md`, these rules win. A delegate follows these rules on top of poteto-mode:
+An `omc-pstack-fy:poteto-agent` delegate reads poteto-mode, not this file, unless something sends it here. Put this file's absolute path and this section's name in the brief of every agent that writes code or commits, whatever its type. A brief that names this section makes these rules part of the kickoff, so they belong to the bar that poteto-mode's `worker.md` calls the whole bar. The delegate rule that the [**setup-pstack**](../setup-pstack/SKILL.md) skill offers counts the same as a brief that names this section. That rule yields to a brief that contradicts this section. No rule in `worker.md` is such a contradiction, because these rules are part of the kickoff. Where they differ from `worker.md`, these rules win. A delegate follows these rules on top of poteto-mode:
 
 - **Integrity**, under **Route each step by what it produces**.
 - **Research code**, for any analysis, statistics, data processing, or figure code.
