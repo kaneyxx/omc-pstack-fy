@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0] - 2026-11-25
+
+Built from upstream pstack v0.15.48 (https://github.com/cursor/plugins/tree/41e4009), checked against oh-my-claudecode v5.8.7 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/4c7f14f).
+
+### Added
+
+- `/omc-pstack-fy:reframe`, from upstream pstack v0.15.47 and v0.15.48. Use it when you cannot name what you are building. It starts from your files and your own words. When your description could mean more than one problem, it first lists the two or three it could be and picks the likeliest. Then it gives 8 to 12 expert terms, ranked by how much each would change what gets built, each with a real project that uses it and a link it checked. It borrows terms from 2 or 3 neighboring fields, says where each analogy breaks, and rewrites your description with the new words. It runs only when you type it. The README, `/omc-pstack-fy:poteto-help`, and guide 02 each gain an entry for it.
+
+### Changed
+
+- The oh-my-claudecode check moves to v5.8.7. Version 5.8.4 stays compatible, and 5.8.5 and 5.8.6 are now recorded as compatible. The session-start note about a version mismatch no longer shows for 5.8.5, 5.8.6, or 5.8.7. Between v5.8.4 and v5.8.7, oh-my-claudecode changed the text of its `document-specialist` agent and of six of its skills. This plugin relies on none of those passages, and its bridge is unchanged.
+
 ## [1.7.3] - 2026-11-23
 
 Built from upstream pstack v0.15.46 (https://github.com/cursor/plugins/tree/7a58391), checked against oh-my-claudecode v5.8.4 (https://github.com/Yeachan-Heo/oh-my-claudecode/tree/b93059f).

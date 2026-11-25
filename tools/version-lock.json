@@ -1,12 +1,12 @@
 {
-  "version": "1.7.3",
-  "contentSha256": "73ea6ce8dc164ef4d0c808d3b115f68aee436546110d96f626e70b7bd73e914d",
+  "version": "1.8.0",
+  "contentSha256": "cd52bd4a8002cf02727a64707dbf53c5889246ec288bb25d49db533a4fa2f127",
   "upstream": {
-    "ref": "7a583913eb1b8d1a0ee76753d1a2cf072e7b54f9",
-    "version": "0.15.46"
+    "ref": "41e400932eca14f289e7db717a70455256b6d388",
+    "version": "0.15.48"
   },
   "omc": {
-    "ref": "b93059fb7c10ae28934a0bc950e26c9a17437a94",
-    "version": "5.8.4"
+    "ref": "4c7f14fe18fc0bc62348445e1acbbcdf9076f66c",
+    "version": "5.8.7"
   }
 }
