@@ -23,6 +23,8 @@ Then detect which other vendors' CLIs are installed. Run `node <omc-pstack-fy ro
 
 ### 2. Load current state
 
+On a first run the model rule is missing, and the `~/.claude/rules/` folder often is too. That is normal, not an error. Check for the file with a command that exits 0 either way, such as `test -f ~/.claude/rules/omc-pstack-fy-models.md && echo present || echo missing`, and read it only when it is present. Do not check the folder, because step 5 creates it.
+
 The default role-to-value mapping is the rule shape shown in step 5 below. If `~/.claude/rules/omc-pstack-fy-models.md` already exists, read it and treat its `# budget` line and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in step 5, such as `architect runners`, `reflect tooling`, or `why investigators`, is from a retired role. Drop it. A `second opinion` line is a role, even though step 5 shows it commented out. A commented line sets nothing. Mark an external entry as needing a choice when its provider was not detected, or when its role is not one of the three that allow one.
 
 A rule without the `# defaults: 3` line comes from an older setup. That setup wrote a line for every role, so some of its values are old defaults, not choices. Before step 3, replace these values:
