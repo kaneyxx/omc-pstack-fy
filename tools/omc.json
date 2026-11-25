@@ -218,6 +218,20 @@
       "ours": "hooks/omc-bridge.md",
       "uses": "ralph's Step 7 architect or critic check",
       "why": "OMC keeps ralph's Step 7, which the bridge leaves alone."
+    },
+    {
+      "omc": "skills/deep-interview/SKILL.md",
+      "find": "Final specs MUST be written to `.omc/specs/deep-interview-{slug}.md`",
+      "ours": "skills/fy-mode/SKILL.md",
+      "uses": "A spec in `.omc/specs/`",
+      "why": "fy-mode's project check passes on a spec where deep-interview writes it."
+    },
+    {
+      "omc": "skills/plan/SKILL.md",
+      "find": "Plans are saved to `.omc/plans/`",
+      "ours": "skills/fy-mode/SKILL.md",
+      "uses": "a plan in `.omc/plans/`",
+      "why": "fy-mode's project check passes on a plan where plan saves it."
     }
   ]
 }

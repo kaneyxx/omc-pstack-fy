@@ -111,28 +111,32 @@
         "contract": "e56e55dfc1b5004c5082288305143c11b672bdc9157d09ae4a4077ce8246ae88"
       },
       {
+        "version": "5.8.7",
+        "contract": "66188ffe98ee6f24c525a912c8ed5795b8278954f11a94d4a4a1a9974963fef9"
+      },
+      {
         "version": "5.8.1",
-        "contract": "3a432a22e5904848b38742c43b350bbd624d2db08b203f339defd722dedbc86c"
+        "contract": "66188ffe98ee6f24c525a912c8ed5795b8278954f11a94d4a4a1a9974963fef9"
       },
       {
         "version": "5.8.2",
-        "contract": "3a432a22e5904848b38742c43b350bbd624d2db08b203f339defd722dedbc86c"
+        "contract": "66188ffe98ee6f24c525a912c8ed5795b8278954f11a94d4a4a1a9974963fef9"
       },
       {
         "version": "5.8.3",
-        "contract": "3a432a22e5904848b38742c43b350bbd624d2db08b203f339defd722dedbc86c"
+        "contract": "66188ffe98ee6f24c525a912c8ed5795b8278954f11a94d4a4a1a9974963fef9"
       },
       {
         "version": "5.8.4",
-        "contract": "3a432a22e5904848b38742c43b350bbd624d2db08b203f339defd722dedbc86c"
+        "contract": "66188ffe98ee6f24c525a912c8ed5795b8278954f11a94d4a4a1a9974963fef9"
       },
       {
         "version": "5.8.5",
-        "contract": "3a432a22e5904848b38742c43b350bbd624d2db08b203f339defd722dedbc86c"
+        "contract": "66188ffe98ee6f24c525a912c8ed5795b8278954f11a94d4a4a1a9974963fef9"
       },
       {
         "version": "5.8.6",
-        "contract": "3a432a22e5904848b38742c43b350bbd624d2db08b203f339defd722dedbc86c"
+        "contract": "66188ffe98ee6f24c525a912c8ed5795b8278954f11a94d4a4a1a9974963fef9"
       }
     ]
   }
