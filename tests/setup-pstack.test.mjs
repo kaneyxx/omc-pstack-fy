@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, test } from "node:test";
@@ -28,6 +29,20 @@ describe("setup-pstack delegate rule", () => {
 
   test("the build leaves the rule's text as the overlay wrote it", () => {
     assert.equal(rule, delegateRule(join(ROOT, "overlays", SKILL)));
+  });
+
+  // A changed rule shows as other text on every machine that already has it, and setup-pstack then asks to overwrite it.
+  test("keeps the text that installed copies hold", () => {
+    const installed = "3938bcf918736956ca2e645c74de9f191fef92a5d660eb9dd61ec0dba6c4eaa8";
+    assert.equal(createHash("sha256").update(rule).digest("hex"), installed, "The delegate rule's text changed. If that is intended, update this hash and say in the release notes that setup-pstack will ask to overwrite the installed file.");
+  });
+
+  test("names this marketplace's plugin cache folder and the plugin's manifest", () => {
+    const [folder] = named(rule, /the copy under `~\/\.claude\/plugins\/cache\/([^/`]+)\/`/, "plugin cache folder");
+    assert.equal(folder, JSON.parse(readFileSync(join(ROOT, ".claude-plugin", "marketplace.json"), "utf8")).name);
+    const [manifest] = named(rule, /whose `([^`]+)` has the highest semantic `version`/, "plugin manifest");
+    assert(existsSync(join(PLUGIN, manifest)), `plugin/${manifest} is missing`);
+    assert.equal(typeof JSON.parse(readFileSync(join(PLUGIN, manifest), "utf8")).version, "string");
   });
 
   test("names a heading that the plugin's delegate agent has", () => {
