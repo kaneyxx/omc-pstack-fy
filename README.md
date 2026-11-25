@@ -27,7 +27,7 @@ Enter each command on its own; pasting several lines at once fails. To use pstac
    ```bash
    /plugin install omc-pstack-fy@omc-pstack-fy
    ```
-3. Restart Claude Code, then run `/omc-pstack-fy:setup-pstack`. It first asks which language to run the setup in: English, 简体中文, or 繁體中文.
+3. Restart Claude Code, then run `/omc-pstack-fy:setup-pstack`. It first asks which language to run the setup in: English, 简体中文, or 繁體中文. It also offers to write `~/.claude/rules/omc-pstack-fy-delegates.md`. Say yes if you use `/omc-pstack-fy:fy-mode`.
 
 The SessionStart hook that hands OMC's code work to pstack looks for the plugin entry `oh-my-claudecode@omc`, which OMC's own marketplace creates. OMC registered under another marketplace or plugin name, as some forks do, or installed in a way that leaves no such entry, gets no bridge. The order is not strict: the hook checks for OMC at every session start, so adding OMC later takes only a restart.
 
@@ -170,6 +170,7 @@ These are the owner's choices, not translations of Lauren's pstack.
 - The oh-my-claudecode bridge above, in `overlays/hooks/` and the poteto-mode edits in `tools/rules/80-personal.json`.
 - When you write in Chinese, replies match your script and follow the `unslop-zh` skill, with Taiwan terms in Traditional Chinese and mainland terms in Simplified Chinese. Code, commits, and docs stay in English.
 - `/omc-pstack-fy:fy-mode` runs poteto-mode with the owner's style on top. It routes each step by what it produces (code to poteto-mode with reproducibility rules for research code, scholarly prose to the research skills), shapes replies action-first, asks with options before big choices, and reviews before every push. With OMC installed and enabled, it runs OMC's `deep-interview` before code work in a project that states no goal or states no architecture, a new project included, and it sends plans and their runs to OMC.
+- fy-mode keeps its rules for delegates in a **For delegates** section, and an `omc-pstack-fy:poteto-agent` delegate follows them only when its brief names that section. `/omc-pstack-fy:setup-pstack` offers a rule file, `~/.claude/rules/omc-pstack-fy-delegates.md`, that has every such delegate follow them anyway. The step is in `overlays/skills/setup-pstack/SKILL.md`.
 - The `omc-pstack-fy:fy` output style puts fy-mode's reply rules in every reply without running a playbook, so a quick question gets a short answer. It keeps Claude Code's coding instructions wherever the system prompt includes them. Pick it for one project with `/output-style omc-pstack-fy:fy` (Claude Code v2.1.269 or later; otherwise `/config` > Output style), or for every project with `"outputStyle": "omc-pstack-fy:fy"` in `~/.claude/settings.json`.
 - They live in `tools/rules/80-personal.json`, `overlays/hooks/`, `overlays/output-styles/`, `overlays/skills/unslop-zh/`, and `overlays/skills/fy-mode/`, apart from the translation rules.
 - Upstream retired the `hardest tasks` role in pstack v0.15.43. This plugin keeps it at `fable xhigh`, and falls back to `opus` when Fable's quota runs out. The role's line is in `overlays/skills/setup-pstack/SKILL.md`, and its rules are in `tools/rules/80-personal.json`.

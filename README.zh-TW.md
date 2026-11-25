@@ -27,7 +27,7 @@ pstack 是 Lauren 的作品，oh-my-claudecode 是 Yeachan Heo 的作品。這�
    ```bash
    /plugin install omc-pstack-fy@omc-pstack-fy
    ```
-3. 重開 Claude Code，再執行 `/omc-pstack-fy:setup-pstack`。它會先問設定過程要用英文、簡體中文還是繁體中文。
+3. 重開 Claude Code，再執行 `/omc-pstack-fy:setup-pstack`。它會先問設定過程要用英文、簡體中文還是繁體中文。它也會問要不要寫入 `~/.claude/rules/omc-pstack-fy-delegates.md`。如果你用 `/omc-pstack-fy:fy-mode`，請同意寫入。
 
 把 OMC 的程式工作交給 pstack 的是一個 SessionStart hook。它只認 `oh-my-claudecode@omc` 這個 plugin 項目，這個項目由 OMC 自己的 marketplace 建立。有些 fork 會用其他 marketplace 或 plugin 名稱註冊 OMC。這樣註冊的 OMC 接不上橋接。如果 OMC 裝完沒有留下這個項目，也一樣。安裝順序反了也沒關係。hook 每次 session 開始都會檢查 OMC，所以之後補裝 OMC，重開 Claude Code 就好。
 
@@ -95,6 +95,7 @@ claude plugin update omc-pstack-fy@omc-pstack-fy
 - 上面的 oh-my-claudecode 橋接。它由 `overlays/hooks/` 和 `tools/rules/80-personal.json` 裡對 poteto-mode 的修改組成。
 - 你用中文寫訊息時，回覆會配合你用繁體或簡體，並遵守 `unslop-zh` skill。繁體中文用台灣用語，簡體中文用中國大陸用語。程式碼、commit 和文件仍維持英文。
 - `/omc-pstack-fy:fy-mode` 在 poteto-mode 上再套用維護者自己的風格。它依每個步驟的產出分派工作。程式碼交給 poteto-mode，研究用的程式碼另外要符合可重現性規則。學術文字交給研究類的 skill。回覆的第一行就是下一步行動或答案。遇到重大選擇，它會先列出選項再問你。每次 push 前，它都會先審查。OMC 已安裝並啟用時，如果專案沒有寫明目標，或沒有寫明架構，它會先執行 OMC 的 `deep-interview` 再寫程式碼，新專案也一樣。計畫和計畫的執行也交給 OMC。
+- fy-mode 給子代理的規則寫在 **For delegates** 這一節。`omc-pstack-fy:poteto-agent` 子代理只有在任務說明提到這一節時才會遵守。`/omc-pstack-fy:setup-pstack` 會問要不要寫入規則檔 `~/.claude/rules/omc-pstack-fy-delegates.md`。寫入後，任務說明沒提到這一節，這類子代理也會遵守。這個步驟寫在 `overlays/skills/setup-pstack/SKILL.md`。
 - `omc-pstack-fy:fy` output style 讓每則回覆都套用 fy-mode 的回覆規則，但不執行 playbook，所以簡單問題會得到簡短回答。只要 system prompt 裡有 Claude Code 的寫程式指示，它都會保留。只在一個專案使用時，輸入 `/output-style omc-pstack-fy:fy`。這個指令需要 Claude Code v2.1.269 以上，較舊的版本改在 `/config` 裡選 Output style。所有專案都要用時，在 `~/.claude/settings.json` 加上 `"outputStyle": "omc-pstack-fy:fy"`。
 - 這些個人調整放在 `tools/rules/80-personal.json`、`overlays/hooks/`、`overlays/output-styles/`、`overlays/skills/unslop-zh/` 和 `overlays/skills/fy-mode/`，和翻譯規則分開。
 - 上游在 pstack v0.15.43 取消了 `hardest tasks` 這個角色。這個 plugin 保留它，預設是 `fable xhigh`。Fable 的額度用完時，改用 `opus`。這個角色的設定寫在 `overlays/skills/setup-pstack/SKILL.md`，規則寫在 `tools/rules/80-personal.json`。
